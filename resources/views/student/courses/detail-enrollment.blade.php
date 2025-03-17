@@ -315,112 +315,82 @@
         @endif
     </div>
     
-    <!-- Geçmiş Ödevlerim Tab İçeriği -->
-    <div id="content-past-homework" class="tab-content hidden">
-        <h2 class="text-2xl font-bold text-[#1a2e5a] mb-6">Geçmiş Ödevlerim</h2>
-        
-        <!-- Örnek geçmiş ödevler -->
-        <div class="space-y-6">
-            <!-- Örnek Ödev 1 -->
-            <div class="bg-gray-50 rounded-lg p-5 shadow-sm border-l-4 border-green-500">
+<!-- Geçmiş Ödevlerim Tab İçeriği -->
+<div id="content-past-homework" class="tab-content hidden">
+    <h2 class="text-2xl font-bold text-[#1a2e5a] mb-6">Geçmiş Ödevlerim</h2>
+    
+    @if(count($pastHomeworks) > 0)
+    <div class="space-y-6">
+        @foreach($pastHomeworks as $homework)
+            <div class="bg-gray-50 rounded-lg p-5 shadow-sm border-l-4 
+                @if($homework['status'] == 'Değerlendirildi')
+                    border-green-500
+                @else
+                    border-yellow-500
+                @endif
+            ">
                 <div class="flex justify-between items-start">
-                    <h3 class="text-lg font-semibold text-[#1a2e5a]">Present Perfect Tense Alıştırmaları</h3>
-                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">Tamamlandı</span>
+                    <h3 class="text-lg font-semibold text-[#1a2e5a]">{{ $homework['title'] }}</h3>
+                    <span class="
+                        @if($homework['status'] == 'Değerlendirildi')
+                            bg-green-100 text-green-700
+                        @else
+                            bg-yellow-100 text-yellow-700
+                        @endif
+                        px-3 py-1 rounded-full text-xs font-medium">
+                        {{ $homework['status'] }}
+                    </span>
                 </div>
                 <div class="mt-3 text-gray-700">
-                    <p>Present Perfect Tense konusunda çalışma kitabındaki alıştırmaları yapınız.</p>
+                    <p>{{ $homework['description'] }}</p>
                 </div>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <p class="text-sm text-gray-500 mb-1"><span class="font-medium">Yükleme Tarihi:</span> 10.02.2025 18:45</p>
-                        <p class="text-sm text-gray-500 mb-1"><span class="font-medium">Son Teslim Tarihi:</span> 15.02.2025 23:59</p>
-                        <p class="text-sm text-gray-500"><span class="font-medium">Puan:</span> <span class="text-green-600 font-semibold">90/100</span></p>
+                        <p class="text-sm text-gray-500 mb-1"><span class="font-medium">Yükleme Tarihi:</span> 
+                            {{ \Carbon\Carbon::parse($homework['submission_date'])->format('d.m.Y H:i') }}
+                        </p>
+                        <p class="text-sm text-gray-500 mb-1"><span class="font-medium">Son Teslim Tarihi:</span> 
+                            {{ \Carbon\Carbon::parse($homework['due_date'])->format('d.m.Y H:i') }}
+                        </p>
+                        <p class="text-sm text-gray-500"><span class="font-medium">Puan:</span> 
+                            @if($homework['score'])
+                                <span class="text-green-600 font-semibold">{{ $homework['score'] }}/{{ $homework['max_score'] }}</span>
+                            @else
+                                <span class="text-yellow-600 font-semibold">Değerlendiriliyor</span>
+                            @endif
+                        </p>
                     </div>
                     <div class="flex justify-end items-end space-x-2">
-                        <button class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-md inline-flex items-center text-sm font-medium transition-colors duration-300">
+                        <button class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-md inline-flex items-center text-sm font-medium transition-colors duration-300 view-homework-btn" data-homework-id="{{ $homework['id'] }}">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                             Görüntüle
                         </button>
-                        <button class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-3 py-1.5 rounded-md inline-flex items-center text-sm font-medium transition-colors duration-300">
+                        @if($homework['file_path'])
+                        <a href="{{ asset('storage/' . $homework['file_path']) }}" target="_blank" class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-3 py-1.5 rounded-md inline-flex items-center text-sm font-medium transition-colors duration-300">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
                             İndir
-                        </button>
+                        </a>
+                        @endif
                     </div>
                 </div>
             </div>
-            
-            <!-- Örnek Ödev 2 -->
-            <div class="bg-gray-50 rounded-lg p-5 shadow-sm border-l-4 border-green-500">
-                <div class="flex justify-between items-start">
-                    <h3 class="text-lg font-semibold text-[#1a2e5a]">Modal Verbs - Haftalık Quiz</h3>
-                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">Tamamlandı</span>
-                </div>
-                <div class="mt-3 text-gray-700">
-                    <p>Modal Verbs (can, could, may, might, must, shall, should, will, would) konularını kapsayan haftalık quiz.</p>
-                </div>
-                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1"><span class="font-medium">Yükleme Tarihi:</span> 01.02.2025 21:30</p>
-                        <p class="text-sm text-gray-500 mb-1"><span class="font-medium">Son Teslim Tarihi:</span> 03.02.2025 23:59</p>
-                        <p class="text-sm text-gray-500"><span class="font-medium">Puan:</span> <span class="text-green-600 font-semibold">85/100</span></p>
-                    </div>
-                    <div class="flex justify-end items-end space-x-2">
-                        <button class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-md inline-flex items-center text-sm font-medium transition-colors duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            Görüntüle
-                        </button>
-                        <button class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-3 py-1.5 rounded-md inline-flex items-center text-sm font-medium transition-colors duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            İndir
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Örnek Ödev 3 -->
-            <div class="bg-gray-50 rounded-lg p-5 shadow-sm border-l-4 border-yellow-500">
-                <div class="flex justify-between items-start">
-                    <h3 class="text-lg font-semibold text-[#1a2e5a]">Past Continuous vs Past Simple Pratik</h3>
-                    <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-medium">Değerlendiriliyor</span>
-                </div>
-                <div class="mt-3 text-gray-700">
-                    <p>Past Continuous ve Past Simple zamanlarının karşılaştırmalı kullanımı üzerine alıştırmalar.</p>
-                </div>
-                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1"><span class="font-medium">Yükleme Tarihi:</span> 14.03.2025 09:15</p>
-                        <p class="text-sm text-gray-500 mb-1"><span class="font-medium">Son Teslim Tarihi:</span> 15.03.2025 23:59</p>
-                        <p class="text-sm text-gray-500"><span class="font-medium">Puan:</span> <span class="text-yellow-600 font-semibold">Değerlendiriliyor</span></p>
-                    </div>
-                    <div class="flex justify-end items-end space-x-2">
-                        <button class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-md inline-flex items-center text-sm font-medium transition-colors duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            Görüntüle
-                        </button>
-                        <button class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-3 py-1.5 rounded-md inline-flex items-center text-sm font-medium transition-colors duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            İndir
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @endforeach
     </div>
+    @else
+    <div class="bg-gray-50 p-8 rounded-lg text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <p class="text-gray-600 font-medium">Henüz tamamladığınız ödev bulunmamaktadır.</p>
+        <p class="text-sm text-gray-500 mt-2">Tamamlanan ödevleriniz burada listelenecektir.</p>
+    </div>
+    @endif
+</div>
     
     <!-- Hoca Yanıtları Tab İçeriği -->
     <div id="content-teacher-feedback" class="tab-content hidden">
@@ -616,8 +586,7 @@
             </div>
         </div>
         
-        <form action="#" method="POST" enctype="multipart/form-data">
-            @csrf
+        <form action="{{ route('ogrenci.odev-yukle', ['slug' => $course->slug, 'homeworkId' => 0]) }}" method="POST" enctype="multipart/form-data" id="submitHomeworkForm">            @csrf
             <input type="hidden" id="homeworkId" name="homework_id" value="">
             
             <div class="p-6">
@@ -723,29 +692,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Ödev yükleme modal işlevselliği
-    const submitButtons = document.querySelectorAll('.submit-homework-btn');
-    const submitHomeworkModal = document.getElementById('submitHomeworkModal');
-    const closeSubmitModal = document.getElementById('closeSubmitModal');
-    const cancelSubmitBtn = document.getElementById('cancelSubmitBtn');
-    const homeworkIdInput = document.getElementById('homeworkId');
+// Ödev yükleme modal işlevselliği
+const submitButtons = document.querySelectorAll('.submit-homework-btn');
+const submitHomeworkModal = document.getElementById('submitHomeworkModal');
+const closeSubmitModal = document.getElementById('closeSubmitModal');
+const cancelSubmitBtn = document.getElementById('cancelSubmitBtn');
+const homeworkIdInput = document.getElementById('homeworkId');
+const submitHomeworkForm = document.getElementById('submitHomeworkForm');
+
+if (submitButtons.length > 0 && submitHomeworkModal) {
+    submitButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const homeworkId = this.getAttribute('data-homework-id');
+            homeworkIdInput.value = homeworkId;
+            
+            // Form action URL'ini güncelle
+            const formAction = submitHomeworkForm.action;
+            // homeworkId kısmını URL'de güncelle
+            const newAction = formAction.replace(/\/odev-yukle\/[^\/]*$/, '/odev-yukle/' + homeworkId);
+            submitHomeworkForm.action = newAction;
+            
+            submitHomeworkModal.classList.remove('hidden');
+        });
+    });
     
-    if (submitButtons.length > 0 && submitHomeworkModal) {
-        submitButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const homeworkId = this.getAttribute('data-homework-id');
-                homeworkIdInput.value = homeworkId;
-                submitHomeworkModal.classList.remove('hidden');
-            });
-        });
-        
-        closeSubmitModal.addEventListener('click', function() {
-            submitHomeworkModal.classList.add('hidden');
-        });
-        
-        cancelSubmitBtn.addEventListener('click', function() {
-            submitHomeworkModal.classList.add('hidden');
-        });
-    }
+    closeSubmitModal.addEventListener('click', function() {
+        submitHomeworkModal.classList.add('hidden');
+    });
+    
+    cancelSubmitBtn.addEventListener('click', function() {
+        submitHomeworkModal.classList.add('hidden');
+    });
+}
     
     // Hoca yanıtına yanıt verme modal işlevselliği
     const responseButtons = document.querySelectorAll('.reply-to-teacher');

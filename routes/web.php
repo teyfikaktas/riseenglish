@@ -194,6 +194,8 @@ Route::middleware(['auth', 'role:ogrenci'])->group(function () {
         // Ödev ekleme (sonradan işlevsellik eklenecek)
         Route::post('/kurslarim/{slug}/odev-ekle', [App\Http\Controllers\Student\StudentCourseController::class, 'submitHomework'])
             ->name('odev-ekle');
+            Route::post('/kurslarim/{slug}/odev-yukle/{homeworkId}', [App\Http\Controllers\Student\StudentCourseController::class, 'submitHomeworkFile'])
+            ->name('odev-yukle');
     });
 });
 // Oturum açmış kullanıcı profil yönetimi
