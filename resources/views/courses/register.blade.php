@@ -123,17 +123,18 @@
                             <div class="ml-3">
                                 <h3 class="text-blue-800 font-medium mb-1">Kayıt İşlemi Hakkında</h3>
                                 <p class="text-blue-700 text-sm">
-                                    Aşağıdaki formu doldurarak kursa kayıt olabilirsiniz. Ödeme işleminden sonra kaydınız tamamlanacak ve kurs erişim bilgileri e-posta adresinize gönderilecektir.
+                                    Aşağıdaki formu doldurarak kursa kayıt olabilirsiniz. Yönetici Onay işleminden tarafınıza sms gönderilerek onaylanacaktır.
                                 </p>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Kayıt formu -->
-                    <form method="POST" action="{{ route('course.register.submit', $course->id) }}" class="space-y-6">
+                    <form method="POST" action="{{ route('course.register.submit', $course->slug) }}" class="space-y-6">
+
                         @csrf
                         
-                        <!-- Kişisel bilgiler -->
+                        {{-- <!-- Kişisel bilgiler -->
                         <div>
                             <h2 class="text-lg font-semibold mb-4">Kişisel Bilgiler</h2>
                             
@@ -162,10 +163,10 @@
                                     <input type="date" name="birthdate" id="birthdate" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#1a2e5a] focus:border-[#1a2e5a]" value="{{ old('birthdate') }}">
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                         
                         <!-- Adres Bilgileri -->
-                        <div>
+                        {{-- <div>
                             <h2 class="text-lg font-semibold mb-4">Adres Bilgileri</h2>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -190,10 +191,10 @@
                                     <textarea name="address" id="address" rows="3" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#1a2e5a] focus:border-[#1a2e5a]">{{ old('address') }}</textarea>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                         
                         <!-- Ödeme Bilgileri -->
-                        <div>
+                        {{-- <div>
                             <h2 class="text-lg font-semibold mb-4">Ödeme Bilgileri</h2>
                             
                             <!-- Ödeme yöntemi seçimi -->
@@ -284,7 +285,7 @@
                                     <option value="9">9 Taksit</option>
                                 </select>
                             </div>
-                        </div>
+                        </div> --}}
                         
 <!-- Şartlar ve koşullar --> 
 <div class="pt-4 border-t border-gray-200"> 

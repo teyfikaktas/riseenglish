@@ -163,6 +163,11 @@ public function getDiscountPercentageAttribute()
     
     return 0;
 }
+// app/Models/Course.php
+public function announcements()
+{
+    return $this->hasMany(Announcement::class);
+}
 public function homeworks()
 {
     return $this->hasMany(Homework::class);

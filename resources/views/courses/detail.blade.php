@@ -138,20 +138,54 @@
                         </div>
                     </div>
                     
-                    <!-- Fiyat ve kayıt butonu -->
-                    <div class="flex flex-col md:flex-row items-center justify-between mt-6 space-y-4 md:space-y-0">
-                        <div>
-                            @if($course->discount_price)
-                                <span class="text-gray-500 line-through text-xl">{{ number_format($course->price, 2) }} ₺</span>
-                                <span class="text-[#e63946] font-bold text-2xl ml-2">{{ number_format($course->discount_price, 2) }} ₺</span>
-                            @else
-                                <span class="text-[#1a2e5a] font-bold text-2xl">{{ number_format($course->price, 2) }} ₺</span>
-                            @endif
-                        </div>
-                        <a href="{{ url('/kurs-kayit/' . $course->id) }}" class="bg-[#e63946] hover:bg-[#d32836] text-white px-8 py-3 rounded-lg transition-colors duration-300 font-bold text-lg shadow-md hover:shadow-lg w-full md:w-auto text-center">
-                            Hemen Kaydol
-                        </a>
-                    </div>
+<!-- resources/views/courses/detail.blade.php dosyasında butonun bulunduğu kısmı değiştiriyoruz -->
+<!-- Fiyat ve kayıt butonu -->
+<div class="flex flex-col md:flex-row items-center justify-between mt-6 space-y-4 md:space-y-0">
+    <div>
+        @if($course->discount_price)
+            <span class="text-gray-500 line-through text-xl">{{ number_format($course->price, 2) }} ₺</span>
+            <span class="text-[#e63946] font-bold text-2xl ml-2">{{ number_format($course->discount_price, 2) }} ₺</span>
+        @else
+            <span class="text-[#1a2e5a] font-bold text-2xl">{{ number_format($course->price, 2) }} ₺</span>
+        @endif
+    </div>
+    
+    @if(Auth::check())
+    @php
+        $enrollment = Auth::user()->enrolledCourses()->where('course_id', $course->id)->first();
+    @endphp
+    
+    @if($enrollment && $enrollment->pivot->status_id == 1)
+    <a href="{{ route('ogrenci.kurs-detay', $course->slug) }}" class="bg-[#1a2e5a] hover:bg-[#15243f] text-white px-8 py-3 rounded-lg transition-colors duration-300 font-bold text-lg shadow-md hover:shadow-lg w-full md:w-auto text-center">
+        Derse Git
+    </a>
+    @elseif($enrollment && $enrollment->pivot->status_id == 4)
+        <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg transition-colors duration-300 font-bold text-lg shadow-md hover:shadow-lg w-full md:w-auto text-center cursor-default">
+            Onay Bekleniyor
+        </button>
+    @elseif($enrollment && $enrollment->pivot->status_id == 3)
+        <button class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg transition-colors duration-300 font-bold text-lg shadow-md hover:shadow-lg w-full md:w-auto text-center cursor-default">
+            Başvuru Reddedildi
+        </button>
+    @elseif($enrollment && $enrollment->pivot->status_id == 2)
+        <button class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg transition-colors duration-300 font-bold text-lg shadow-md hover:shadow-lg w-full md:w-auto text-center">
+            Tamamlandı - Sertifikayı Gör
+        </button>
+    @elseif($enrollment)
+        <button class="bg-gray-400 text-white px-8 py-3 rounded-lg transition-colors duration-300 font-bold text-lg shadow-md hover:shadow-lg w-full md:w-auto text-center cursor-default">
+            Bilinmeyen Durum (ID: {{ $enrollment->pivot->status_id }})
+        </button>
+    @else
+        <a href="{{ url('/kurs-kayit/' . $course->slug) }}" class="bg-[#e63946] hover:bg-[#d32836] text-white px-8 py-3 rounded-lg transition-colors duration-300 font-bold text-lg shadow-md hover:shadow-lg w-full md:w-auto text-center">
+            Hemen Kaydol
+        </a>
+    @endif
+@else
+    <a href="{{ route('login') }}?redirect={{ urlencode(route('course.register', $course->slug)) }}" class="bg-[#e63946] hover:bg-[#d32836] text-white px-8 py-3 rounded-lg transition-colors duration-300 font-bold text-lg shadow-md hover:shadow-lg w-full md:w-auto text-center">
+        Giriş Yap ve Kaydol
+    </a>
+@endif
+</div>
                 </div>
             </div>
             

@@ -19,6 +19,11 @@ Route::get('/', function () {
         return redirect('/admin/dashboard');
     }
     
+    // Öğretmen kullanıcıları doğrudan öğretmen paneline yönlendir
+    if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
+        return redirect('/ogretmen/panel');
+    }
+    
     // Öne çıkan kursları getir
     $featuredCourses = Course::where('is_featured', true)
                              ->where('is_active', true)
@@ -34,6 +39,11 @@ Route::get('/ana-sayfa', function () {
     // Yönetici kullanıcıları doğrudan yönetici paneline yönlendir
     if (Auth::check() && Auth::user()->hasRole('yonetici')) {
         return redirect('/admin/dashboard');
+    }
+    
+    // Öğretmen kullanıcıları doğrudan öğretmen paneline yönlendir
+    if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
+        return redirect('/ogretmen/panel');
     }
     
     // Öne çıkan kursları getir
@@ -54,6 +64,10 @@ Route::get('/oturum-ac', function() {
         if (Auth::user()->hasRole('yonetici')) {
             return redirect('/admin/dashboard');
         }
+        // Öğretmen ise öğretmen paneline yönlendir
+        if (Auth::user()->hasRole('ogretmen')) {
+            return redirect('/ogretmen/panel');
+        }
         // Normal kullanıcı ise ana sayfaya yönlendir
         return redirect('/');
     }
@@ -65,6 +79,11 @@ Route::get('/home', function () {
     // Yönetici kullanıcıları doğrudan yönetici paneline yönlendir
     if (Auth::check() && Auth::user()->hasRole('yonetici')) {
         return redirect('/admin/dashboard');
+    }
+    
+    // Öğretmen kullanıcıları doğrudan öğretmen paneline yönlendir
+    if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
+        return redirect('/ogretmen/panel');
     }
     
     // Doğrudan controller'a yönlendir
@@ -86,8 +105,8 @@ Route::get('/egitimler', [FrontendCourseController::class, 'index'])->name('cour
 Route::get('/egitimler/{slug}', [FrontendCourseController::class, 'detail'])->name('courses.detail');
 
 // Kurs kayıt işlemleri
-Route::get('/kurs-kayit/{id}', [FrontendCourseController::class, 'register'])->name('course.register');
-Route::post('/kurs-kayit/{id}', [FrontendCourseController::class, 'registerSubmit'])->name('course.register.submit');
+Route::get('/kurs-kayit/{slug}', [FrontendCourseController::class, 'register'])->name('course.register');
+Route::post('/kurs-kayit/{slug}', [FrontendCourseController::class, 'registerSubmit'])->name('course.register.submit');
 Route::get('/kurs-kayit-basarili', [FrontendCourseController::class, 'registerSuccess'])->name('course.register.success');
 
 // Kurs değerlendirme
@@ -97,7 +116,9 @@ Route::post('/egitimler/{id}/yorum', [FrontendCourseController::class, 'review']
 Route::middleware(['auth', 'role:yonetici'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        
+        Route::get('/sms', [App\Http\Controllers\Admin\SmsController::class, 'index'])->name('sms.index');
+        Route::post('/sms/send-individual', [App\Http\Controllers\Admin\SmsController::class, 'sendIndividual'])->name('sms.send-individual');
+        Route::post('/sms/send-bulk', [App\Http\Controllers\Admin\SmsController::class, 'sendBulk'])->name('sms.send-bulk');
         // Kurs tipleri için resource route
         Route::resources([
             'course-types' => CourseTypeController::class,
@@ -105,7 +126,9 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
             'course-frequencies' => CourseFrequencyController::class,
             'courses' => CourseController::class,
         ]);
-        
+           // Eksik olan rotalar - bunları ekleyin
+           Route::get('/sms/search-users', [App\Http\Controllers\Admin\SmsController::class, 'searchUsers'])->name('sms.search-users');
+           Route::get('/sms/search-courses', [App\Http\Controllers\Admin\SmsController::class, 'searchCourses'])->name('sms.search-courses');
         Route::get('/course-levels/list', [CourseLevelController::class, 'getList'])->name('course-levels.list');
         Route::get('/course-types/list', [CourseTypeController::class, 'getList'])->name('course-types.list');
         Route::get('/courses/{course}/enrollments', [CourseController::class, 'enrollments'])->name('courses.enrollments');
@@ -130,8 +153,34 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         
         // Kullanıcı kurs kayıt verilerini getiren API
         Route::get('/users/{user}/courses/{course}/enrollment-data', [\App\Http\Controllers\Admin\AdminUserController::class, 'getEnrollmentData'])
-            ->name('users.enrollmentData');    });
+            ->name('users.enrollmentData');   
+    });
 });
+
+// Öğretmen rotaları
+Route::middleware(['auth', 'role:ogretmen'])->group(function () {
+    Route::prefix('ogretmen')->name('ogretmen.')->group(function () {
+        // Öğretmen ana sayfası/dashboard
+        Route::get('/panel', [App\Http\Controllers\Teacher\TeacherController::class, 'index'])
+            ->name('panel');
+            Route::get('/panel', [App\Http\Controllers\Teacher\TeacherController::class, 'index'])
+            ->name('panel');
+        
+        // Kurs detay sayfası
+        Route::get('/kurs/{id}', [App\Http\Controllers\Teacher\TeacherController::class, 'courseDetail'])
+            ->name('course.detail');
+        
+        // Duyuru oluşturma
+        Route::post('/kurs/{courseId}/duyuru', [App\Http\Controllers\Teacher\TeacherController::class, 'createAnnouncement'])
+            ->name('course.create-announcement');
+        
+        // Ödev oluşturma
+        Route::post('/kurs/{courseId}/odev', [App\Http\Controllers\Teacher\TeacherController::class, 'createHomework'])
+            ->name('course.create-homework');
+    });
+});
+
+// Öğrenci rotaları
 Route::middleware(['auth', 'role:ogrenci'])->group(function () {
     Route::prefix('ogrenci')->name('ogrenci.')->group(function () {
         
@@ -140,11 +189,10 @@ Route::middleware(['auth', 'role:ogrenci'])->group(function () {
             ->name('kurslarim');
             
         // Kurs detay sayfası - Sadece kayıtlı öğrenciler için
-        Route::get('/kurslarim/{id}', [App\Http\Controllers\Student\StudentCourseController::class, 'showCourseDetail'])
-            ->name('kurs-detay');
-            
+        Route::get('/kurslarim/{slug}', [App\Http\Controllers\Student\StudentCourseController::class, 'showCourseDetail'])
+        ->name('kurs-detay');
         // Ödev ekleme (sonradan işlevsellik eklenecek)
-        Route::post('/kurslarim/{id}/odev-ekle', [App\Http\Controllers\Student\StudentCourseController::class, 'submitHomework'])
+        Route::post('/kurslarim/{slug}/odev-ekle', [App\Http\Controllers\Student\StudentCourseController::class, 'submitHomework'])
             ->name('odev-ekle');
     });
 });

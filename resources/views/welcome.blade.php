@@ -370,8 +370,17 @@
         <!-- Basit Kurslarım Listesi -->
         <div class="space-y-4">
             @php
-                $enrolledCourses = auth()->user()->enrolledCourses()->take(3)->get();
-            @endphp
+            // Sadece aktif ve onaylanmış kayıtları getir
+            $enrolledCourses = auth()->user()->enrolledCourses()
+                ->wherePivot('approval_status', 'approved') // Onaylanmış kayıtlar
+                ->where(function($query) {
+                    $query->where('end_date', '>=', now()) // Bitiş tarihi bugünden sonra olanlar
+                          ->orWhereNull('end_date'); // Veya bitiş tarihi belirtilmemiş olanlar
+                })
+                ->where('is_active', true) // Aktif kurslar
+                ->take(3)
+                ->get();
+        @endphp
 
             @forelse($enrolledCourses as $course)
             <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200">
@@ -389,7 +398,7 @@
                         </div>
                     </div>
                     <div class="flex space-x-3">
-                        <a href="{{ route('ogrenci.kurs-detay', $course->id) }}" class="text-[#1a2e5a] hover:text-[#e63946] font-medium text-sm">Detaylar</a>
+                        <a href="{{ route('ogrenci.kurs-detay', $course->slug) }}" class="text-[#1a2e5a] hover:text-[#e63946] font-medium text-sm">Detaylar</a>
                         @if($course->meeting_link)
                         <a href="{{ $course->meeting_link }}" target="_blank" class="bg-[#e63946] hover:bg-[#d32836] text-white px-3 py-1 rounded-lg text-sm font-medium">Derse Katıl</a>
                         @endif

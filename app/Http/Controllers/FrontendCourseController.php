@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class FrontendCourseController extends Controller
 {
@@ -194,109 +195,117 @@ class FrontendCourseController extends Controller
     /**
      * Kurs kayıt formunu göster
      */
-    public function register($id)
+    public function register($slug)
     {
-        $course = Course::with(['courseType', 'courseLevel', 'teacher', 'courseFrequency', 'category'])
-            ->findOrFail($id);
+        \Log::info('Register metodu çağrıldı. Slug: ' . $slug);
         
-        // Kursun aktif olup olmadığını kontrol et
-        if (!$course->is_active) {
-            return redirect()->route('courses.index')->with('error', 'Bu kurs şu anda kayıtlara kapalıdır.');
+        try {
+            // Kurs bulma işlemi
+            $course = Course::where('slug', $slug)->first();
+            
+            if (!$course) {
+                \Log::error('Kurs bulunamadı: ' . $slug);
+                return redirect()->route('courses.index')->with('error', 'Kurs bulunamadı.');
+            }
+            
+            \Log::info('Kurs bulundu: ' . $course->name);
+            
+            // İlişkileri yükleme
+            $course->load(['courseType', 'courseLevel', 'teacher', 'courseFrequency', 'category']);
+            
+            // Kontroller...
+            if (!$course->is_active) {
+                \Log::info('Kurs aktif değil: ' . $course->name);
+                return redirect()->route('courses.index')->with('error', 'Bu kurs şu anda kayıtlara kapalıdır.');
+            }
+            
+            // Benzer kursları bul
+            $similarCourses = $this->getSimilarCourses($course);
+            
+            \Log::info('Register view döndürülüyor');
+            
+            return view('courses.register', [
+                'course' => $course,
+                'similarCourses' => $similarCourses
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Register metodu hatası: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            return redirect()->back()->with('error', 'Bir hata oluştu.');
         }
-        
-        // Kursun kontenjanının dolu olup olmadığını kontrol et
-        if ($course->max_students && $course->students->count() >= $course->max_students) {
-            return redirect()->route('courses.detail', $course->slug)->with('error', 'Bu kursun kontenjanı dolmuştur.');
-        }
-        
-        // Kullanıcının daha önce kursa kayıt olup olmadığını kontrol et
-        if (auth()->check() && $course->students->contains('id', auth()->id())) {
-            return redirect()->route('courses.detail', $course->slug)->with('error', 'Bu kursa zaten kayıtlısınız.');
-        }
-        
-        // Benzer kursları bul
-        $similarCourses = $this->getSimilarCourses($course);
-        
-        return view('courses.register', [
-            'course' => $course,
-            'similarCourses' => $similarCourses
-        ]);
     }
     
     /**
-     * Kurs kaydını işle
-     */
-    public function registerSubmit(Request $request, $id)
-    {
-        // Form validasyonu
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:20',
-            'payment_method' => 'required|in:credit_card,bank_transfer,online_payment',
-            'terms' => 'required|accepted',
-            // Diğer alanlar
-        ]);
-        
-        $course = Course::findOrFail($id);
-        
-        // Kullanıcı oturum açmamışsa kayıt ol
-        if (!auth()->check()) {
-            // E-posta adresi kullanılıyor mu kontrol et
-            $existingUser = User::where('email', $validatedData['email'])->first();
-            
-            if ($existingUser) {
-                return redirect()->back()->with('error', 'Bu e-posta adresi zaten kullanılıyor. Lütfen giriş yapın veya farklı bir e-posta adresi kullanın.');
-            }
-            
-            // Yeni kullanıcı oluştur
-            $user = User::create([
-                'name' => $validatedData['name'],
-                'email' => $validatedData['email'],
-                'phone' => $validatedData['phone'],
-                'password' => bcrypt(uniqid()) // Geçici şifre (daha sonra değiştirmesi için e-posta gönderilecek)
-            ]);
-            
-            // Öğrenci rolü ata
-            $user->assignRole('ogrenci');
-            
-            // Kullanıcı adına oturum aç
-            auth()->login($user);
-        } else {
-            $user = auth()->user();
-        }
-        
-        // Kursa kayıt ol
-        $user->enrolledCourses()->attach($course->id, [
-            'paid_amount' => $course->discount_price ?? $course->price,
-            'payment_completed' => $validatedData['payment_method'] === 'bank_transfer' ? false : true,
-            'enrollment_date' => now(),
-            'status_id' => 1, // Aktif/kayıtlı durumu
-            'notes' => 'Ödeme yöntemi: ' . $validatedData['payment_method']
-        ]);
-        
-        // Ödeme yöntemine göre yönlendirme
-        if ($validatedData['payment_method'] === 'credit_card' || $validatedData['payment_method'] === 'online_payment') {
-            // Kredi kartı ödeme sayfasına yönlendir (bu örnek için direk başarılı sayfaya gidiyoruz)
-            return redirect()->route('course.register.success');
-        } else {
-            // Banka havalesi bilgileri için başarılı sayfasına yönlendir
-            return redirect()->route('course.register.success')->with([
-                'payment_method' => 'bank_transfer',
-                'course_name' => $course->name,
-                'amount' => $course->discount_price ?? $course->price
-            ]);
-        }
+ * Kurs kaydını işle
+ */
+public function registerSubmit(Request $request, $slug)
+{
+    // Kursu bul veya 404 hatası ver
+    $course = Course::where('slug', $slug)->firstOrFail();
+    
+    // Kullanıcı giriş yapmış mı kontrol et
+    if (!Auth::check()) {
+        return redirect()->route('login')
+            ->with('error', 'Kurs kaydı yapmak için önce giriş yapmalısınız.');
     }
     
+    $user = Auth::user();
+    
+    // Kullanıcı zaten bu kursa kayıtlı mı kontrol et
+    if ($user->enrolledCourses()->where('course_id', $course->id)->exists()) {
+        // İsteğe bağlı olarak, zaten kaydolduğuna dair bir mesaj gösterilebilir
+        return redirect()->route('courses.detail', $course->slug)
+            ->with('info', 'Bu kursa zaten kayıtlısınız.');
+    }
+    
+    // Şartlar ve koşulları kabul ettiğinden emin ol
+    $request->validate([
+        'terms' => 'required',
+    ], [
+        'terms.required' => 'Kurs kaydı için şartlar ve koşulları kabul etmelisiniz.',
+    ]);
+    
+    // Bültene abone olmak isteyip istemediğini kontrol et
+    $subscribeNewsletter = $request->has('newsletter');
+    
+    // CourseUser pivot tablosuna kayıt ekle
+    // Status_id = 1 (Onay bekliyor durumu için)
+    $enrollmentData = [
+        'enrollment_date' => now(),
+        'status_id' => 1, // Onay bekliyor durumu
+        'paid_amount' => 0, // Şimdilik 0, ödeme sistemine göre değişecek
+        'payment_completed' => false,
+        'notes' => 'Otomatik kayıt', 
+        'approval_status' => false // Onay bekliyor
+    ];
+    
+    // Kursa kaydol
+    $user->enrolledCourses()->attach($course->id, $enrollmentData);
+    
+    // İsteğe bağlı: Kullanıcıyı bültene abone yap
+    if ($subscribeNewsletter) {
+        // Burada newsletter işlemleri yapılabilir
+    }
+    
+    // Başarılı kayıt sonrası kullanıcıyı başarı sayfasına yönlendir
+    return redirect()->route('course.register.success', ['slug' => $course->slug]);
+}
+
     /**
      * Kayıt başarılı sayfasını göster
      */
-    public function registerSuccess()
+    public function registerSuccess(Request $request)
     {
-        return view('courses.register-success');
+        $slug = $request->query('slug');
+        
+        // Slug varsa kursu getir
+        $course = null;
+        if ($slug) {
+            $course = Course::where('slug', $slug)->first();
+        }
+        
+        return view('courses.register-success', compact('course'));
     }
-    
     /**
      * Kurs değerlendirme/yorum ekleme
      */

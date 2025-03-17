@@ -15,6 +15,7 @@
                 <a href="{{ url('/admin/dashboard') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/dashboard') ? 'text-red-400' : '' }}">Dashboard</a>
                 <a href="{{ url('/admin/users') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/users*') ? 'text-red-400' : '' }}">Kullanıcılar</a>
                 <a href="{{ url('/admin/courses') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/courses*') ? 'text-red-400' : '' }}">Kurslar</a>
+                <a href="{{ url('/admin/sms') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/sms*') ? 'text-red-400' : '' }}">SMS Yönetimi</a>
                 <a href="{{ url('/admin/reports') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/reports*') ? 'text-red-400' : '' }}">Raporlar</a>
                 <a href="{{ url('/') }}" class="text-white hover:text-red-400 font-medium transition duration-200">Ana Siteye Dön</a>
             </div>
@@ -58,6 +59,7 @@
         <a href="{{ url('/admin/dashboard') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/dashboard') ? 'text-red-400' : '' }}">Dashboard</a>
         <a href="{{ url('/admin/users') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/users*') ? 'text-red-400' : '' }}">Kullanıcılar</a>
         <a href="{{ url('/admin/courses') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/courses*') ? 'text-red-400' : '' }}">Kurslar</a>
+        <a href="{{ url('/admin/sms') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/sms*') ? 'text-red-400' : '' }}">SMS Yönetimi</a>
         <a href="{{ url('/admin/reports') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/reports*') ? 'text-red-400' : '' }}">Raporlar</a>
         <a href="{{ url('/') }}" class="block py-2 text-white hover:text-red-400 font-medium">Ana Siteye Dön</a>
     </div>

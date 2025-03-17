@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Course;
-use App\Models\CourseAnnouncement;
-use App\Models\CourseHomework;
+use App\Models\Announcement;
 use Illuminate\Support\Facades\Auth;
 
 class StudentCourseController extends Controller
@@ -16,35 +15,67 @@ class StudentCourseController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
-        $enrolledCourses = $user->enrolledCourses()->get();
-        
-        return view('student.courses.index', compact('enrolledCourses'));
+        try {
+            $user = Auth::user();
+            
+            // Öğrencinin tüm onaylanmış ve aktif kurslarını getir
+            $enrolledCourses = $user->enrolledCourses()
+                ->wherePivot('status_id', 1) // Active status_id (onaylanmış)
+                ->where('is_active', true)
+                ->with('teacher', 'courseType', 'courseLevel') // İlişkili modelleri yükle
+                ->get();
+            
+            return view('student.courses.index', compact('enrolledCourses'));
+        } catch (\Exception $e) {
+            // Hata logla
+            \Log::error('Kurs listesi hatası: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->with('error', 'Kurslarınız listelenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+        }
     }
     
     /**
      * Kurs detay sayfasını gösterir - sadece kayıtlı olan öğrenciler için
      */
-    public function showCourseDetail($id)
-    {
+/**
+ * Kurs detay sayfasını gösterir - sadece kayıtlı olan öğrenciler için
+ */
+public function showCourseDetail($slug)
+{
+    try {
         $user = Auth::user();
-        $course = Course::findOrFail($id);
+        $course = Course::where('slug', $slug)->firstOrFail();
         
-        // Kullanıcının bu kursa kayıtlı olup olmadığını kontrol et
-        if (!$user->enrolledCourses->contains($course->id)) {
-            return redirect()->route('ogrenci.kurslarim')
-                ->with('error', 'Bu kursa erişim izniniz bulunmamaktadır.');
+        // Kullanıcının bu kursa ACTIVE (status_id: 1) kaydı olup olmadığını kontrol et
+        $enrollment = $user->enrolledCourses()
+            ->where('course_id', $course->id)
+            ->wherePivot('status_id', 1) // Active status_id
+            ->first();
+        
+        if (!$enrollment) {
+            // Kursun genel detay sayfasına yönlendir
+            return redirect()->route('courses.detail', $course->slug)
+                ->with('error', 'Bu kursa erişim izniniz bulunmamaktadır. Lütfen önce kursa kaydolun veya yönetici onayını bekleyin.');
         }
         
-        // Kurs duyurularını getir (gerçek veri olmadığı için şimdilik rastgele duyurular oluşturalım)
-        $announcements = $this->getDummyAnnouncements();
+        // Kurs duyurularını getir (gerçek veri)
+        $announcements = Announcement::where('course_id', $course->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
         
-        // Kurs ödevlerini getir (gerçek veri olmadığı için şimdilik rastgele ödevler oluşturalım)
+        // Kurs ödevlerini getir (dummy veri)
         $homeworks = $this->getDummyHomeworks();
         
         return view('student.courses.detail-enrollment', compact('course', 'announcements', 'homeworks'));
+    } catch (\Exception $e) {
+        // Hata logla
+        \Log::error('Kurs detay hatası: ' . $e->getMessage());
+        
+        return redirect()->route('ogrenci.kurslarim')
+            ->with('error', 'Kurs detayları yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
     }
-    
+}
     /**
      * Ödev gönder (şimdilik işlevsellik eklemiyoruz)
      */
@@ -56,29 +87,7 @@ class StudentCourseController extends Controller
     /**
      * Geçici duyurular oluştur (gerçek veritabanı yerine)
      */
-    private function getDummyAnnouncements()
-    {
-        return [
-            [
-                'id' => 1,
-                'title' => 'Haftalık Program Değişikliği',
-                'content' => 'Önümüzdeki hafta dersin saati 18:00\'dan 19:00\'a alınmıştır. Lütfen dikkat ediniz.',
-                'created_at' => '2023-04-01 10:15:00'
-            ],
-            [
-                'id' => 2,
-                'title' => 'Yeni Kaynaklar Eklendi',
-                'content' => 'Ders materyallerine yeni kaynaklar eklenmiştir. Kaynaklar sekmesinden erişebilirsiniz.',
-                'created_at' => '2023-03-25 14:30:00'
-            ],
-            [
-                'id' => 3,
-                'title' => 'Quiz Hatırlatması',
-                'content' => 'Yarın dersimizin ilk 15 dakikasında küçük bir quiz yapılacaktır. Lütfen hazırlıklı geliniz.',
-                'created_at' => '2023-03-20 09:45:00'
-            ],
-        ];
-    }
+ 
     
     /**
      * Geçici ödevler oluştur (gerçek veritabanı yerine)

@@ -94,7 +94,7 @@
                                         </div>
                                         
                                         <div class="flex justify-between items-center mt-4">
-                                            <a href="{{ route('ogrenci.kurs-detay', $course->id) }}" class="bg-[#1a2e5a] hover:bg-[#132447] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-300">
+                                            <a href="{{ route('ogrenci.kurs-detay', $course->slug) }}" class="bg-[#1a2e5a] hover:bg-[#132447] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-300">
                                                 Detaya Git
                                             </a>
                                             
@@ -214,7 +214,7 @@
                                     </div>
                                     
                                     <div class="flex justify-between items-center mt-4">
-                                        <a href="{{ route('ogrenci.kurs-detay', $course->id) }}" class="bg-[#1a2e5a] hover:bg-[#132447] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-300">
+                                        <a href="{{ route('ogrenci.kurs-detay', $course->slug) }}" class="bg-[#1a2e5a] hover:bg-[#132447] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-300">
                                             Detaya Git
                                         </a>
                                         
@@ -314,7 +314,7 @@
                                     </div>
                                     
                                     <div class="flex justify-between items-center mt-4">
-                                        <a href="{{ route('ogrenci.kurs-detay', $course->id) }}" class="bg-[#1a2e5a] hover:bg-[#132447] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-300">
+                                        <a href="{{ route('ogrenci.kurs-detay', $course->slug) }}" class="bg-[#1a2e5a] hover:bg-[#132447] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-300">
                                             Detaya Git
                                         </a>
                                         

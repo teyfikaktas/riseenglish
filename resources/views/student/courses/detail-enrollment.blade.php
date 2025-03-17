@@ -208,27 +208,28 @@
         <h2 class="text-2xl font-bold text-[#1a2e5a] mb-6">Kurs Duyuruları</h2>
         
         @if(count($announcements) > 0)
-            <div class="space-y-6">
-                @foreach($announcements as $announcement)
-                    <div class="bg-gray-50 rounded-lg p-5 shadow-sm border-l-4 border-[#1a2e5a]">
-                        <div class="flex justify-between items-start">
-                            <h3 class="text-lg font-semibold text-[#1a2e5a]">{{ $announcement['title'] }}</h3>
-                            <span class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($announcement['created_at'])->format('d.m.Y H:i') }}</span>
-                        </div>
-                        <div class="mt-3 text-gray-700">
-                            {{ $announcement['content'] }}
-                        </div>
+        <div class="space-y-6">
+            @foreach($announcements as $announcement)
+                <div class="bg-gray-50 rounded-lg p-5 shadow-sm border-l-4 border-[#1a2e5a]">
+                    <div class="flex justify-between items-start">
+                        <h3 class="text-lg font-semibold text-[#1a2e5a]">{{ $announcement->title }}</h3>
+                        <span class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($announcement->created_at)->format('d.m.Y H:i') }}</span>
                     </div>
-                @endforeach
-            </div>
-        @else
-            <div class="bg-gray-50 p-8 rounded-lg text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <p class="text-gray-600">Henüz duyuru bulunmamaktadır.</p>
-            </div>
-        @endif
+                    <div class="mt-3 text-gray-700">
+                        {{ $announcement->content }}
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @else
+        <div class="bg-gray-50 p-8 rounded-lg text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <p class="text-gray-600 font-medium">Henüz duyuru bulunmamaktadır.</p>
+            <p class="text-sm text-gray-500 mt-2">Kursunuzla ilgili duyurular burada görünecektir.</p>
+        </div>
+    @endif
     </div>
     
     <!-- Ödevler Tab İçeriği -->
@@ -543,6 +544,22 @@
         </div>
     </div>
 </div>
+<div id="modal-overlay" class="fixed inset-0 bg-gray-700 bg-opacity-30 backdrop-blur-sm z-50 hidden items-center justify-center transition-all duration-300">
+    <div id="modal-container" class="w-full max-w-5xl transform scale-95 transition-all duration-300 ease-in-out flex flex-col">
+        <div class="bg-white rounded-t-xl shadow-2xl border border-gray-200">
+            <div class="flex items-center justify-between p-5 border-b border-gray-100">
+                <h3 id="modal-title" class="text-2xl font-bold text-[#1a2e5a]"></h3>
+                <button id="modal-close" class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full focus:outline-none transition-colors duration-200">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="modal-content" class="p-8 max-h-[70vh] overflow-y-auto bg-white rounded-b-xl"></div>
+        </div>
+    </div>
+</div>
+
 <!-- Ödev Ekleme Modal'ı -->
 <div id="homeworkModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
@@ -858,6 +875,190 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+document.addEventListener('DOMContentLoaded', function() {
+    // Sayfa yüklendiğinde modalı hazırla
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalContainer = document.getElementById('modal-container');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    const modalClose = document.getElementById('modal-close');
+    
+    // Animasyonlu açılış kapanış için CSS sınıflarını ekle
+    modalOverlay.classList.add('opacity-0');
+    modalContainer.classList.add('opacity-0', 'scale-95');
+    
+    // Tüm duyurular, ödevler ve geri bildirimler için tıklanabilir sınıf ekle
+    const announcements = document.querySelectorAll('#content-announcements .bg-gray-50');
+    const homeworks = document.querySelectorAll('#content-homework .bg-gray-50');
+    const pastHomeworks = document.querySelectorAll('#content-past-homework .bg-gray-50');
+    const feedbacks = document.querySelectorAll('#content-teacher-feedback .bg-gray-50');
+    
+    const allItems = [...announcements, ...homeworks, ...pastHomeworks, ...feedbacks];
+    
+    allItems.forEach(item => {
+        // Öğelere stil ekle
+        item.classList.add('hover:shadow-lg', 'hover:border-l-8', 'transition-all', 'duration-200', 'cursor-pointer');
+        
+        item.addEventListener('click', function(e) {
+            // Butonlara tıklandığında modalı açmayı engelle
+            if (e.target.closest('button')) {
+                return;
+            }
+            
+            // Başlığı al
+            const title = item.querySelector('h3').textContent;
+            modalTitle.textContent = title;
+            
+            // İçeriğin bir kopyasını oluştur
+            const contentClone = item.cloneNode(true);
+            
+            // Kart stillerini temizle
+            contentClone.classList.remove('p-5', 'shadow-sm', 'rounded-lg', 'cursor-pointer', 'hover:shadow-lg', 'hover:border-l-8');
+            contentClone.style.padding = '0';
+            contentClone.style.border = 'none';
+            
+            // Tüm metin içeriğini büyüt ve okunabilir yap
+            const titleElement = contentClone.querySelector('h3');
+            if (titleElement) {
+                titleElement.classList.remove('text-lg');
+                titleElement.classList.add('text-2xl', 'mb-4');
+            }
+            
+            // İçerik metinlerini geliştir
+            const descriptions = contentClone.querySelectorAll('.mt-3.text-gray-700, .text-gray-700');
+            descriptions.forEach(desc => {
+                desc.classList.remove('mt-3');
+                desc.classList.add('mt-6', 'space-y-4');
+                
+                // Paragrafları büyüt
+                const paragraphs = desc.querySelectorAll('p');
+                paragraphs.forEach(p => {
+                    p.style.fontSize = '1.1rem';
+                    p.style.lineHeight = '1.8';
+                });
+                
+                // Liste öğelerini büyüt ve aralarına boşluk ekle
+                const listItems = desc.querySelectorAll('li');
+                listItems.forEach(li => {
+                    li.style.fontSize = '1.1rem';
+                    li.style.lineHeight = '1.8';
+                    li.style.marginBottom = '0.75rem';
+                });
+            });
+            
+            // Tarihleri ve meta bilgileri geliştir
+            const dateLabels = contentClone.querySelectorAll('.text-sm.text-gray-500');
+            dateLabels.forEach(label => {
+                label.classList.remove('text-sm');
+                label.classList.add('text-base', 'py-2');
+            });
+            
+            // Butonları büyüt ve güzelleştir
+            const buttons = contentClone.querySelectorAll('button');
+            buttons.forEach(button => {
+                // Görüntüle butonu
+                if (button.textContent.includes('Görüntüle')) {
+                    button.classList.remove('text-sm', 'px-3', 'py-1.5');
+                    button.classList.add('text-base', 'px-6', 'py-2.5', 'rounded-lg', 'shadow-md', 'hover:shadow-lg');
+                } 
+                // İndir butonu
+                else if (button.textContent.includes('İndir')) {
+                    button.classList.remove('text-sm', 'px-3', 'py-1.5');
+                    button.classList.add('text-base', 'px-6', 'py-2.5', 'rounded-lg', 'shadow-md', 'hover:shadow-lg');
+                }
+                // Yanıtla butonu
+                else if (button.textContent.includes('Yanıtla')) {
+                    button.classList.remove('text-sm');
+                    button.classList.add('text-base', 'px-4', 'py-2', 'bg-blue-100', 'hover:bg-blue-200', 'rounded-lg');
+                }
+            });
+            
+            // Modal içeriğini temizle ve içeriği ekle
+            modalContent.innerHTML = '';
+            
+            // Eğer geri bildirim/ödev içeriği ise daha ayrıntılı bilgi göster
+            if (contentClone.querySelector('.list-disc') || contentClone.textContent.includes('Perfect Tense')) {
+                // Bir kapsayıcı div ekle
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'space-y-6';
+                
+                // İçeriği zenginleştir
+                const enhancedContent = document.createElement('div');
+                enhancedContent.className = 'p-6 bg-blue-50 bg-opacity-70 rounded-xl shadow-inner';
+                enhancedContent.innerHTML = `
+                    <h4 class="text-xl font-semibold text-blue-900 mb-4">Detaylı Bilgi</h4>
+                    ${contentClone.innerHTML}
+                `;
+                
+                // İpuçları veya ek bilgiler ekle
+                const tipsSection = document.createElement('div');
+                tipsSection.className = 'mt-8 p-6 bg-yellow-50 rounded-xl';
+                tipsSection.innerHTML = `
+                    <h4 class="flex items-center text-xl font-semibold text-yellow-800 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Hatırlatmalar ve İpuçları
+                    </h4>
+                    <ul class="list-disc pl-6 space-y-2 text-yellow-900">
+                        <li>Benzer konular için ders notlarınızı gözden geçirebilirsiniz.</li>
+                        <li>Sorularınız için öğretmeninize doğrudan mesaj gönderebilirsiniz.</li>
+                        <li>Ödevinizi zamanında teslim etmeye özen gösteriniz.</li>
+                    </ul>
+                `;
+                
+                contentWrapper.appendChild(enhancedContent);
+                contentWrapper.appendChild(tipsSection);
+                modalContent.appendChild(contentWrapper);
+            } else {
+                // Standart içerik için
+                modalContent.appendChild(contentClone);
+            }
+            
+            // Modalı göster - animasyonlu
+            modalOverlay.classList.remove('hidden');
+            modalOverlay.classList.add('flex');
+            
+            // Animasyon için kısa bir gecikme
+            setTimeout(() => {
+                modalOverlay.classList.remove('opacity-0');
+                modalOverlay.classList.add('opacity-100');
+                modalContainer.classList.remove('opacity-0', 'scale-95');
+                modalContainer.classList.add('opacity-100', 'scale-100');
+            }, 10);
+        });
+    });
+    
+    // Modal kapatma işlevi
+    function closeModal() {
+        modalOverlay.classList.remove('opacity-100');
+        modalContainer.classList.remove('opacity-100', 'scale-100');
+        modalOverlay.classList.add('opacity-0');
+        modalContainer.classList.add('opacity-0', 'scale-95');
+        
+        setTimeout(() => {
+            modalOverlay.classList.add('hidden');
+            modalOverlay.classList.remove('flex');
+        }, 300); // Geçiş süresi
+    }
+    
+    // Kapat butonuyla modalı kapat
+    modalClose.addEventListener('click', closeModal);
+    
+    // Modal dışına tıklandığında kapat
+    modalOverlay.addEventListener('click', function(e) {
+        if (e.target === modalOverlay) {
+            closeModal();
+        }
+    });
+    
+    // ESC tuşuyla modalı kapat
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
 });
 </script>
 
