@@ -34,95 +34,173 @@
 <div class="bg-gray-50 py-12">
     <div class="container mx-auto px-4">
         <div class="flex flex-col lg:flex-row">
-            <!-- Filtreler (Sol Kenar) -->
-            <div class="w-full lg:w-1/4 mb-8 lg:mb-0 lg:pr-8">
-                <div class="bg-white rounded-lg shadow-md p-6 sticky top-6">
-                    <h3 class="text-lg font-bold text-[#1a2e5a] mb-4 pb-2 border-b border-gray-200">Filtreleme Seçenekleri</h3>
-                    
-                    <!-- Filtre grupları -->
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-2">Kurs Kategorisi</h4>
-                        <div class="space-y-2 max-h-48 overflow-y-auto pr-2">
-                            @forelse($courseTypes as $type)
-                            <label class="flex items-center cursor-pointer group">
-                                <input type="checkbox" name="course_type[]" value="{{ $type->id }}" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
-                                <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">{{ $type->name }}</span>
-                            </label>
-                            @empty
-                            <p class="text-gray-500 text-sm">Kategori bulunamadı</p>
-                            @endforelse
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-2">Seviye</h4>
-                        <div class="space-y-2">
-                            @forelse($courseLevels as $level)
-                            <label class="flex items-center cursor-pointer group">
-                                <input type="checkbox" name="course_level[]" value="{{ $level->id }}" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
-                                <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">{{ $level->name }}</span>
-                            </label>
-                            @empty
-                            <p class="text-gray-500 text-sm">Seviye bulunamadı</p>
-                            @endforelse
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-2">Eğitim Durumu</h4>
-                        <div class="space-y-2">
-                            <label class="flex items-center cursor-pointer group">
-                                <input type="checkbox" name="course_status[]" value="upcoming" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
-                                <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">Yakında Başlayacak</span>
-                            </label>
-                            <label class="flex items-center cursor-pointer group">
-                                <input type="checkbox" name="course_status[]" value="ongoing" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
-                                <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">Devam Eden</span>
-                            </label>
-                            <label class="flex items-center cursor-pointer group">
-                                <input type="checkbox" name="course_status[]" value="completed" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
-                                <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">Tamamlanan</span>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-2">Özellikler</h4>
-                        <div class="space-y-2">
-                            <label class="flex items-center cursor-pointer group">
-                                <input type="checkbox" name="features[]" value="certificate" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
-                                <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">Sertifikalı</span>
-                            </label>
-                            <label class="flex items-center cursor-pointer group">
-                                <input type="checkbox" name="features[]" value="discount" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
-                                <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">İndirimli</span>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-2">Fiyat Aralığı</h4>
-                        <div class="px-2">
-                            <div class="flex items-center justify-between mb-2">
-                                <span id="minPriceValue" class="text-sm text-gray-600">0 ₺</span>
-                                <span id="maxPriceValue" class="text-sm text-gray-600">5000 ₺</span>
-                            </div>
-                            <div class="relative">
-                                <input type="range" id="priceRange" min="0" max="5000" step="100" value="5000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex mt-8">
-                        <button id="applyFilters" class="flex-1 bg-[#1a2e5a] hover:bg-[#152347] text-white py-2 px-4 rounded-lg mr-2 transition-colors duration-300">
-                            Filtrele
-                        </button>
-                        <button id="clearFilters" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg ml-2 transition-colors duration-300">
-                            Temizle
-                        </button>
-                    </div>
+       <!-- Filtreler (Sol Kenar) -->
+<div class="w-full lg:w-1/4 mb-8 lg:mb-0 lg:pr-8" x-data="{ mobileFilterOpen: false }">
+    <div class="block lg:hidden mb-4">
+        <button @click="mobileFilterOpen = !mobileFilterOpen" class="w-full bg-[#1a2e5a] hover:bg-[#152347] text-white py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-between">
+            <span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                Filtreleme Seçenekleri
+            </span>
+            <svg x-show="!mobileFilterOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+            <svg x-show="mobileFilterOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+        </button>
+    </div>
+    
+    <!-- Filtreleme içeriği - masaüstünde her zaman görünür, mobilde açılıp kapanabilir -->
+    <div class="bg-white rounded-lg shadow-md p-6 sticky top-6" 
+         x-show="mobileFilterOpen || window.innerWidth >= 1024" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-95"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform scale-100"
+         x-transition:leave-end="opacity-0 transform scale-95">
+        
+        <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
+            <h3 class="text-lg font-bold text-[#1a2e5a]">Filtreleme Seçenekleri</h3>
+            <!-- Sadece mobil görünümde kapatma butonu -->
+            <button @click="mobileFilterOpen = false" class="lg:hidden text-gray-500 hover:text-[#e63946]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Kurs Kategorisi Filtresi -->
+        <div class="mb-6" x-data="{ categoryOpen: true }">
+            <div @click="categoryOpen = !categoryOpen" class="flex justify-between items-center cursor-pointer mb-2">
+                <h4 class="font-semibold text-gray-700">Kurs Kategorisi</h4>
+                <svg x-show="!categoryOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                <svg x-show="categoryOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div x-show="categoryOpen" class="space-y-2 max-h-48 overflow-y-auto pr-2">
+                @forelse($courseTypes as $type)
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="course_type[]" value="{{ $type->id }}" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
+                    <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">{{ $type->name }}</span>
+                </label>
+                @empty
+                <p class="text-gray-500 text-sm">Kategori bulunamadı</p>
+                @endforelse
+            </div>
+        </div>
+        
+        <!-- Seviye Filtresi -->
+        <div class="mb-6" x-data="{ levelOpen: true }">
+            <div @click="levelOpen = !levelOpen" class="flex justify-between items-center cursor-pointer mb-2">
+                <h4 class="font-semibold text-gray-700">Seviye</h4>
+                <svg x-show="!levelOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                <svg x-show="levelOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div x-show="levelOpen" class="space-y-2">
+                @forelse($courseLevels as $level)
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="course_level[]" value="{{ $level->id }}" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
+                    <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">{{ $level->name }}</span>
+                </label>
+                @empty
+                <p class="text-gray-500 text-sm">Seviye bulunamadı</p>
+                @endforelse
+            </div>
+        </div>
+        
+        <!-- Eğitim Durumu Filtresi -->
+        <div class="mb-6" x-data="{ statusOpen: true }">
+            <div @click="statusOpen = !statusOpen" class="flex justify-between items-center cursor-pointer mb-2">
+                <h4 class="font-semibold text-gray-700">Eğitim Durumu</h4>
+                <svg x-show="!statusOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                <svg x-show="statusOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div x-show="statusOpen" class="space-y-2">
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="course_status[]" value="upcoming" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
+                    <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">Yakında Başlayacak</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="course_status[]" value="ongoing" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
+                    <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">Devam Eden</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="course_status[]" value="completed" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
+                    <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">Tamamlanan</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Özellikler Filtresi -->
+        <div class="mb-6" x-data="{ featuresOpen: true }">
+            <div @click="featuresOpen = !featuresOpen" class="flex justify-between items-center cursor-pointer mb-2">
+                <h4 class="font-semibold text-gray-700">Özellikler</h4>
+                <svg x-show="!featuresOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                <svg x-show="featuresOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div x-show="featuresOpen" class="space-y-2">
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="features[]" value="certificate" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
+                    <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">Sertifikalı</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="features[]" value="discount" class="form-checkbox h-5 w-5 text-[#e63946] rounded transition duration-150 ease-in-out">
+                    <span class="ml-2 text-gray-700 group-hover:text-[#e63946]">İndirimli</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Fiyat Aralığı Filtresi -->
+        <div class="mb-6" x-data="{ priceOpen: true }">
+            <div @click="priceOpen = !priceOpen" class="flex justify-between items-center cursor-pointer mb-2">
+                <h4 class="font-semibold text-gray-700">Fiyat Aralığı</h4>
+                <svg x-show="!priceOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                <svg x-show="priceOpen" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div x-show="priceOpen" class="px-2">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="minPriceValue" class="text-sm text-gray-600">0 ₺</span>
+                    <span id="maxPriceValue" class="text-sm text-gray-600">20000 ₺</span>
+                </div>
+                <div class="relative">
+                    <input type="range" id="priceRange" min="0" max="5000" step="100" value="5000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
             </div>
+        </div>
+        
+        <div class="flex mt-8">
+            <button id="applyFilters" class="flex-1 bg-[#1a2e5a] hover:bg-[#152347] text-white py-2 px-4 rounded-lg mr-2 transition-colors duration-300">
+                Filtrele
+            </button>
+            <button id="clearFilters" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg ml-2 transition-colors duration-300">
+                Temizle
+            </button>
+        </div>
+    </div>
+</div>
             
             <!-- Kurslar (Sağ Taraf) -->
             <div class="w-full lg:w-3/4">
@@ -678,6 +756,13 @@
 <!-- JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+        // Ekran genişliği değişimlerini dinle - mobil filtre görünürlüğü için
+        window.addEventListener('resize', function() {
+        if (window.innerWidth >= 1024) {
+            // Geniş ekranlarda filtreleri her zaman göster (Alpine.js ile yönetiliyor)
+            document.querySelector('.bg-white.rounded-lg.shadow-md.p-6').style.display = 'block';
+        }
+    });
     // Görünüm değiştirme
     const gridView = document.getElementById('gridView');
     const listView = document.getElementById('listView');

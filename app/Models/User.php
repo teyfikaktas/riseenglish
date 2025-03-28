@@ -21,8 +21,13 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'parent_phone_number',
+        'phone',             // Telefon numarası alanı
+        'phone_verified',    // Telefon doğrulama durumu
+        'phone_verified_at', // Telefon doğrulama tarihi
         'password',
     ];
+
 
     /**
      * The attributes that should be hidden for serialization.

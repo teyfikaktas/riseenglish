@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Course;
 use Illuminate\Support\Facades\DB;
+use App\Netgsm\Otp\otp;
 
 class SmsController extends Controller
 {
@@ -160,24 +161,6 @@ class SmsController extends Controller
     /**
      * Bireysel SMS gönderimi
      */
-    public function sendIndividual(Request $request)
-    {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'message' => 'required|string|max:160',
-        ]);
-
-        $user = User::find($request->user_id);
-        
-        if (!$user->phone) {
-            return redirect()->back()->with('error', 'Kullanıcının telefon numarası bulunmamaktadır.');
-        }
-        
-        // SMS gönderimi burada gerçekleştirilecek
-        // Şimdilik sadece simüle ediyoruz
-        
-        return redirect()->back()->with('success', $user->name . ' kullanıcısına SMS başarıyla gönderildi.');
-    }
 
     /**
      * Toplu SMS gönderimi
@@ -223,4 +206,5 @@ class SmsController extends Controller
         
         return redirect()->back()->with('success', $successMessage . ' (' . count($recipients) . ' kişi)');
     }
+    
 }

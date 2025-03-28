@@ -26,7 +26,18 @@ class StudentCourseController extends Controller
                 ->with('teacher', 'courseType', 'courseLevel') // İlişkili modelleri yükle
                 ->get();
             
-            return view('student.courses.index', compact('enrolledCourses'));
+            // Öğrencinin onay bekleyen kurslarını getir - doğru syntax ile
+// Öğrencinin onay bekleyen kurslarını getir (status_id = 4 olanlar)
+        $pendingCourses = $user->enrolledCourses()
+            ->where('is_active', true)
+            ->wherePivot('status_id', 4) // Sadece status_id = 4 olanları getir
+            ->with('teacher', 'courseType', 'courseLevel')
+            ->get();
+            
+            // Aktif ödevleri getir
+            $activeHomeworks = $this->getActiveHomeworks($user->id);
+            
+            return view('student.courses.index', compact('enrolledCourses', 'pendingCourses', 'activeHomeworks'));
         } catch (\Exception $e) {
             // Hata logla
             \Log::error('Kurs listesi hatası: ' . $e->getMessage());
@@ -40,66 +51,8 @@ class StudentCourseController extends Controller
      * Kurs detay sayfasını gösterir - sadece kayıtlı olan öğrenciler için
      */
     /**
- * Öğrencinin ödev eklemesi için metod
- */
-public function submitHomework(Request $request, $courseId)
-{
-    try {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'file' => 'nullable|file|max:10240', // 10MB maksimum
-        ]);
 
-        // Kursun var olup olmadığını kontrol et
-        $course = Course::findOrFail($courseId);
-        $user = Auth::user();
-        
-        // Kullanıcının bu kursa erişim izni var mı kontrol et
-        $enrollment = $user->enrolledCourses()
-            ->where('course_id', $course->id)
-            ->wherePivot('status_id', 1)
-            ->first();
-            
-        if (!$enrollment) {
-            return redirect()->back()->with('error', 'Bu kursa erişim yetkiniz bulunmamaktadır.');
-        }
 
-        // Dosya yükleme işlemi
-        $filePath = null;
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('homework_files', $fileName, 'public');
-        }
-
-        // Homework modeli ile ödev oluştur
-        $homework = new Homework([
-            'title' => $request->title,
-            'description' => $request->description,
-            'course_id' => $courseId,
-            'due_date' => now()->addWeek(), // Varsayılan olarak 1 hafta sonra
-            'published_at' => now(),
-            'max_score' => 100, // Varsayılan maksimum puan
-            'is_active' => true,
-            'file_path' => $filePath,
-        ]);
-
-        $homework->save();
-
-        return redirect()->back()->with('success', 'Ödeviniz başarıyla eklendi.');
-    } catch (\Exception $e) {
-        \Log::error('Ödev eklerken hata: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Ödev eklerken bir hata oluştu: ' . $e->getMessage())->withInput();
-    }
-}
-/**
- * Kurs detay sayfasını gösterir - sadece kayıtlı olan öğrenciler için
- */
-/**
- * Kurs detay sayfasını gösterir - sadece kayıtlı olan öğrenciler için
- */
-/**
  * Öğrencinin ödev dosyası yüklemesi için metod
  */
 public function submitHomeworkFile(Request $request, $slug, $homeworkId)
@@ -161,6 +114,37 @@ public function submitHomeworkFile(Request $request, $slug, $homeworkId)
         \Log::error('Ödev yükleme hatası: ' . $e->getMessage());
         return redirect()->back()->with('error', 'Ödev yüklenirken bir hata oluştu: ' . $e->getMessage())->withInput();
     }
+}
+public function submitHomework(Request $request, $slug, $homeworkId)
+{
+    $course = Course::where('slug', $slug)->firstOrFail();
+    $homework = Homework::findOrFail($homeworkId);
+    
+    // Yetkilendirme kontrolü (Öğrenci bu kursa kayıtlı mı?)
+    if (!$course->students->contains(auth()->id())) {
+        return redirect()->back()->with('error', 'Bu kursa kayıtlı değilsiniz.');
+    }
+    
+    // Dosya yükleme
+    $filePath = null;
+    if ($request->hasFile('file')) {
+        $file = $request->file('file');
+        $filePath = $file->store('homework_submissions', 'public');
+    } else {
+        return redirect()->back()->with('error', 'Lütfen bir dosya yükleyin.');
+    }
+    
+    // Ödev gönderimini oluştur
+    HomeworkSubmission::create([
+        'homework_id' => $homeworkId,
+        'user_id' => auth()->id(),
+        'file_path' => $filePath,
+        'comment' => $request->comment,
+        'submitted_at' => now(),
+        'status' => 'pending' // 'Teslim Edildi' yerine enum değerlerinden birini kullanın
+    ]);
+    
+    return redirect()->back()->with('success', 'Ödeviniz başarıyla yüklendi.');
 }
 public function showCourseDetail($slug)
 {
@@ -241,9 +225,11 @@ public function showCourseDetail($slug)
                     'due_date' => $submission->homework->due_date ? $submission->homework->due_date->format('Y-m-d H:i:s') : null,
                     'submission_date' => $submission->created_at->format('Y-m-d H:i:s'),
                     'score' => $submission->score,
-                    'max_score' => $submission->homework->max_score,
+                    'max_score' => $submission->homework->max_score ?? 100,
                     'status' => $submission->score ? 'Değerlendirildi' : 'Değerlendiriliyor',
-                    'file_path' => $submission->file_path
+                    'file_path' => $submission->file_path,
+                    'feedback' => $submission->feedback, // Eksik olan feedback anahtarı eklendi
+                    'graded_at' => $submission->graded_at ? $submission->graded_at->format('Y-m-d H:i:s') : null // Değerlendirme tarihi de eklendi
                 ];
             }
         }
@@ -264,7 +250,57 @@ public function showCourseDetail($slug)
     /**
      * Geçici duyurular oluştur (gerçek veritabanı yerine)
      */
- 
+     /**
+     * Öğrencinin aktif ödevlerini getirir
+     */
+    private function getActiveHomeworks($userId)
+    {
+        try {
+            // Öğrencinin kayıtlı olduğu kursları al
+            $enrolledCourseIds = Auth::user()->enrolledCourses()
+            ->wherePivotIn('status_id', [1, 3])
+                ->pluck('courses.id');
+            
+            // Tamamlanmış ödevleri bul
+            $completedHomeworkIds = HomeworkSubmission::where('user_id', $userId)
+                ->pluck('homework_id')
+                ->toArray();
+            
+            // Aktif ödevleri getir (tamamlanmamış ve süresi dolmamış)
+            $homeworks = Homework::whereIn('course_id', $enrolledCourseIds)
+                ->where('is_active', true)
+                ->whereNotIn('id', $completedHomeworkIds) // Tamamlanmış ödevleri hariç tut
+                ->with('course:id,name,slug') // Kurs bilgilerini de getir
+                ->orderBy('due_date', 'asc')
+                ->get();
+            
+            $formattedHomeworks = [];
+            foreach ($homeworks as $homework) {
+                $status = 'Tamamlanmadı';
+                
+                // Süresi geçmiş bir ödev mi kontrol et
+                if ($homework->due_date && $homework->due_date->isPast()) {
+                    $status = 'Süresi Doldu';
+                }
+                
+                $formattedHomeworks[] = [
+                    'id' => $homework->id,
+                    'title' => $homework->title,
+                    'description' => $homework->description,
+                    'due_date' => $homework->due_date ? $homework->due_date->format('Y-m-d H:i:s') : null,
+                    'status' => $status,
+                    'course_id' => $homework->course_id,
+                    'course_name' => $homework->course->name,
+                    'course_slug' => $homework->course->slug
+                ];
+            }
+            
+            return $formattedHomeworks;
+        } catch (\Exception $e) {
+            \Log::error('Ödevler getirilemedi: ' . $e->getMessage());
+            return [];
+        }
+    }
     
     /**
      * Geçici ödevler oluştur (gerçek veritabanı yerine)

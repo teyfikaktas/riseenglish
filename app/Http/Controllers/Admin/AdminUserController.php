@@ -77,6 +77,7 @@ class AdminUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'parent_phone_number' => 'nullable|string|max:20',
             'phone' => 'nullable|string|max:20',
             'roles' => 'required|array|min:1',
         ]);
@@ -85,6 +86,7 @@ class AdminUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'parent_phone_number' => $request->parent_phone_number,
             'phone' => $request->phone,
         ]);
     
@@ -138,47 +140,49 @@ class AdminUserController extends Controller
         return view('admin.users.edit', compact('user', 'roles', 'userRoles'));
     }
 
-    /**
-     * Kullanıcı bilgilerini güncelle
-     */
-    public function update(Request $request, User $user)
-    {
+/**
+ * Kullanıcı bilgilerini güncelle
+ */
+public function update(Request $request, User $user)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => [
+            'required',
+            'string',
+            'email',
+            'max:255',
+            Rule::unique('users')->ignore($user->id),
+        ],
+        'phone' => 'nullable|string|max:20',
+        'parent_phone_number' => 'nullable|string|max:20',
+        'roles' => 'required|array|min:1',
+    ]);
+
+    $user->update([
+        'name' => $request->name,
+        'email' => $request->email,
+        'phone' => $request->phone,
+        'parent_phone_number' => $request->parent_phone_number,
+    ]);
+
+    // Şifre güncelleme (opsiyonel)
+    if ($request->filled('password')) {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-            'phone' => 'nullable|string|max:20',
-            'roles' => 'required|array|min:1',
+            'password' => 'required|string|min:8|confirmed',
         ]);
-    
+        
         $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
         ]);
-    
-        // Şifre güncelleme (opsiyonel)
-        if ($request->filled('password')) {
-            $request->validate([
-                'password' => 'required|string|min:8|confirmed',
-            ]);
-            
-            $user->update([
-                'password' => Hash::make($request->password),
-            ]);
-        }
-    
-        // Rolleri güncelle (Spatie permission paketi kullanılıyorsa)
-        $user->syncRoles($request->roles);
-    
-        return redirect()->route('admin.users.show', $user)
-            ->with('success', 'Kullanıcı başarıyla güncellendi.');
     }
+
+    // Rolleri güncelle (Spatie permission paketi kullanılıyorsa)
+    $user->syncRoles($request->roles);
+
+    return redirect()->route('admin.users.show', $user)
+        ->with('success', 'Kullanıcı başarıyla güncellendi.');
+}
 
     /**
      * Kullanıcı kurslarını yönet

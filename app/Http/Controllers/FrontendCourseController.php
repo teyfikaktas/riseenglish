@@ -272,7 +272,7 @@ public function registerSubmit(Request $request, $slug)
     // Status_id = 1 (Onay bekliyor durumu için)
     $enrollmentData = [
         'enrollment_date' => now(),
-        'status_id' => 1, // Onay bekliyor durumu
+        'status_id' => 4, // Onay bekliyor durumu
         'paid_amount' => 0, // Şimdilik 0, ödeme sistemine göre değişecek
         'payment_completed' => false,
         'notes' => 'Otomatik kayıt', 

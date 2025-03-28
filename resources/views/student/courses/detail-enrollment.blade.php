@@ -33,136 +33,169 @@
                     @endif
                 </div>
                 
-                <!-- Sağ taraf: Kurs bilgileri -->
-                <div class="w-full md:w-3/4 md:pl-8 text-white">
-                    <h1 class="text-3xl font-bold mb-4">{{ $course->name }}</h1>
-                    
-                    <div class="mb-4">
-                        <p class="text-blue-100">{{ $course->description }}</p>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                        <!-- Temel bilgiler -->
-                        <div class="bg-gray-100 border-2 border-red-600 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center text-blue-900">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Kurs Bilgileri
-                            </h3>
-                            <ul class="space-y-2">
-                                @if($course->courseType)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Tür:</span>
-                                        <span class="text-gray-800">{{ $course->courseType->name }}</span>
-                                    </li>
-                                @endif
-                                
-                                @if($course->courseLevel)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Seviye:</span>
-                                        <span class="text-gray-800">{{ $course->courseLevel->name }}</span>
-                                    </li>
-                                @endif
-                                
-                                @if($course->courseFrequency)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Sıklık:</span>
-                                        <span class="text-gray-800">{{ $course->courseFrequency->name }}</span>
-                                    </li>
-                                @endif
-                                
-                                @if($course->total_hours)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Toplam Süre:</span>
-                                        <span class="text-gray-800">{{ $course->total_hours }} Saat</span>
-                                    </li>
-                                @endif
-                            </ul>
-                        </div>
-                        
-                        <!-- Tarihler -->
-                        <div class="bg-gray-100 border-2 border-red-600 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center text-blue-900">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                Tarih Bilgileri
-                            </h3>
-                            <ul class="space-y-2">
-                                @if($course->start_date)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Başlangıç:</span>
-                                        <span class="text-gray-800">{{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y') }}</span>
-                                    </li>
-                                @endif
-                                
-                                @if($course->end_date)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Bitiş:</span>
-                                        <span class="text-gray-800">{{ \Carbon\Carbon::parse($course->end_date)->format('d.m.Y') }}</span>
-                                    </li>
-                                @endif
-                                
-                                @if($course->start_time)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Ders Saati:</span>
-                                        <span class="text-gray-800">
-                                            {{ \Carbon\Carbon::parse($course->start_time)->format('H:i') }}
-                                            @if($course->end_time)
-                                                - {{ \Carbon\Carbon::parse($course->end_time)->format('H:i') }}
-                                            @endif
-                                        </span>
-                                    </li>
-                                @endif
-                            </ul>
-                        </div>
-                        
-                        <!-- Öğretmen ve Toplam Öğrenci Bilgisi -->
-                        <div class="bg-gray-100 border-2 border-red-600 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all">
-                            <h3 class="text-lg font-semibold mb-2 flex items-center text-blue-900">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                                Sınıf Bilgileri
-                            </h3>
-                            <ul class="space-y-2">
-                                @if($course->teacher)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Eğitmen:</span>
-                                        <span class="text-gray-800">{{ $course->teacher->name }}</span>
-                                    </li>
-                                @endif
-                                
-                                @if($course->max_students)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Kontenjan:</span>
-                                        <span class="text-gray-800">{{ $course->max_students }} Kişi</span>
-                                    </li>
-                                @endif
-                                
-                                @if($course->has_certificate)
-                                    <li class="flex items-center">
-                                        <span class="w-24 text-blue-900 font-medium">Sertifika:</span>
-                                        <span class="text-gray-800">Var</span>
-                                    </li>
-                                @endif
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <!-- Zoom bağlantısı (varsa) -->
-                    @if($course->meeting_link)
-                        <div class="mt-6">
-                            <a href="{{ $course->meeting_link }}" target="_blank" class="bg-[#e63946] hover:bg-[#d32836] text-white px-6 py-3 rounded-lg inline-flex items-center font-medium transition-colors duration-300">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                Derse Katıl (Zoom)
-                            </a>
-                        </div>
-                    @endif
+            <!-- Sağ taraf: Kurs bilgileri -->
+            <div class="w-full md:w-3/4 md:pl-8 text-white relative">
+                <!-- Arkaplan efekti (mor renkler kaldırıldı) -->
+                <div class="absolute -top-16 -right-16 w-64 h-64 bg-blue-500 rounded-full opacity-20 blur-xl"></div>
+                <div class="absolute bottom-16 left-16 w-48 h-48 bg-blue-500 rounded-full opacity-20 blur-xl"></div>
+                
+                <!-- Kurs başlığı -->
+                <h1 class="text-5xl font-black mb-6 text-white relative z-10">
+                    {{ $course->name }}
+                    <div class="h-1 w-24 bg-red-500 rounded-full mt-3"></div>
+                </h1>
+                
+                <!-- Kurs açıklaması -->
+                <div class="mb-8 p-6 bg-blue-900/30 rounded-xl backdrop-blur-md border-l-4 border-red-500 shadow-lg relative z-10">
+                    <p class="text-blue-50 leading-relaxed">{{ $course->description }}</p>
                 </div>
+                
+                <!-- Bilgi kartları -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 relative z-10">
+                    <!-- Temel bilgiler -->
+                    <div class="bg-blue-900/50 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 group overflow-hidden relative">
+                        <!-- Decorative elements (mor renk kaldırıldı) -->
+                        <div class="absolute -top-12 -right-12 w-24 h-24 bg-red-500/20 rounded-full blur-xl group-hover:bg-red-500/30 transition-all duration-500"></div>
+                        
+                        <h3 class="text-xl font-bold mb-4 flex items-center text-white group-hover:text-red-400 transition-colors duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-red-500 group-hover:text-red-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Kurs Bilgileri
+                        </h3>
+                        <div class="space-y-4">
+                            @if($course->courseType)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Tür:</span>
+                                    <span class="text-white bg-blue-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-blue-400/20">{{ $course->courseType->name }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($course->courseLevel)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Seviye:</span>
+                                    <span class="text-white bg-blue-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-blue-400/20">{{ $course->courseLevel->name }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($course->courseFrequency)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Sıklık:</span>
+                                    <span class="text-white bg-blue-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-blue-400/20">{{ $course->courseFrequency->name }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($course->total_hours)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Toplam Süre:</span>
+                                    <span class="text-white bg-blue-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-blue-400/20">{{ $course->total_hours }} Saat</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <!-- Tarihler -->
+                    <div class="bg-blue-900/50 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 group overflow-hidden relative">
+                        <!-- Decorative elements (mor renk kaldırıldı) -->
+                        <div class="absolute -top-12 -right-12 w-24 h-24 bg-red-500/20 rounded-full blur-xl group-hover:bg-red-500/30 transition-all duration-500"></div>
+                        
+                        <h3 class="text-xl font-bold mb-4 flex items-center text-white group-hover:text-red-400 transition-colors duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-red-500 group-hover:text-red-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Tarih Bilgileri
+                        </h3>
+                        <div class="space-y-4">
+                            @if($course->start_date)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Başlangıç:</span>
+                                    <span class="text-white bg-blue-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-blue-400/20">{{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y') }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($course->end_date)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Bitiş:</span>
+                                    <span class="text-white bg-blue-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-blue-400/20">{{ \Carbon\Carbon::parse($course->end_date)->format('d.m.Y') }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($course->start_time)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Ders Saati:</span>
+                                    <span class="text-white bg-blue-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-blue-400/20">
+                                        {{ \Carbon\Carbon::parse($course->start_time)->format('H:i') }}
+                                        @if($course->end_time)
+                                            - {{ \Carbon\Carbon::parse($course->end_time)->format('H:i') }}
+                                        @endif
+                                    </span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <!-- Öğretmen ve Toplam Öğrenci Bilgisi -->
+                    <div class="bg-blue-900/50 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 group overflow-hidden relative">
+                        <!-- Decorative elements (mor renk kaldırıldı) -->
+                        <div class="absolute -top-12 -right-12 w-24 h-24 bg-red-500/20 rounded-full blur-xl group-hover:bg-red-500/30 transition-all duration-500"></div>
+                        
+                        <h3 class="text-xl font-bold mb-4 flex items-center text-white group-hover:text-red-400 transition-colors duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-red-500 group-hover:text-red-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Sınıf Bilgileri
+                        </h3>
+                        <div class="space-y-4">
+                            @if($course->teacher)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Eğitmen:</span>
+                                    <span class="text-white bg-blue-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-blue-400/20">{{ $course->teacher->name }}</span>
+                                </div>
+                            @endif
+                            
+                            @if($course->max_students)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Kontenjan:</span>
+                                    <div class="flex flex-col w-full">
+                                        <span class="text-white bg-blue-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-blue-400/20 mb-2">{{ $course->students->count() }} / {{ $course->max_students }} Kişi</span>
+                                        <div class="w-full bg-blue-900/40 backdrop-blur-sm rounded-full h-2 overflow-hidden border border-blue-400/20">
+                                            <div class="bg-red-500 h-2 rounded-full transform transition-all duration-500 ease-out" style="width: {{ ($course->students->count() / $course->max_students) * 100 }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                            
+                            @if($course->has_certificate)
+                                <div class="flex items-center">
+                                    <span class="w-28 text-blue-200 font-medium">Sertifika:</span>
+                                    <span class="text-white bg-green-600/40 backdrop-blur-sm px-4 py-1.5 rounded-full text-sm font-medium shadow-inner border border-green-400/20 flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Var
+                                    </span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Zoom bağlantısı -->
+                @if($course->meeting_link)
+                    <div class="mt-10 relative z-10">
+                        <a href="{{ $course->meeting_link }}" target="_blank" class="group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-red-600 p-0.5 font-bold text-white shadow-lg">
+                            <span class="relative rounded-xl bg-red-700 backdrop-blur-sm px-8 py-4 transition-all duration-300 ease-out group-hover:bg-red-800">
+                                <span class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 group-hover:animate-pulse transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    Derse Katıl (Zoom)
+                                </span>
+                            </span>
+                        </a>
+                    </div>
+                @endif
+            </div>
             </div>
         </div>
         
@@ -182,24 +215,7 @@
                     </svg>
                     Ödevler
                 </button>
-                <button id="tab-past-homework" class="tab-button whitespace-nowrap px-6 py-4 font-medium text-gray-500 hover:text-[#1a2e5a]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Geçmiş Ödevlerim
-                </button>
-                <button id="tab-teacher-feedback" class="tab-button whitespace-nowrap px-6 py-4 font-medium text-gray-500 hover:text-[#1a2e5a]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                    </svg>
-                    Hoca Yanıtları
-                </button>
-                <button id="tab-materials" class="tab-button whitespace-nowrap px-6 py-4 font-medium text-gray-500 hover:text-[#1a2e5a]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                    Materyaller
-                </button>
+
             </div>
             <!-- Tab İçerikleri -->
 <div class="p-6">
@@ -237,12 +253,6 @@
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold text-[#1a2e5a]">Kurs Ödevleri</h2>
             
-            <button id="addHomeworkBtn" class="bg-[#1a2e5a] hover:bg-[#132447] text-white px-4 py-2 rounded-lg inline-flex items-center font-medium transition-colors duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Ödev Ekle
-            </button>
         </div>
         
         @if(count($homeworks) > 0)
@@ -378,6 +388,27 @@
                         @endif
                     </div>
                 </div>
+                
+                @if($homework['feedback'])
+                <!-- Hoca Geri Bildirimi -->
+                <div class="mt-5 border-t border-gray-200 pt-4">
+                    <h4 class="font-medium text-blue-800 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                        </svg>
+                        Hoca Geri Bildirimi:
+                    </h4>
+                    <div class="bg-blue-50 p-4 rounded-lg text-gray-700">
+                        <p>{{ $homework['feedback'] }}</p>
+                    </div>
+                    @if($homework['graded_at'])
+                    <div class="mt-2 text-sm text-gray-500 text-right">
+                        <span class="font-medium">Değerlendirme Tarihi:</span> 
+                        {{ \Carbon\Carbon::parse($homework['graded_at'])->format('d.m.Y H:i') }}
+                    </div>
+                    @endif
+                </div>
+                @endif
             </div>
         @endforeach
     </div>
@@ -392,127 +423,9 @@
     @endif
 </div>
     
-    <!-- Hoca Yanıtları Tab İçeriği -->
-    <div id="content-teacher-feedback" class="tab-content hidden">
-        <h2 class="text-2xl font-bold text-[#1a2e5a] mb-6">Hoca Yanıtları ve Geri Bildirimler</h2>
-        
-        <!-- Örnek hoca yanıtları -->
-        <div class="space-y-6">
-            <!-- Örnek Geribildirim 1 -->
-            <div class="bg-gray-50 rounded-lg overflow-hidden shadow-sm">
-                <div class="border-b border-gray-200 bg-gray-100 px-5 py-3">
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center">
-                            <span class="font-semibold text-[#1a2e5a]">Present Perfect Tense Alıştırmaları</span>
-                            <span class="ml-3 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">90/100</span>
-                        </div>
-                        <span class="text-sm text-gray-500">10.02.2025</span>
-                    </div>
-                </div>
-                <div class="p-5">
-                    <h3 class="font-medium text-gray-900 mb-1">Hoca Geri Bildirimi:</h3>
-                    <div class="text-gray-700 mb-4">
-                        <p>Çok iyi çalışma! Present Perfect Tense yapısını doğru şekilde kullanmışsınız. Sadece birkaç küçük hata var:</p>
-                        <ul class="list-disc pl-5 mt-2 space-y-1">
-                            <li>3. soruda "since" ve "for" kullanımına dikkat etmelisiniz. "For" bir süre için kullanılırken, "since" belirli bir başlangıç zamanı için kullanılır.</li>
-                            <li>7. soruda Present Perfect ile kullanılan "just", "already" ve "yet" gibi zaman zarflarının pozisyonlarına dikkat ediniz.</li>
-                        </ul>
-                        <p class="mt-2">Sonraki derste bu konulara tekrar değineceğiz. Genel olarak harika bir iş çıkardınız!</p>
-                    </div>
-                    
-                    <div class="border-t border-gray-200 pt-3 mt-3">
-                        <div class="flex justify-between items-center">
-                            <h4 class="text-sm font-medium text-gray-900">Hoca Notu:</h4>
-                            <div class="flex space-x-2">
-                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                    </svg>
-                                    Yanıtla
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Örnek Geribildirim 2 -->
-            <div class="bg-gray-50 rounded-lg overflow-hidden shadow-sm">
-                <div class="border-b border-gray-200 bg-gray-100 px-5 py-3">
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center">
-                            <span class="font-semibold text-[#1a2e5a]">Modal Verbs - Haftalık Quiz</span>
-                            <span class="ml-3 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">85/100</span>
-                        </div>
-                        <span class="text-sm text-gray-500">04.02.2025</span>
-                    </div>
-                </div>
-                <div class="p-5">
-                    <h3 class="font-medium text-gray-900 mb-1">Hoca Geri Bildirimi:</h3>
-                    <div class="text-gray-700 mb-4">
-                        <p>İyi çalışma! Modal fiillerin kullanımında genel olarak başarılısınız. Özellikle "should", "must" ve "have to" arasındaki farkı iyi anlamışsınız.</p>
-                        <p class="mt-2">Birkaç geliştirmeniz gereken alan:</p>
-                        <ul class="list-disc pl-5 mt-2 space-y-1">
-                            <li>"Might" ve "may" arasındaki farkı karıştırmışsınız. "Might" daha az olasılık belirtir.</li>
-                            <li>Geçmiş zaman ile modal fiilleri kullanırken (could have, should have, might have) bazı hatalar var.</li>
-                        </ul>
-                        <p class="mt-2">Genel olarak iyi bir performans. Sonraki dersimizde bu konuları pekiştireceğiz.</p>
-                    </div>
-                    
-                    <div class="border-t border-gray-200 pt-3 mt-3">
-                        <div class="flex justify-between items-center">
-                            <h4 class="text-sm font-medium text-gray-900">Hoca Notu:</h4>
-                            <div class="flex space-x-2">
-                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                    </svg>
-                                    Yanıtla
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Örnek Geribildirim 3 -->
-            <div class="bg-gray-50 rounded-lg overflow-hidden shadow-sm">
-                <div class="border-b border-gray-200 bg-gray-100 px-5 py-3">
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center">
-                            <span class="font-semibold text-[#1a2e5a]">Past Continuous vs Past Simple Pratik</span>
-                            <span class="ml-3 bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-medium">Değerlendiriliyor</span>
-                        </div>
-                        <span class="text-sm text-gray-500">14.03.2025</span>
-                    </div>
-                </div>
-                <div class="p-5">
-                    <div class="flex items-center justify-center py-8">
-                        <div class="flex flex-col items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-yellow-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <p class="text-gray-600 font-medium">Ödeviniz değerlendiriliyor...</p>
-                            <p class="text-sm text-gray-500 mt-1">Hoca yanıtı yakında burada görünecek.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
     
-    <!-- Materyaller Tab İçeriği -->
-    <div id="content-materials" class="tab-content hidden">
-        <h2 class="text-2xl font-bold text-[#1a2e5a] mb-6">Kurs Materyalleri</h2>
-        
-        <!-- Örnek materyal içeriği -->
-        <div class="bg-gray-50 p-8 rounded-lg text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <p class="text-gray-600">Henüz materyal bulunmamaktadır.</p>
-        </div>
-    </div>
+
 </div>
 <div id="modal-overlay" class="fixed inset-0 bg-gray-700 bg-opacity-30 backdrop-blur-sm z-50 hidden items-center justify-center transition-all duration-300">
     <div id="modal-container" class="w-full max-w-5xl transform scale-95 transition-all duration-300 ease-in-out flex flex-col">
@@ -544,31 +457,7 @@
             </div>
         </div>
         
-        <form action="{{ route('ogrenci.odev-ekle', $course->id) }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            <div class="p-6">
-                <div class="mb-4">
-                    <label for="homework_title" class="block text-sm font-medium text-gray-700 mb-1">Ödev Başlığı</label>
-                    <input type="text" id="homework_title" name="title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a2e5a]" required>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="homework_description" class="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
-                    <textarea id="homework_description" name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a2e5a]" required></textarea>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="homework_file" class="block text-sm font-medium text-gray-700 mb-1">Dosya Ekle</label>
-                    <input type="file" id="homework_file" name="file" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a2e5a]">
-                    <p class="mt-1 text-sm text-gray-500">PDF, Word, Excel veya görsel dosyaları yükleyebilirsiniz (Max: 10MB)</p>
-                </div>
-            </div>
-            
-            <div class="px-6 py-4 bg-gray-50 rounded-b-lg text-right">
-                <button type="button" id="cancelHomeworkBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md mr-2 hover:bg-gray-300 transition-colors duration-300">İptal</button>
-                <button type="submit" class="px-4 py-2 bg-[#1a2e5a] text-white rounded-md hover:bg-[#132447] transition-colors duration-300">Ödevi Gönder</button>
-            </div>
-        </form>
+
     </div>
 </div>
 
@@ -610,38 +499,7 @@
     </div>
 </div>
 
-<!-- Hoca Yanıtı Modal'ı -->
-<div id="teacherResponseModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-xl">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xl font-bold text-[#1a2e5a]">Hoca Yanıtına Cevap Ver</h3>
-                <button id="closeResponseModal" class="text-gray-400 hover:text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-        
-        <form action="#" method="POST">
-            @csrf
-            <input type="hidden" id="feedbackId" name="feedback_id" value="">
-            
-            <div class="p-6">
-                <div class="mb-4">
-                    <label for="response_text" class="block text-sm font-medium text-gray-700 mb-1">Mesajınız</label>
-                    <textarea id="response_text" name="response" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a2e5a]" required placeholder="Hocanıza yanıtınızı buraya yazınız..."></textarea>
-                </div>
-            </div>
-            
-            <div class="px-6 py-4 bg-gray-50 rounded-b-lg text-right">
-                <button type="button" id="cancelResponseBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md mr-2 hover:bg-gray-300 transition-colors duration-300">İptal</button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300">Yanıtı Gönder</button>
-            </div>
-        </form>
-    </div>
-</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -677,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const homeworkModal = document.getElementById('homeworkModal');
     const closeHomeworkModal = document.getElementById('closeHomeworkModal');
     const cancelHomeworkBtn = document.getElementById('cancelHomeworkBtn');
-    if (addHomeworkBtn && homeworkModal) {
+    if (addHomeworkBtn && homeworkModal && closeHomeworkModal) {
         addHomeworkBtn.addEventListener('click', function() {
             homeworkModal.classList.remove('hidden');
         });

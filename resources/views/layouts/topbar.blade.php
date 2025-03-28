@@ -11,9 +11,8 @@
             <!-- Navigation -->
             <div class="hidden lg:flex items-center ml-auto mr-6 space-x-6 text-base">
                 <a href="{{ url('/ana-sayfa') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('ana-sayfa') ? 'text-red-600' : '' }}">Ana Sayfa</a>
-                <a href="{{ url('/neden-rise-english') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('neden-rise-english') ? 'text-red-600' : '' }}">Neden Rise English?</a>
+                <a href="{{ url('/ucretsiz-icerikler') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('ucretsiz-icerikler') ? 'text-red-600' : '' }}">Ücretsiz İçerikler</a>
                 <a href="{{ url('/egitimler') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('egitimler') ? 'text-red-600' : '' }}">Eğitimler</a>
-                <a href="{{ url('/yararli-icerikler') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('yararli-icerikler') ? 'text-red-600' : '' }}">Yararlı İçerikler</a>
                 <a href="{{ url('/iletisim') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('iletisim') ? 'text-red-600' : '' }}">İletişim</a>
             </div>
             
@@ -23,7 +22,6 @@
                     @if(auth()->user()->hasRole('ogrenci'))
                         <!-- Öğrenci: Profil simgesi ve açılır menü -->
                         <button id="profile-btn" class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg focus:outline-none cursor-pointer">
-                            <img src="{{ asset('images/default-avatar.png') }}" alt="Profilim" class="w-8 h-8 rounded-full">
                             <span class="text-gray-700 font-medium">{{ auth()->user()->name }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -31,7 +29,7 @@
                         </button>
                         <!-- Açılır Menü -->
                         <div id="profile-dropdown" class="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg hidden">
-                            <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Ayarlar</a>
+                            <a href="{{ route('ogrenci.settings.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Ayarlar</a>
                             <a href="{{ route('logout') }}" 
                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Çıkış Yap</a>
@@ -77,9 +75,8 @@
     <!-- Mobile Menu (hidden by default) -->
     <div class="lg:hidden mobile-menu hidden px-4 py-2 bg-white border-t">
         <a href="{{ url('/ana-sayfa') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('ana-sayfa') ? 'text-red-600' : '' }}">Ana Sayfa</a>
-        <a href="{{ url('/neden-rise-english') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('neden-rise-english') ? 'text-red-600' : '' }}">Neden Rise English?</a>
+        <a href="{{ url('/ucretsiz-icerikler') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('ucretsiz-icerikler') ? 'text-red-600' : '' }}"> Ücretsiz İçerikler</a>
         <a href="{{ url('/egitimler') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('egitimler') ? 'text-red-600' : '' }}">Eğitimler</a>
-        <a href="{{ url('/yararli-icerikler') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('yararli-icerikler') ? 'text-red-600' : '' }}">Yararlı İçerikler</a>
         <a href="{{ url('/iletisim') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('iletisim') ? 'text-red-600' : '' }}">İletişim</a>
     </div>
 </div>

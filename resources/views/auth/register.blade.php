@@ -20,7 +20,7 @@
         <!-- İndirim bilgisi -->
         <div class="relative w-full h-full flex flex-col items-center justify-center p-8 text-center">
             <div class="bg-[#e63946] text-white rounded-xl p-8 shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-300 max-w-md w-full mb-10 border-4 border-white">
-                <div class="text-5xl font-extrabold mb-4">%20 İNDİRİM</div>
+                <div class="text-5xl font-extrabold mb-4">%15 İNDİRİM</div>
                 <div class="text-2xl font-semibold mb-3">İlk Kayıtta</div>
                 <div class="text-lg mt-2 bg-white text-[#e63946] px-4 py-2 rounded-lg font-bold inline-block animate-pulse">SINIRLI SÜRE!</div>
             </div>
@@ -79,6 +79,21 @@
                     @error('email')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
+                </div>
+                
+                <div class="mb-4">
+                    <label for="phone" class="block text-gray-700 text-sm font-bold mb-2">Telefon Numarası</label>
+                    <div class="flex">
+                        <span class="inline-flex items-center px-3 text-gray-500 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg">
+                            +90
+                        </span>
+                        <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" required placeholder="5xx xxx xx xx"
+                            class="appearance-none border rounded-r-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('phone') border-red-500 @enderror">
+                    </div>
+                    @error('phone')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
+                    <p class="text-xs text-gray-500 mt-1">Kurs kayıtları ve bilgilendirmeler için telefon numaranızı doğrulamanız gerekecektir.</p>
                 </div>
                 
                 <div class="mb-4">

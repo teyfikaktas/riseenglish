@@ -16,7 +16,16 @@
                 <a href="{{ url('/admin/users') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/users*') ? 'text-red-400' : '' }}">Kullanıcılar</a>
                 <a href="{{ url('/admin/courses') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/courses*') ? 'text-red-400' : '' }}">Kurslar</a>
                 <a href="{{ url('/admin/sms') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/sms*') ? 'text-red-400' : '' }}">SMS Yönetimi</a>
-                <a href="{{ url('/admin/reports') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/reports*') ? 'text-red-400' : '' }}">Raporlar</a>
+               <!-- Hemen altına şu satırı ekleyin: -->
+<a href="{{ url('/admin/contacts') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/contacts*') ? 'text-red-400' : '' }}">
+    İletişim Mesajları
+    @php
+        $unreadCount = \App\Models\Contact::where('is_read', false)->count();
+    @endphp
+    @if($unreadCount > 0)
+        <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full ml-2">{{ $unreadCount }}</span>
+    @endif
+</a>
                 <a href="{{ url('/') }}" class="text-white hover:text-red-400 font-medium transition duration-200">Ana Siteye Dön</a>
             </div>
             
@@ -59,8 +68,14 @@
         <a href="{{ url('/admin/dashboard') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/dashboard') ? 'text-red-400' : '' }}">Dashboard</a>
         <a href="{{ url('/admin/users') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/users*') ? 'text-red-400' : '' }}">Kullanıcılar</a>
         <a href="{{ url('/admin/courses') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/courses*') ? 'text-red-400' : '' }}">Kurslar</a>
+        <!-- Ayrıca mobil menüde de şu satırı ekleyin (<!-- Mobile Menu (hidden by default) --> kısmında): -->
+<a href="{{ url('/admin/contacts') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/contacts*') ? 'text-red-400' : '' }}">
+    İletişim Mesajları
+    @if($unreadCount > 0)
+        <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full ml-2">{{ $unreadCount }}</span>
+    @endif
+</a>
         <a href="{{ url('/admin/sms') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/sms*') ? 'text-red-400' : '' }}">SMS Yönetimi</a>
-        <a href="{{ url('/admin/reports') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/reports*') ? 'text-red-400' : '' }}">Raporlar</a>
         <a href="{{ url('/') }}" class="block py-2 text-white hover:text-red-400 font-medium">Ana Siteye Dön</a>
     </div>
 </div>

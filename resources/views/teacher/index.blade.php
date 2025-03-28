@@ -84,6 +84,14 @@
             </div>
         </div>
     </div>
+    <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="px-6 py-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-800">Son Gelen Ödevler</h3>
+        </div>
+        <div class="p-6">
+            @livewire('homeworks-list')
+        </div>
+    </div>
     
     <!-- Aktif Kurslarım -->
     <div class="bg-white rounded-lg shadow-md mb-8">
@@ -104,7 +112,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach ($courses as $course)
-                        <tr>
+                        <tr class="hover:bg-gray-100 cursor-pointer" onclick="window.location='{{ route('ogretmen.course.detail', $course->id) }}'">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10 rounded bg-gray-300 overflow-hidden">
@@ -136,9 +144,7 @@
                                 {{ $course->start_date ? $course->start_date->format('d.m.Y') : 'Belirtilmemiş' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('ogretmen.course.detail', $course->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Detay</a>
-                                <a href="#" class="text-green-600 hover:text-green-900 mr-3">Öğrenciler</a>
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900">Oturumlar</a>
+                                <a href="{{ route('ogretmen.course.detail', $course->id) }}" class="text-blue-600 hover:text-blue-900 mr-3" onclick="event.stopPropagation();">Detay</a>
                             </td>
                         </tr>
                         @endforeach
@@ -148,92 +154,29 @@
         </div>
     </div>
     
-    <!-- Son Gelen Ödevler -->
-    <div class="bg-white rounded-lg shadow-md mb-8">
-        <div class="px-6 py-4 border-b">
-            <h3 class="text-lg font-semibold text-gray-800">Son Gelen Ödevler</h3>
-        </div>
-        <div class="p-6">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Öğrenci</th>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kurs</th>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ödev Başlığı</th>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gönderim Tarihi</th>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach ($recentHomeworks as $homework)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-                                        {{ strtoupper(substr($homework->student->name, 0, 1)) }}
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $homework->student->name }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $homework->course->name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $homework->title }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $homework->submitted_at->format('d.m.Y H:i') }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Görüntüle</a>
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900">Değerlendir</a>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Hızlı Erişim Linkleri -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md overflow-hidden flex items-center p-6 transition-all duration-200 hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <div>
-                <h3 class="text-lg font-semibold">Yeni Kurs</h3>
-                <p class="text-sm text-blue-100">Kurs oluşturma önerisi</p>
-            </div>
-        </a>
-        
-        <a href="#" class="bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-md overflow-hidden flex items-center p-6 transition-all duration-200 hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <div>
-                <h3 class="text-lg font-semibold">Yeni Ödev</h3>
-                <p class="text-sm text-green-100">Ödev oluştur</p>
-            </div>
-        </a>
-        
-        <a href="#" class="bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow-md overflow-hidden flex items-center p-6 transition-all duration-200 hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <div>
-                <h3 class="text-lg font-semibold">Ders Planla</h3>
-                <p class="text-sm text-purple-100">Yeni oturum oluştur</p>
-            </div>
-        </a>
-        
-        <a href="#" class="bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg shadow-md overflow-hidden flex items-center p-6 transition-all duration-200 hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            <div>
-                <h3 class="text-lg font-semibold">Materyal Ekle</h3>
-                <p class="text-sm text-yellow-100">Ders materyali yükle</p>
-            </div>
-        </a>
-    </div>
+
+
 </div>
 @endsection
+@push('scripts')
+<script>
+    // Sadece bu sayfa için scroll pozisyonunu koruma
+    document.addEventListener('livewire:init', function () {
+        let scrollPosition = 0;
+        
+        // Sayfa değişmeden önce scroll pozisyonunu kaydet
+        Livewire.on('pageChanging', function() {
+            scrollPosition = window.scrollY;
+        });
+        
+        // Sayfa yenilendikten sonra scroll pozisyonunu geri yükle
+        Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+            succeed(({ effects }) => {
+                if (component.name === 'homeworks-list') {
+                    window.scrollTo(0, scrollPosition);
+                }
+            });
+        });
+    });
+</script>
+@endpush

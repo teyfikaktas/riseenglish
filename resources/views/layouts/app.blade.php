@@ -5,18 +5,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0iIzFhMmE1ZSIgc3Ryb2tlPSIjZTYzOTQ2IiBzdHJva2Utd2lkdGg9IjMiIC8+PHBhdGggZD0iTTM1IDMwIEMzNSAzMCwgNTAgMzAsIDYwIDMwIEM3MCAzMCwgNzUgMzUsIDc1IDQ1IEM3NSA1NSwgNzAgNjAsIDYwIDYwIEw0OCA2MCBMNjUgNzUiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSI2IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIC8+PHBhdGggZD0iTTM1IDMwIEwzNSA3NSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjYiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgLz48L3N2Zz4=" type="image/svg+xml">
     <title>{{ config('app.name', 'RiseEnlish') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@700;800;900&family=Playfair+Display:ital@0;1&family=Poppins:wght@600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
+
 </head>
 <body class="font-sans bg-gray-50 min-h-screen">
     <!-- Kullanıcı rolüne göre topbar gösterimi -->
@@ -42,9 +47,11 @@
 
     <div id="chat-widget" class="fixed right-6 bottom-6 z-50">
         <!-- Kapalı durumdaki buton -->
+        @guest
         <button id="chat-toggle" class="flex items-center justify-center w-16 h-16 bg-green-500 rounded-full shadow-lg hover:bg-green-600 transition-all duration-300">
-          <i class="fab fa-whatsapp text-white text-3xl"></i>
+            <i class="fab fa-whatsapp text-white text-3xl"></i>
         </button>
+    @endguest
       
         <!-- Açık durumdaki sohbet kutusu -->
         <div id="chat-box" class="hidden bg-white rounded-lg shadow-xl w-80 mb-4 overflow-hidden">
@@ -187,6 +194,7 @@
           });
         });
       </script>
-      
+          @livewireScripts
+
 </body>
 </html>

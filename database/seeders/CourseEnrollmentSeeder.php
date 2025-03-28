@@ -76,7 +76,7 @@ class CourseEnrollmentSeeder extends Seeder
                     DB::table('course_user')->insert([
                         'course_id' => $course->id,
                         'user_id' => $student->id,
-                        'enrollment_date' => $enrollmepublic function enrollments(Course $course)ntDate,
+                        'enrollment_date' => $enrollmentDate,
                         'status_id' => $status->id,
                         'paid_amount' => $paidAmount,
                         'payment_completed' => $paymentCompleted,

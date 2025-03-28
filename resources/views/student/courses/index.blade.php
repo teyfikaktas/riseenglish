@@ -253,7 +253,113 @@
                 @endif
             </div>
         </div>
-        
+        <!-- Onay Bekleyen Kurslarım Bölümü -->
+<div id="bekleyen-kurslar" class="bg-white rounded-xl shadow-md mb-8 overflow-hidden">
+    <div class="px-6 py-4 border-b flex items-center justify-between">
+        <div class="flex items-center">
+            <div class="rounded-full bg-yellow-100 p-2 mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800">Onay Bekleyen Kurslarım</h3>
+        </div>
+        <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{{ $pendingCourses->count() }} Kurs</span>
+    </div>
+    <div class="p-6">
+        @if($pendingCourses->count() > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach ($pendingCourses as $course)
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="h-48 bg-gradient-to-r from-yellow-400 to-yellow-500 relative overflow-hidden opacity-75">
+                            @if ($course->thumbnail)
+                                <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->name }}" class="h-full w-full object-cover transition-transform duration-500 hover:scale-110">
+                            @else
+                                <div class="h-full w-full flex items-center justify-center bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-bold text-4xl">
+                                    {{ strtoupper(substr($course->name, 0, 1)) }}
+                                </div>
+                            @endif
+                            
+                            <!-- Kurs durumu etiketi -->
+                            <div class="absolute top-3 right-3">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200 shadow-sm">
+                                    <span class="w-2 h-2 bg-yellow-500 rounded-full mr-1.5 animate-pulse"></span>
+                                    Onay Bekliyor
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-5">
+                            <h4 class="text-xl font-bold text-gray-800 mb-2 line-clamp-1 hover:line-clamp-none transition-all duration-300">{{ $course->name }}</h4>
+                            
+                            <div class="flex items-center text-sm text-gray-600 mb-3">
+                                @if($course->teacher)
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    <span>{{ $course->teacher->name }}</span>
+                                @endif
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                @if($course->courseType)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                        {{ $course->courseType->name }}
+                                    </span>
+                                @endif
+                                
+                                @if($course->courseLevel)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                                        {{ $course->courseLevel->name }}
+                                    </span>
+                                @endif
+                            </div>
+                            
+                            <div class="flex justify-between text-sm text-gray-600 mb-5">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {{ $course->start_date ? \Carbon\Carbon::parse($course->start_date)->format('d.m.Y') : 'Belirtilmemiş' }}
+                                </div>
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {{ $course->total_hours ?? 0 }} Saat
+                                </div>
+                            </div>
+                            
+                            <!-- Bilgilendirme metni -->
+                            <div class="p-3 bg-yellow-50 rounded-lg mb-4 text-sm text-yellow-700">
+                                <div class="flex">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Bu kurs kaydınız için yönetici onayı bekleniyor. Onaylandığında e-posta ile bilgilendirileceksiniz.</span>
+                                </div>
+                            </div>
+                            
+                            <a href="{{ route('courses.detail', $course->slug) }}" class="block w-full bg-gray-200 hover:bg-gray-300 text-gray-700 text-center py-2.5 px-4 rounded-lg shadow-sm hover:shadow transition-all duration-300 font-medium">
+                                Kurs Detaylarını Gör
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-12 px-4">
+                <div class="bg-yellow-50 rounded-full p-4 w-20 h-20 flex items-center justify-center mx-auto mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Onay bekleyen kursunuz bulunmamaktadır</h3>
+                <p class="text-gray-600 max-w-md mx-auto">Kaydolduğunuz ve onay bekleyen kurslar burada listelenecektir.</p>
+            </div>
+        @endif
+    </div>
+</div>
         <!-- Tamamlanan Kurslarım Bölümü -->
         <div id="tamamlanan-kurslar" class="bg-white rounded-xl shadow-md mb-8 overflow-hidden">
             <div class="px-6 py-4 border-b flex items-center justify-between">
@@ -386,31 +492,153 @@
             </div>
         </div>
         
-        <!-- Ödevlerim Bölümü -->
-        <div id="odevlerim" class="bg-white rounded-xl shadow-md mb-8 overflow-hidden">
-            <div class="px-6 py-4 border-b flex items-center justify-between">
-                <div class="flex items-center">
-                    <div class="rounded-full bg-amber-100 p-2 mr-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-800">Ödevlerim</h3>
-                </div>
-                <span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">0 Ödev</span>
+<!-- Ödevlerim Bölümü -->
+<div id="odevlerim" class="bg-white rounded-xl shadow-md mb-8 overflow-hidden">
+    <div class="px-6 py-4 border-b flex items-center justify-between">
+        <div class="flex items-center">
+            <div class="rounded-full bg-amber-100 p-2 mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
             </div>
-            <div class="p-6">
-                <div class="text-center py-12 px-4">
-                    <div class="bg-amber-50 rounded-full p-4 w-20 h-20 flex items-center justify-center mx-auto mb-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Henüz ödeviniz bulunmamaktadır</h3>
-                    <p class="text-gray-600 max-w-md mx-auto">Öğretmenleriniz ödev verdiğinde burada listelenecektir. Ödevlerinizi zamanında tamamlamak için bildirimleri kontrol etmeyi unutmayın.</p>
-                </div>
-            </div>
+            <h3 class="text-lg font-semibold text-gray-800">Ödevlerim</h3>
         </div>
+        <span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{{ count($activeHomeworks ?? []) }} Ödev</span>
+    </div>
+    <div class="p-6">
+        @if(isset($activeHomeworks) && count($activeHomeworks) > 0)
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ödev Adı</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kurs</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Son Teslim Tarihi</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($activeHomeworks as $homework)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">{{ $homework['title'] }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-500">{{ $homework['course_name'] }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($homework['due_date'])
+                                    <div class="text-sm text-gray-500">
+                                        {{ \Carbon\Carbon::parse($homework['due_date'])->format('d.m.Y H:i') }}
+                                    </div>
+                    
+                                    <!-- Tarih hesaplama - kullanıcı dostu format -->
+                                    @php
+                                        $dueDate = \Carbon\Carbon::parse($homework['due_date']);
+                                        $now = \Carbon\Carbon::now();
+                                        $isPast = $dueDate->isPast();
+                    
+                                        if (!$isPast) {
+                                            // Önce gün farkını hesapla
+                                            $diffInDays = $now->diffInDays($dueDate, false);
+                                            if ($diffInDays >= 1) {
+                                                // 1 gün veya daha fazla kalan süre: tam gün sayısını göster
+                                                $timeLabel = floor($diffInDays) . ' gün kaldı';
+                                                $alertClass = $diffInDays <= 2 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800';
+                                            } else {
+                                                // 1 günden az kalan süre: saat farkını hesapla ve tam sayı olarak göster
+                                                $diffInHours = floor($now->diffInHours($dueDate, false));
+                                                if ($diffInHours >= 1) {
+                                                    $timeLabel = $diffInHours . ' saat kaldı';
+                                                    $alertClass = 'bg-yellow-100 text-yellow-800';
+                                                } else {
+                                                    // 1 saatten az kalan süre: dakika farkını hesapla ve tam sayı olarak göster
+                                                    $diffInMinutes = floor($now->diffInMinutes($dueDate, false));
+                                                    $timeLabel = $diffInMinutes . ' dakika kaldı';
+                                                    $alertClass = 'bg-red-100 text-red-800';
+                                                }
+                                            }
+                                        } else {
+                                            $timeLabel = 'Süresi Doldu';
+                                            $alertClass = 'bg-red-100 text-red-800';
+                                        }
+                                    @endphp
+                    
+                                    <span class="inline-flex items-center mt-1 px-2 py-0.5 rounded text-xs font-medium {{ $alertClass }}">
+                                        @if(!$isPast)
+                                            <svg class="w-3 h-3 mr-1 {{ in_array($alertClass, ['bg-yellow-100 text-yellow-800', 'bg-red-100 text-red-800']) ? 'animate-pulse' : '' }}" 
+                                                 fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" 
+                                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" 
+                                                      clip-rule="evenodd"></path>
+                                            </svg>
+                                        @else
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" 
+                                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" 
+                                                      clip-rule="evenodd"></path>
+                                            </svg>
+                                        @endif
+                                        {{ $timeLabel }}
+                                    </span>
+                                @else
+                                    <div class="text-sm text-gray-500">Belirtilmemiş</div>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($homework['status'] == 'Tamamlandı')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Tamamlandı
+                                    </span>
+                                @elseif($homework['status'] == 'Süresi Doldu')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Süresi Doldu
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Bekliyor
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-right text-sm font-medium">
+                                <a href="{{ route('ogrenci.kurs-detay', $homework['course_slug']) }}#homework-{{ $homework['id'] }}" 
+                                   class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Ödeve Git
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                    
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="text-center py-12 px-4">
+                <div class="bg-amber-50 rounded-full p-4 w-20 h-20 flex items-center justify-center mx-auto mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Henüz ödeviniz bulunmamaktadır</h3>
+                <p class="text-gray-600 max-w-md mx-auto">Öğretmenleriniz ödev verdiğinde burada listelenecektir. Ödevlerinizi zamanında tamamlamak için bildirimleri kontrol etmeyi unutmayın.</p>
+            </div>
+        @endif
+    </div>
+</div>
         
         <!-- Sayfa Sonu -->
         <div class="flex justify-center pb-8">
