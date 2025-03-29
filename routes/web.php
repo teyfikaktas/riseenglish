@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\CustomRegisterController;
 use App\Http\Controllers\Auth\ContactController;
+use App\Http\Controllers\ResourceController;
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -16,6 +17,10 @@ use App\Models\Course;
 
 Route::get('/iletisim', [\App\Http\Controllers\ContactController::class, 'index'])->name('contact');
 Route::post('/iletisim/gonder', [\App\Http\Controllers\ContactController::class, 'send'])->name('contact.send');
+
+Route::get('/ucretsiz-kaynaklar', [App\Http\Controllers\PublicResourceController::class, 'index'])->name('public.resources.index');
+Route::get('/ucretsiz-kaynaklar/{slug}', [App\Http\Controllers\PublicResourceController::class, 'show'])->name('public.resources.show');
+// Ana sayfa için kaynak yönlendirmesi (opsiyonel)
 
 Route::post('/send-otp', [App\Http\Controllers\OtpController::class, 'sendOtp'])
     ->middleware('auth')
@@ -148,7 +153,15 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         Route::get('/sms', [App\Http\Controllers\Admin\SmsController::class, 'index'])->name('sms.index');
         Route::post('/sms/send-individual', [App\Http\Controllers\Admin\SmsController::class, 'sendIndividual'])->name('sms.send-individual');
         Route::post('/sms/send-bulk', [App\Http\Controllers\Admin\SmsController::class, 'sendBulk'])->name('sms.send-bulk');
-        // Kurs tipleri için resource route
+        Route::resource('/resources', App\Http\Controllers\ResourceController::class);
+    // Kaynak Kategorileri Yönetimi
+    Route::resource('/resource-categories', App\Http\Controllers\ResourceCategoryController::class);
+    
+    // Kaynak Türleri Yönetimi
+    Route::resource('/resource-types', App\Http\Controllers\ResourceTypeController::class);
+    
+    // Kaynak Etiketleri Yönetimi
+    Route::resource('/resource-tags', App\Http\Controllers\ResourceTagController::class);
         Route::resources([
             'course-types' => CourseTypeController::class,
             'course-levels' => CourseLevelController::class,

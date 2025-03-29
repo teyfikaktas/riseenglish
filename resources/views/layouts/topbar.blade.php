@@ -11,7 +11,7 @@
             <!-- Navigation -->
             <div class="hidden lg:flex items-center ml-auto mr-6 space-x-6 text-base">
                 <a href="{{ url('/ana-sayfa') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('ana-sayfa') ? 'text-red-600' : '' }}">Ana Sayfa</a>
-                <a href="{{ url('/ucretsiz-icerikler') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('ucretsiz-icerikler') ? 'text-red-600' : '' }}">Ücretsiz İçerikler</a>
+                <a href="{{ route('public.resources.index') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('ucretsiz-kaynaklar') ? 'text-red-600' : '' }}">Ücretsiz İçerikler</a>
                 <a href="{{ url('/egitimler') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('egitimler') ? 'text-red-600' : '' }}">Eğitimler</a>
                 <a href="{{ url('/iletisim') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('iletisim') ? 'text-red-600' : '' }}">İletişim</a>
             </div>
@@ -75,8 +75,7 @@
     <!-- Mobile Menu (hidden by default) -->
     <div class="lg:hidden mobile-menu hidden px-4 py-2 bg-white border-t">
         <a href="{{ url('/ana-sayfa') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('ana-sayfa') ? 'text-red-600' : '' }}">Ana Sayfa</a>
-        <a href="{{ url('/ucretsiz-icerikler') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('ucretsiz-icerikler') ? 'text-red-600' : '' }}"> Ücretsiz İçerikler</a>
-        <a href="{{ url('/egitimler') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('egitimler') ? 'text-red-600' : '' }}">Eğitimler</a>
+        <a href="{{ url('/ucretsiz-icerikler') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('ucretsiz-icerikler') ? 'text-red-600' : '' }}">Ücretsiz İçerikler</a>        <a href="{{ url('/egitimler') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('egitimler') ? 'text-red-600' : '' }}">Eğitimler</a>
         <a href="{{ url('/iletisim') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('iletisim') ? 'text-red-600' : '' }}">İletişim</a>
     </div>
 </div>
