@@ -133,7 +133,7 @@ class CourseSystemSeeder extends Seeder
         $courses = [
             [
                 'name' => 'İngilizce Konuşma Kursu - A1 Seviyesi',
-                'teacher_id' => 1, // İlk öğretmen kullanıcı
+                'teacher_id' => 1, 
                 'description' => 'Başlangıç seviyesi İngilizce konuşma kursu',
                 'objectives' => 'Günlük konuşma İngilizcesi, temel gramer, basit diyaloglar',
                 'level_id' => 1, // A1
@@ -141,11 +141,17 @@ class CourseSystemSeeder extends Seeder
                 'frequency_id' => 3, // Haftada 3
                 'start_date' => Carbon::now()->addDays(10),
                 'end_date' => Carbon::now()->addMonths(3),
-                'total_hours' => 60, // Toplam ders saati
+                'total_hours' => 60, 
+                'price' => 1499.99, // Kurs ücreti
+                'max_students' => 20,
+                'is_active' => true,
+                'has_certificate' => true,
+                'is_featured' => true,
+                'discount_price' => 1299.99, // İndirimli fiyat
             ],
             [
                 'name' => 'İş İngilizcesi - B2 Seviyesi',
-                'teacher_id' => 2, // İkinci öğretmen kullanıcı
+                'teacher_id' => 2, 
                 'description' => 'Profesyoneller için İş İngilizcesi kursu',
                 'objectives' => 'Toplantı yönetimi, sunum becerileri, iş yazışmaları',
                 'level_id' => 4, // B2
@@ -153,11 +159,17 @@ class CourseSystemSeeder extends Seeder
                 'frequency_id' => 2, // Haftada 2
                 'start_date' => Carbon::now()->addDays(15),
                 'end_date' => Carbon::now()->addMonths(4),
-                'total_hours' => 80, // Toplam ders saati
+                'total_hours' => 80,
+                'price' => 1999.99, // Kurs ücreti 
+                'max_students' => 15,
+                'is_active' => true,
+                'has_certificate' => true,
+                'is_featured' => false,
+                'discount_price' => 1799.99, // İndirimli fiyat
             ],
             [
                 'name' => 'TOEFL Hazırlık Kursu',
-                'teacher_id' => 3, // Üçüncü öğretmen kullanıcı
+                'teacher_id' => 3, 
                 'description' => 'TOEFL sınavına hazırlık kursu',
                 'objectives' => 'Okuma, yazma, dinleme ve konuşma becerileri, sınav stratejileri',
                 'level_id' => 5, // C1
@@ -165,7 +177,13 @@ class CourseSystemSeeder extends Seeder
                 'frequency_id' => 4, // Haftalık
                 'start_date' => Carbon::now()->addDays(20),
                 'end_date' => Carbon::now()->addMonths(5),
-                'total_hours' => 100, // Toplam ders saati
+                'total_hours' => 100,
+                'price' => 2499.99, // Kurs ücreti
+                'max_students' => 10,
+                'is_active' => true,
+                'has_certificate' => true,
+                'is_featured' => true,
+                'discount_price' => 2199.99, // İndirimli fiyat
             ]
         ];
 
@@ -184,7 +202,7 @@ class CourseSystemSeeder extends Seeder
             
             $courseId = DB::table('courses')->insertGetId([
                 'name' => $course['name'],
-                'slug' => $slug, // SLUG EKLENDI
+                'slug' => $slug,
                 'teacher_id' => $course['teacher_id'],
                 'description' => $course['description'],
                 'objectives' => $course['objectives'],
@@ -193,7 +211,13 @@ class CourseSystemSeeder extends Seeder
                 'frequency_id' => $course['frequency_id'],
                 'start_date' => $course['start_date'],
                 'end_date' => $course['end_date'],
-                'total_hours' => $course['total_hours'], // TOTAL_HOURS EKLENDI
+                'total_hours' => $course['total_hours'],
+                'price' => $course['price'], // PRICE EKLENDI
+                'max_students' => $course['max_students'] ?? 20,
+                'is_active' => $course['is_active'] ?? true,
+                'has_certificate' => $course['has_certificate'] ?? true,
+                'is_featured' => $course['is_featured'] ?? false,
+                'discount_price' => $course['discount_price'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
