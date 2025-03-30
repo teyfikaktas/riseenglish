@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +12,14 @@ class CreateResourceSystem extends Migration
      */
     public function up()
     {
+        // resource_types tablosu
+        Schema::create('resource_types', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->timestamps();
+        });
+
         // resource_categories tablosu
         Schema::create('resource_categories', function (Blueprint $table) {
             $table->id();
@@ -38,7 +45,7 @@ class CreateResourceSystem extends Migration
             $table->integer('view_count')->default(0);
             $table->string('file_path')->nullable();
             $table->timestamps();
-            
+
             $table->foreign('type_id')->references('id')->on('resource_types')->onDelete('cascade');
             $table->foreign('category_id')->references('id')->on('resource_categories')->onDelete('cascade');
         });
@@ -55,7 +62,7 @@ class CreateResourceSystem extends Migration
         Schema::create('resource_tag', function (Blueprint $table) {
             $table->unsignedBigInteger('resource_id');
             $table->unsignedBigInteger('tag_id');
-            
+
             $table->primary(['resource_id', 'tag_id']);
             $table->foreign('resource_id')->references('id')->on('resources')->onDelete('cascade');
             $table->foreign('tag_id')->references('id')->on('resource_tags')->onDelete('cascade');
