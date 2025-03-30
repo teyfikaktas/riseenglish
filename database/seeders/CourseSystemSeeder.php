@@ -168,8 +168,20 @@ class CourseSystemSeeder extends Seeder
 
         // Kursları ekleyelim ve ID'lerini alalım
         foreach ($courses as $course) {
+            // Slug oluştur
+            $slug = Str::slug($course['name'], '-');
+            
+            // Slug'ın benzersiz olduğundan emin ol
+            $count = 1;
+            $originalSlug = $slug;
+            while (DB::table('courses')->where('slug', $slug)->exists()) {
+                $slug = $originalSlug . '-' . $count;
+                $count++;
+            }
+            
             $courseId = DB::table('courses')->insertGetId([
                 'name' => $course['name'],
+                'slug' => $slug, // SLUG EKLENDI!
                 'teacher_id' => $course['teacher_id'],
                 'description' => $course['description'],
                 'objectives' => $course['objectives'],
