@@ -141,6 +141,7 @@ class CourseSystemSeeder extends Seeder
                 'frequency_id' => 3, // Haftada 3
                 'start_date' => Carbon::now()->addDays(10),
                 'end_date' => Carbon::now()->addMonths(3),
+                'total_hours' => 60, // Toplam ders saati
             ],
             [
                 'name' => 'İş İngilizcesi - B2 Seviyesi',
@@ -152,6 +153,7 @@ class CourseSystemSeeder extends Seeder
                 'frequency_id' => 2, // Haftada 2
                 'start_date' => Carbon::now()->addDays(15),
                 'end_date' => Carbon::now()->addMonths(4),
+                'total_hours' => 80, // Toplam ders saati
             ],
             [
                 'name' => 'TOEFL Hazırlık Kursu',
@@ -163,6 +165,7 @@ class CourseSystemSeeder extends Seeder
                 'frequency_id' => 4, // Haftalık
                 'start_date' => Carbon::now()->addDays(20),
                 'end_date' => Carbon::now()->addMonths(5),
+                'total_hours' => 100, // Toplam ders saati
             ]
         ];
 
@@ -181,7 +184,7 @@ class CourseSystemSeeder extends Seeder
             
             $courseId = DB::table('courses')->insertGetId([
                 'name' => $course['name'],
-                'slug' => $slug, // SLUG EKLENDI!
+                'slug' => $slug, // SLUG EKLENDI
                 'teacher_id' => $course['teacher_id'],
                 'description' => $course['description'],
                 'objectives' => $course['objectives'],
@@ -190,6 +193,7 @@ class CourseSystemSeeder extends Seeder
                 'frequency_id' => $course['frequency_id'],
                 'start_date' => $course['start_date'],
                 'end_date' => $course['end_date'],
+                'total_hours' => $course['total_hours'], // TOTAL_HOURS EKLENDI
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
