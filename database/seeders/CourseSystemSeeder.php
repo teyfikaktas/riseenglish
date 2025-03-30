@@ -166,7 +166,22 @@ class CourseSystemSeeder extends Seeder
             ]
         ];
 
-
+        // Kursları ekleyelim ve ID'lerini alalım
+        foreach ($courses as $course) {
+            $courseId = DB::table('courses')->insertGetId([
+                'name' => $course['name'],
+                'teacher_id' => $course['teacher_id'],
+                'description' => $course['description'],
+                'objectives' => $course['objectives'],
+                'level_id' => $course['level_id'],
+                'type_id' => $course['type_id'], 
+                'frequency_id' => $course['frequency_id'],
+                'start_date' => $course['start_date'],
+                'end_date' => $course['end_date'],
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
             // Her kurs için materyaller
             for ($i = 1; $i <= rand(3, 8); $i++) {
                 DB::table('course_materials')->insert([
@@ -182,13 +197,9 @@ class CourseSystemSeeder extends Seeder
                     'updated_at' => now()
                 ]);
             }
-
+            
             // Her kurs için oturumlar
-           
-
-
-    
-
-
+            // Burada oturum ekleme kodu eklenebilir
         }
     }
+}
