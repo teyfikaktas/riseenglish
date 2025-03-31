@@ -13,8 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
-            'verified.phone' => \App\Http\Middleware\EnsurePhoneIsVerified::class, // Bu satırı ekleyin
-        ]);
+            'verified.phone' => \App\Http\Middleware\EnsurePhoneVerified::class, // Doğru sınıf adını kullanın
+            ]);
         })
     ->withExceptions(function (Exceptions $exceptions) {
         //
