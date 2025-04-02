@@ -95,30 +95,44 @@
             </div>
             
             <!-- İdiom Gösterim Alanı -->
-            <div class="p-6 bg-gray-50">
-              <!-- İngilizce İdiom -->
-              <div class="bg-white rounded-lg p-4 mb-4 shadow-md border-l-4 border-[#e63946]">
-                <div class="text-xl font-bold text-[#1a2e5a] mb-1">"I have to pee"</div>
-                <div class="text-sm text-gray-500 italic">çok tuvaletim geldi</div>
-              </div>
-              
-              <!-- Türkçe İdiom -->
-              <div class="bg-white rounded-lg p-4 shadow-md border-l-4 border-[#1a2e5a]">
-                <div class="text-lg font-bold text-[#1a2e5a]">Örnek Cümleler:</div>
-                <div class="text-sm text-gray-600 mt-2">- I have to pee—can we take a quick break?</div>
-                <div class="text-sm text-gray-600">- I have to pee so badly, I can't wait any longer!</div>
-              </div>
-              
-              <!-- Karakter Görseli - Ortalanmış -->
-              <div class="relative mt-6 flex justify-center">
-                <img src="{{ asset('images/1.jpg') }}" alt="İdiom Karakteri" class="h-80 object-contain z-10">
-                <div class="absolute top-0 right-10 animate-bounce z-20">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#e63946]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<!-- İdiom Gösterim Alanı -->
+<div class="p-6 bg-gray-50">
+    @if(isset($dailyIdiom))
+        <!-- İngilizce İdiom -->
+        <div class="bg-white rounded-lg p-4 mb-4 shadow-md border-l-4 border-[#e63946]">
+            <div class="text-xl font-bold text-[#1a2e5a] mb-1">"{{ $dailyIdiom->english_phrase }}"</div>
+            <div class="text-sm text-gray-500 italic">{{ $dailyIdiom->turkish_translation }}</div>
+        </div>
+        
+        <!-- Örnek Cümleler -->
+        <div class="bg-white rounded-lg p-4 shadow-md border-l-4 border-[#1a2e5a]">
+            <div class="text-lg font-bold text-[#1a2e5a]">Örnek Cümleler:</div>
+            <div class="text-sm text-gray-600 mt-2">- {{ $dailyIdiom->example_sentence_1 }}</div>
+            @if($dailyIdiom->example_sentence_2)
+                <div class="text-sm text-gray-600">- {{ $dailyIdiom->example_sentence_2 }}</div>
+            @endif
+        </div>
+        
+        <!-- Karakter Görseli - Ortalanmış -->
+        <div class="relative mt-6 flex justify-center">
+            @if($dailyIdiom->image_path)
+                <img src="{{ asset('storage/' . $dailyIdiom->image_path) }}" alt="İdiom Görseli" class="h-80 object-contain z-10">
+            @else
+                <img src="{{ asset('images/1.jpg') }}" alt="Varsayılan İdiom Görseli" class="h-80 object-contain z-10">
+            @endif
+            <div class="absolute top-0 right-10 animate-bounce z-20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#e63946]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                  </svg>
-                </div>
-              </div>
+                </svg>
             </div>
+        </div>
+    @else
+        <!-- Veri yoksa gösterilecek alan -->
+        <div class="bg-white rounded-lg p-4 shadow-md text-center">
+            <div class="text-lg text-gray-500 italic">Bugün için deyim bulunamadı.</div>
+        </div>
+    @endif
+</div>
             
             <!-- Alt Banner -->
             <div class="py-3 px-4 bg-gray-100 text-center relative border-t border-gray-200">

@@ -45,49 +45,10 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Ana Route'lar
-Route::get('/', function () {
-    // Yönetici kullanıcıları doğrudan yönetici paneline yönlendir
-    if (Auth::check() && Auth::user()->hasRole('yonetici')) {
-        return redirect('/admin/dashboard');
-    }
-    
-    // Öğretmen kullanıcıları doğrudan öğretmen paneline yönlendir
-    if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
-        return redirect('/ogretmen/panel');
-    }
-    
-    // Öne çıkan kursları getir
-    $featuredCourses = Course::where('is_featured', true)
-                             ->where('is_active', true)
-                             ->orderBy('display_order')
-                             ->with(['teacher', 'courseType', 'courseLevel'])
-                             ->take(6)
-                             ->get();
-    
-    return view('welcome', compact('featuredCourses'));
-});
+// Ana route
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index']);
 
-Route::get('/ana-sayfa', function () {
-    // Yönetici kullanıcıları doğrudan yönetici paneline yönlendir
-    if (Auth::check() && Auth::user()->hasRole('yonetici')) {
-        return redirect('/admin/dashboard');
-    }
-    
-    // Öğretmen kullanıcıları doğrudan öğretmen paneline yönlendir
-    if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
-        return redirect('/ogretmen/panel');
-    }
-    
-    // Öne çıkan kursları getir
-    $featuredCourses = Course::where('is_featured', true)
-                             ->where('is_active', true)
-                             ->orderBy('display_order')
-                             ->with(['teacher', 'courseType', 'courseLevel'])
-                             ->take(3)
-                             ->get();
-    
-    return view('welcome', compact('featuredCourses'));
-});
+Route::get('/ana-sayfa', [App\Http\Controllers\HomeController::class, 'index']);
 
 Route::get('/oturum-ac', function() {
     // Eğer kullanıcı zaten giriş yapmışsa, rol kontrolü yap

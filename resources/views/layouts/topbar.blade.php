@@ -1,11 +1,29 @@
 <div class="sticky top-0 w-full bg-white shadow-md z-50">
+    <style>
+        /* Çok küçük fontlar için özel sınıf */
+        .text-xxs {
+            font-size: 0.65rem;
+        }
+        
+        /* En küçük ekranlar için özel sınıf */
+        @media (max-width: 370px) {
+            .xs\:text-xs {
+                font-size: 0.65rem;
+            }
+        }
+    </style>
     <div class="container mx-auto px-4">
         <div class="flex items-center justify-between h-24">
-            <!-- Logo -->
-            <div class="flex-shrink-0">
-                <a href="{{ url('/') }}" class="flex items-center">
-                    <img src="{{ asset('images/logo.png') }}" alt="Rise English Logo" class="h-18">
+            <!-- Logo ve Slogan -->
+            <div class="flex-shrink-0 flex items-center">
+                <a href="{{ url('/') }}" class="flex-shrink-0">
+                    <img src="{{ asset('images/logo.png') }}" alt="Rise English Logo" class="h-14 sm:h-16 md:h-18">
                 </a>
+                <div class="ml-2 sm:ml-4 border-l-2 border-[#e63946] pl-2 sm:pl-4">
+                    <span class="text-[#1a2e5a] font-serif italic text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl font-bold block leading-tight">
+                        Hakan Hoca <br class="sm:hidden">Eğitim Hayatınızda<br class="sm:hidden"> Başarılar Diler.
+                    </span>
+                </div>
             </div>
             
             <!-- Navigation -->
@@ -41,8 +59,8 @@
                         <!-- Diğer roller: Sadece Oturumu Kapat butonu -->
                         <a href="{{ route('logout') }}" 
                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                           class="bg-[#1a2e5a] hover:bg-[#283b6a] text-white font-bold py-3 px-8 rounded-lg border-2 border-[#e63946] shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 transform hover:-translate-y-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                           class="bg-[#1a2e5a] hover:bg-[#283b6a] text-white font-bold py-2 sm:py-3 px-4 sm:px-8 text-sm sm:text-base rounded-lg border-2 border-[#e63946] shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-1 sm:space-x-2 transform hover:-translate-y-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V7.414a1 1 0 00-.293-.707L11.414 2H5a1 1 0 00-1 1v4.586l2.293-2.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0L3 13.414V3z" clip-rule="evenodd" />
                             </svg>
                             <span>Oturumu Kapat</span>
@@ -53,8 +71,8 @@
                     @endif
                 @else
                     <!-- Giriş yapılmamışsa Oturum Aç butonu -->
-                    <a href="{{ url('/oturum-ac') }}" class="bg-[#1a2e5a] hover:bg-[#283b6a] text-white font-bold py-3 px-8 rounded-lg border-2 border-[#e63946] shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 transform hover:-translate-y-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <a href="{{ url('/oturum-ac') }}" class="bg-[#1a2e5a] hover:bg-[#283b6a] text-white font-bold py-2 sm:py-3 px-4 sm:px-8 text-sm sm:text-base rounded-lg border-2 border-[#e63946] shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-1 sm:space-x-2 transform hover:-translate-y-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
                         </svg>
                         <span>Oturum Aç</span>
