@@ -212,7 +212,18 @@ Route::middleware(['auth', 'role:ogretmen', 'verified.phone'])->group(function (
             
         Route::post('/teslim/{id}/degerlendir', [App\Http\Controllers\Teacher\TeacherController::class, 'saveEvaluation'])
             ->name('submission.save-evaluation');
-            
+            // Ders materyali ekleme rotaları
+        // Ders materyali ekleme rotaları
+        Route::get('/ozel-ders/{id}/materyal-ekle', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'showAddMaterial'])
+        ->name('private-lessons.material.create');
+        Route::post('/ozel-ders/{id}/materyal-ekle', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'storeMaterial'])
+        ->name('private-lessons.material.store');
+        Route::delete('/ozel-ders-materyal/{materialId}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'deleteMaterial'])
+        ->name('private-lessons.material.delete');
+
+        // Ders materyali indirme rotası
+        Route::get('/ozel-ders-materyal/{id}/indir', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'downloadMaterial'])
+        ->name('private-lessons.material.download');
         // Özel Ders Yönetimi route'ları
         Route::get('/ozel-derslerim', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'index'])
             ->name('private-lessons.index');

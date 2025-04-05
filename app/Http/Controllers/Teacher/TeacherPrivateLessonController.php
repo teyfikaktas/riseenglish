@@ -10,7 +10,8 @@ use App\Models\PrivateLesson;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\PrivateLessonMaterial;
+use Illuminate\Support\Facades\Storage;
 
 class TeacherPrivateLessonController extends Controller
 {
@@ -29,6 +30,108 @@ class TeacherPrivateLessonController extends Controller
 
         return view('teacher.private-lessons.index', compact('sessions'));
     }
+    /**
+ * Show the form for adding materials to a lesson
+ *
+ * @param int $id
+ * @return \Illuminate\View\View
+ */
+public function showAddMaterial($id)
+{
+    $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student', 'materials'])
+        ->where('teacher_id', Auth::id())
+        ->findOrFail($id);
+    
+    // Check if the lesson is completed
+    if ($session->status !== 'completed') {
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('error', 'Ders tamamlanmadan materyal eklenemez.');
+    }
+    
+    return view('teacher.private-lessons.add-material', compact('session'));
+}
+
+/**
+ * Store a newly created material
+ *
+ * @param \Illuminate\Http\Request $request
+ * @param int $id
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function storeMaterial(Request $request, $id)
+{
+    $session = PrivateLessonSession::where('teacher_id', Auth::id())->findOrFail($id);
+    
+    // Validate the input
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'material_file' => 'required|file|max:10240', // 10MB max
+    ]);
+    
+    try {
+        // Benzersiz bir dosya adı oluşturun
+        $originalName = $request->file('material_file')->getClientOriginalName();
+        $fileExtension = $request->file('material_file')->getClientOriginalExtension();
+        $uniqueFileName = uniqid() . '_' . time() . '.' . $fileExtension;
+        
+        // Dosyayı local disk'e kaydedin (bu private bir klasöre kaydedecek)
+        $filePath = $request->file('material_file')->storeAs(
+            'lessons/materials', 
+            $uniqueFileName, 
+            'local'  // zaten private klasörü gösteriyor
+        );
+        
+        // Veritabanı kaydını oluşturun
+        PrivateLessonMaterial::create([
+            'session_id' => $session->id,
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'file_path' => $filePath,
+            'original_filename' => $originalName, // Bu sütunu eklemek isterseniz
+        ]);
+        
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('success', 'Ders materyali başarıyla eklendi.');
+            
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Materyal eklenirken bir hata oluştu: ' . $e->getMessage())
+            ->withInput();
+    }
+}
+/**
+ * Delete a material
+ *
+ * @param int $materialId
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function deleteMaterial($materialId)
+{
+    try {
+        $material = PrivateLessonMaterial::findOrFail($materialId);
+        
+        // Check if the material belongs to a session taught by this teacher
+        $session = PrivateLessonSession::where('id', $material->session_id)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+        
+        // Delete the file
+        if (\Storage::disk('public')->exists($material->file_path)) {
+            \Storage::disk('public')->delete($material->file_path);
+        }
+        
+        // Delete the record
+        $material->delete();
+        
+        return redirect()->route('ogretmen.private-lessons.session.show', $session->id)
+            ->with('success', 'Materyal başarıyla silindi.');
+            
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Materyal silinirken bir hata oluştu: ' . $e->getMessage());
+    }
+}
 /**
  * Dersi tamamla
  *
@@ -69,6 +172,46 @@ public function completeLesson($id)
         // Hata durumunda
         Log::error("Ders tamamlama işleminde hata: " . $e->getMessage());
         return redirect()->back()->with('error', 'Ders tamamlanırken bir hata oluştu: ' . $e->getMessage());
+    }
+}
+/**
+ * Ders materyalini indir
+ *
+ * @param int $id Materyal ID
+ * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+ */
+public function downloadMaterial($id)
+{
+    try {
+        // Materyali bul
+        $material = PrivateLessonMaterial::findOrFail($id);
+        
+        // Materyal hangi derse ait, derse erişim yetkisi kontrolü
+        $session = PrivateLessonSession::findOrFail($material->session_id);
+        
+        // Yetkilendirme kontrolü: Sadece dersin öğretmeni, öğrencisi veya admin erişebilir
+        if (Auth::id() != $session->teacher_id && 
+            Auth::id() != $session->student_id && 
+            !Auth::user()->hasRole('admin')) {
+            return abort(403, 'Bu materyali indirme yetkiniz bulunmuyor.');
+        }
+        
+        // Dosyanın var olduğunu kontrol et
+        if (!Storage::disk('local')->exists($material->file_path)) {
+            return abort(404, 'Dosya bulunamadı veya silinmiş.');
+        }
+        
+        // Dosya adını oluştur 
+        $originalFileName = pathinfo($material->file_path, PATHINFO_FILENAME);
+        $extension = pathinfo($material->file_path, PATHINFO_EXTENSION);
+        $downloadName = $material->title . '.' . $extension;
+        
+        // Dosyayı indir
+        return Storage::disk('local')->download($material->file_path, $downloadName);
+        
+    } catch (\Exception $e) {
+        Log::error('Materyal indirme hatası: ' . $e->getMessage());
+        return back()->with('error', 'Dosya indirilirken bir hata oluştu: ' . $e->getMessage());
     }
 }
 /**

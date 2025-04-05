@@ -25,6 +25,8 @@ class PrivateLessonSession extends Model
         'payment_date',
         'status',
         'notes',
+        'teacher_notes', // Yeni eklenen alan - occurrence'dan aktarıldı
+
     ];
 
     /**
@@ -89,5 +91,28 @@ class PrivateLessonSession extends Model
     public function getRemainingAmount(): float
     {
         return $this->fee - $this->paid_amount;
+    }
+        /**
+     * Get the materials for this session
+     */
+    public function materials(): HasMany
+    {
+        return $this->hasMany(PrivateLessonMaterial::class, 'session_id');
+    }
+
+    /**
+     * Get the homeworks for this session
+     */
+    public function homeworks(): HasMany
+    {
+        return $this->hasMany(PrivateLessonHomework::class, 'session_id');
+    }
+
+    /**
+     * Get the notifications for this session
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(PrivateLessonNotification::class, 'session_id');
     }
 }

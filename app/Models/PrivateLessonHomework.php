@@ -9,18 +9,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PrivateLessonHomework extends Model
 {
     protected $fillable = [
-        'occurrence_id',
+        'session_id',
         'title',
         'description',
         'due_date',
     ];
 
     /**
-     * Get the occurrence for this homework
+     * Get the session for this homework
      */
-    public function occurrence(): BelongsTo
+    public function session(): BelongsTo
     {
-        return $this->belongsTo(PrivateLessonOccurrence::class, 'occurrence_id');
+        return $this->belongsTo(PrivateLessonSession::class, 'session_id');
     }
 
     /**

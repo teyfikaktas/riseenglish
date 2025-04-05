@@ -22,6 +22,7 @@ class PrivateLessonCalendar extends Component
     public $viewType = 'week'; // 'week' veya 'day' olabilir
     public $selectedLesson = null; // Modal için seçilen ders
     public $compactView = false; // varsayılan olarak normal görünüm
+    public $nextLesson = null;
 
     protected $listeners = [
         'dateChanged' => 'setWeek',
@@ -59,8 +60,79 @@ class PrivateLessonCalendar extends Component
         $this->setWeek(Carbon::now('Europe/Istanbul'));
         $this->timeSlots = $this->getTimeSlots();
         $this->loadOccurrences();
-    }
 
+    }
+// Aşağıdaki yeni metodu sınıfa ekleyin
+/**
+ * Öğretmenin gelecek en yakın dersini bul
+ */
+public function getNextLesson()
+{
+    try {
+        $query = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+            ->where('start_date', '>=', Carbon::now('Europe/Istanbul')->format('Y-m-d'))
+            ->where(function($q) {
+                // Aynı gün içindeki dersler için saat kontrolü
+                $q->where('start_date', '>', Carbon::now('Europe/Istanbul')->format('Y-m-d'))
+                  ->orWhere(function($q2) {
+                      $q2->where('start_date', '=', Carbon::now('Europe/Istanbul')->format('Y-m-d'))
+                         ->where('start_time', '>=', Carbon::now('Europe/Istanbul')->format('H:i:s'));
+                  });
+            })
+            ->orderBy('start_date', 'asc')
+            ->orderBy('start_time', 'asc');
+            
+        // Eğer öğretmen olarak giriş yapılmışsa sadece onun derslerini göster
+        if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
+            $query->where('teacher_id', Auth::id());
+        }
+        
+        $nextSession = $query->first();
+        
+        if ($nextSession) {
+            $this->nextLesson = [
+                'id' => $nextSession->id,
+                'title' => $nextSession->privateLesson ? $nextSession->privateLesson->name : 'Ders',
+                'teacher' => $nextSession->teacher ? $nextSession->teacher->name : 'Öğretmen Atanmamış',
+                'student' => $nextSession->student ? $nextSession->student->name : 'Öğrenci Atanmamış',
+                'date' => Carbon::parse($nextSession->start_date, 'Europe/Istanbul')->locale('tr')->translatedFormat('d F Y, l'),
+                'start_time' => substr($nextSession->start_time, 0, 5),
+                'end_time' => substr($nextSession->end_time, 0, 5),
+                'status' => $nextSession->status,
+                'location' => $nextSession->location,
+                'days_left' => Carbon::now('Europe/Istanbul')->diffInDays(Carbon::parse($nextSession->start_date, 'Europe/Istanbul')),
+                'hours_left' => Carbon::now('Europe/Istanbul')->diffInHours(Carbon::parse($nextSession->start_date . ' ' . $nextSession->start_time, 'Europe/Istanbul')),
+                'time_left_formatted' => $this->formatTimeLeft(
+                    Carbon::now('Europe/Istanbul'), 
+                    Carbon::parse($nextSession->start_date . ' ' . $nextSession->start_time, 'Europe/Istanbul')
+                ),
+            ];
+            
+            Log::info("En yakın ders bulundu: " . json_encode($this->nextLesson));
+        } else {
+            Log::info("Gelecek ders bulunamadı");
+            $this->nextLesson = null;
+        }
+    } catch (\Exception $e) {
+        Log::error("En yakın ders aranırken hata: " . $e->getMessage());
+        $this->nextLesson = null;
+    }
+}
+/**
+ * Kalan süreyi daha anlaşılır bir formatta formatlar
+ */
+private function formatTimeLeft($currentTime, $futureTime)
+{
+    $diff = $currentTime->diff($futureTime);
+    
+    if ($diff->days > 0) {
+        return $diff->days . ' gün ' . $diff->h . ' saat';
+    } elseif ($diff->h > 0) {
+        return $diff->h . ' saat ' . $diff->i . ' dakika';
+    } else {
+        return $diff->i . ' dakika';
+    }
+}
     public function setWeek($date)
     {
         $this->weekStart = Carbon::parse($date, 'Europe/Istanbul')->startOfWeek();
@@ -386,7 +458,7 @@ public function showSession($id)
                 
                 $this->calendarData[$date][$startTime][] = $occurrence;
             }
-            
+            $this->getNextLesson();
             $this->dispatch('debug', ['message' => "Takvim veri boyutu: " . count($this->calendarData)]);
             
         } catch (\Exception $e) {

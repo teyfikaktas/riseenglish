@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\PrivateLesson;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +11,7 @@ class PrivateLessonNotification extends Model
     protected $fillable = [
         'teacher_id',
         'student_id',
-        'occurrence_id',
+        'session_id', // occurrence_id yerine değiştirildi
         'message',
         'is_sms',
         'is_read',
@@ -34,10 +34,10 @@ class PrivateLessonNotification extends Model
     }
 
     /**
-     * Get the occurrence for this notification
+     * Get the session for this notification
      */
-    public function occurrence(): BelongsTo
+    public function session(): BelongsTo
     {
-        return $this->belongsTo(PrivateLessonOccurrence::class, 'occurrence_id');
+        return $this->belongsTo(PrivateLessonSession::class, 'session_id');
     }
 }

@@ -28,6 +28,7 @@
             <p class="text-xs text-gray-500 mb-0.5">Öğretmen</p>
             <p class="font-medium text-gray-800 text-sm">{{ $session->teacher ? $session->teacher->name : 'Öğretmen Atanmamış' }}</p>
         </div>
+        
         <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
             <p class="text-xs text-gray-500 mb-0.5">Tarih</p>
             <p class="font-medium text-gray-800 text-sm">{{ Carbon\Carbon::parse($session->start_date)->format('d.m.Y') }}</p>
@@ -65,7 +66,22 @@
             <p class="font-medium text-gray-800 text-sm">₺{{ $session->fee ?? ($session->privateLesson ? $session->privateLesson->price : 0) }}</p>
         </div>
     </div>
-    
+    <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
+        <p class="text-xs text-gray-500 mb-0.5">Ödeme Durumu</p>
+        <p>
+            @php
+                $paymentColors = [
+                    'pending' => 'bg-amber-100 text-amber-800 border-amber-200',
+                    'paid' => 'bg-green-100 text-green-800 border-green-200',
+                ];
+                $paymentBadgeColor = $paymentColors[$session->payment_status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
+                $paymentText = $session->payment_status == 'pending' ? 'Ödeme Bekliyor' : 'Ödendi';
+            @endphp
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border {{ $paymentBadgeColor }}">
+                {{ $paymentText }}
+            </span>
+        </p>
+    </div>
     <!-- Notlar Bölümü - Daha kompakt -->
     @if($session->notes)
     <div class="bg-gray-50 p-3 rounded-lg shadow-sm mb-4">
@@ -121,13 +137,58 @@
                     </button>
                     <p class="mt-1.5 text-xs text-orange-600">Ders tamamlanmadan materyal yüklenemez.</p>
                 @else
-                    <a href="#" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 shadow-sm flex items-center text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
+                    <a href="{{ route('ogretmen.private-lessons.material.create', $session->id) }}" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 shadow-sm flex items-center text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
                         Materyal Ekle
                     </a>
                     <p class="mt-1.5 text-xs text-gray-600">Ders materyallerini yükleyebilirsiniz.</p>
+                @endif
+                
+                <!-- Mevcut Materyaller Listesi -->
+                @if($session->materials && $session->materials->count() > 0)
+                    <div class="mt-3 border-t border-gray-100 pt-3">
+                        <h6 class="text-xs font-medium text-gray-700 mb-2">Mevcut Materyaller</h6>
+                        <ul class="space-y-2">
+                            @foreach($session->materials as $material)
+                                <li class="bg-gray-50 p-2 rounded-lg border border-gray-100 flex justify-between items-center">
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Dosya tipine göre ikon -->
+                                        <div class="text-indigo-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <a href="{{ route('ogretmen.private-lessons.material.download', $material->id) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                                                {{ $material->title }}
+                                            </a>
+                                            @if($material->description)
+                                                <p class="text-xs text-gray-500 mt-0.5">{{ Str::limit($material->description, 50) }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <a href="{{ route('ogretmen.private-lessons.material.download', $material->id) }}" class="text-gray-500 hover:text-gray-700 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                        </a>
+                                        <form action="{{ route('ogretmen.private-lessons.material.delete', $material->id) }}" method="POST" onsubmit="return confirm('Bu materyali silmek istediğinizden emin misiniz?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-500 hover:text-red-700 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
                 @endif
             </div>
         </div>

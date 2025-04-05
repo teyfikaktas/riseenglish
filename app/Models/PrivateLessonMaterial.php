@@ -8,17 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PrivateLessonMaterial extends Model
 {
     protected $fillable = [
-        'occurrence_id',
+        'session_id',
         'title',
         'description',
         'file_path',
     ];
 
     /**
-     * Get the occurrence for this material
+     * Get the session for this material
      */
-    public function occurrence(): BelongsTo
+    public function session(): BelongsTo
     {
-        return $this->belongsTo(PrivateLessonOccurrence::class, 'occurrence_id');
+        return $this->belongsTo(PrivateLessonSession::class, 'session_id');
     }
 }
