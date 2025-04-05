@@ -1,5 +1,5 @@
 <?php
-namespace App\Models\PrivateLesson;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +19,10 @@ class PrivateLessonSession extends Model
         'start_date',
         'end_date',
         'location',
+        'fee',
+        'payment_status',
+        'paid_amount',
+        'payment_date',
         'status',
         'notes',
     ];
@@ -53,5 +57,37 @@ class PrivateLessonSession extends Model
     public function occurrences(): HasMany
     {
         return $this->hasMany(PrivateLessonOccurrence::class, 'session_id');
+    }
+
+    /**
+     * Check if the session is paid
+     */
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    /**
+     * Check if the session is partially paid
+     */
+    public function isPartiallyPaid(): bool
+    {
+        return $this->payment_status === 'partially_paid';
+    }
+
+    /**
+     * Check if the session is pending payment
+     */
+    public function isPending(): bool
+    {
+        return $this->payment_status === 'pending';
+    }
+
+    /**
+     * Get remaining amount to be paid
+     */
+    public function getRemainingAmount(): float
+    {
+        return $this->fee - $this->paid_amount;
     }
 }

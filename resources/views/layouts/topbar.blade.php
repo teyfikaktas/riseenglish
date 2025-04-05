@@ -32,6 +32,13 @@
                 <a href="{{ route('public.resources.index') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('ucretsiz-kaynaklar') ? 'text-red-600' : '' }}">Ücretsiz İçerikler</a>
                 <a href="{{ url('/egitimler') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('egitimler') ? 'text-red-600' : '' }}">Eğitimler</a>
                 <a href="{{ url('/iletisim') }}" class="text-gray-700 hover:text-red-600 font-medium transition duration-200 {{ request()->is('iletisim') ? 'text-red-600' : '' }}">İletişim</a>
+                @if(auth()->check() && auth()->user()->hasRole('ogretmen'))
+                <a href="{{ route('ogretmen.private-lessons.index') }}" 
+                   class="text-gray-700 hover:text-red-600 font-medium transition duration-200 
+                          {{ request()->is('ogretmen/ozel-derslerim') ? 'text-red-600' : '' }}">
+                    Özel Ders
+                </a>
+            @endif
             </div>
             
             <!-- Sağ Üst Alan: Giriş yapılmışsa profil veya oturum aç/kapat -->
@@ -95,6 +102,13 @@
         <a href="{{ url('/ana-sayfa') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('ana-sayfa') ? 'text-red-600' : '' }}">Ana Sayfa</a>
         <a href="{{ url('/ucretsiz-icerikler') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('ucretsiz-icerikler') ? 'text-red-600' : '' }}">Ücretsiz İçerikler</a>        <a href="{{ url('/egitimler') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('egitimler') ? 'text-red-600' : '' }}">Eğitimler</a>
         <a href="{{ url('/iletisim') }}" class="block py-2 text-gray-700 hover:text-red-600 font-medium {{ request()->is('iletisim') ? 'text-red-600' : '' }}">İletişim</a>
+        @if(auth()->check() && auth()->user()->hasRole('ogretmen'))
+        <a href="{{ route('ogretmen.private-lessons.index') }}" 
+           class="block py-2 text-gray-700 hover:text-red-600 font-medium 
+                  {{ request()->is('ogretmen/ozel-derslerim') ? 'text-red-600' : '' }}">
+            Özel Ders
+        </a>
+    @endif
     </div>
 </div>
 
