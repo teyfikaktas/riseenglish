@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'parent_phone_number',
+        'parent_phone_number_2',
         'phone',             // Telefon numarası alanı
         'phone_verified',    // Telefon doğrulama durumu
         'phone_verified_at', // Telefon doğrulama tarihi

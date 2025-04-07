@@ -184,7 +184,7 @@
             }
             
             // Mesaj gönderildikten sonra WhatsApp’a yönlendir
-            const phoneNumber = '905541383539';
+            const phoneNumber = '905457624498';
             const encodedMessage = encodeURIComponent(messageText);
             const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
             window.open(whatsappURL, '_blank');

@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PrivateLessonSession;
 use App\Models\PrivateLesson;
+use App\Models\PrivateLessonHomeWork;
+use App\Models\PrivateLessonHomeworkSubmission;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -30,6 +32,478 @@ class TeacherPrivateLessonController extends Controller
 
         return view('teacher.private-lessons.index', compact('sessions'));
     }
+
+    
+    /**
+ * Dersin tüm seanslarını göster (Lesson bazlı)
+ */
+public function showLesson($lessonId)
+{
+    $teacherId = Auth::id();
+    
+    // Dersi getir
+    $lesson = PrivateLesson::findOrFail($lessonId);
+    
+    // Bu derse ait tüm seansları getir
+    $sessions = PrivateLessonSession::with(['student'])
+        ->where('private_lesson_id', $lessonId)
+        ->where('teacher_id', $teacherId)
+        ->orderBy('start_date', 'asc')
+        ->get();
+    
+    // Öğrenci bilgisini ilk seanstan al
+    $student = $sessions->first()->student ?? null;
+    
+    return view('teacher.private-lessons.lesson', compact('lesson', 'sessions', 'student'));
+}
+/**
+ * Show the form for adding homework to a lesson
+ *
+ * @param int $id
+ * @return \Illuminate\View\View
+ */
+public function showAddHomework($id)
+{
+    $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student', 'homeworks'])
+        ->where('teacher_id', Auth::id())
+        ->findOrFail($id);
+    
+    // Check if the lesson is completed
+    if ($session->status !== 'completed') {
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('error', 'Ders tamamlanmadan ödev eklenemez.');
+    }
+    
+    return view('teacher.private-lessons.add-homework', compact('session'));
+}
+
+/**
+ * Store a newly created homework
+ *
+ * @param \Illuminate\Http\Request $request
+ * @param int $id
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function storeHomework(Request $request, $id)
+{
+    $session = PrivateLessonSession::where('teacher_id', Auth::id())->findOrFail($id);
+    
+    // Check if the lesson is completed
+    if ($session->status !== 'completed') {
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('error', 'Ders tamamlanmadan ödev eklenemez.');
+    }
+    
+    // Validate the input
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'due_date' => 'required|date|after:today',
+        'file' => 'nullable|file|max:10240', // 10MB max
+    ]);
+    
+    try {
+        $homeworkData = [
+            'session_id' => $session->id,
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'due_date' => $validated['due_date'],
+        ];
+        
+        // Handle file upload if provided
+        if ($request->hasFile('file')) {
+            $originalName = $request->file('file')->getClientOriginalName();
+            $uniqueFileName = uniqid() . '_' . time() . '.' . $request->file('file')->getClientOriginalExtension();
+            
+            $filePath = $request->file('file')->storeAs(
+                'lessons/homeworks', 
+                $uniqueFileName, 
+                'local'
+            );
+            
+            $homeworkData['file_path'] = $filePath;
+            $homeworkData['original_filename'] = $originalName;
+        }
+        
+        // Create homework
+        $homework = PrivateLessonHomework::create($homeworkData);
+        
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('success', 'Ödev başarıyla eklendi.');
+            
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Ödev eklenirken bir hata oluştu: ' . $e->getMessage())
+            ->withInput();
+    }
+}
+
+/**
+ * View all homeworks for a session
+ *
+ * @param int $id
+ * @return \Illuminate\View\View
+ */
+public function viewHomeworks($id)
+{
+    $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student', 'homeworks'])
+        ->where('teacher_id', Auth::id())
+        ->findOrFail($id);
+    
+    return view('teacher.private-lessons.homeworks', compact('session'));
+}
+
+/**
+ * Delete homework
+ *
+ * @param int $homeworkId
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function deleteHomework($homeworkId)
+{
+    try {
+        $homework = PrivateLessonHomework::findOrFail($homeworkId);
+        
+        // Check if the homework belongs to a session taught by this teacher
+        $session = PrivateLessonSession::where('id', $homework->session_id)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+        
+        // Delete file if exists
+        if (!empty($homework->file_path) && Storage::disk('local')->exists($homework->file_path)) {
+            Storage::disk('local')->delete($homework->file_path);
+        }
+        
+        // Delete the homework
+        $homework->delete();
+        
+        return redirect()->route('ogretmen.private-lessons.session.show', $session->id)
+            ->with('success', 'Ödev başarıyla silindi.');
+            
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Ödev silinirken bir hata oluştu: ' . $e->getMessage());
+    }
+}
+
+/**
+ * View homework submissions
+ *
+ * @param int $homeworkId
+ * @return \Illuminate\View\View
+ */
+public function viewHomeworkSubmissions($homeworkId)
+{
+    $homework = PrivateLessonHomework::with(['session', 'submissions.student'])
+        ->findOrFail($homeworkId);
+    
+    // Check if the homework belongs to a session taught by this teacher
+    $session = PrivateLessonSession::where('id', $homework->session_id)
+        ->where('teacher_id', Auth::id())
+        ->firstOrFail();
+    
+    return view('teacher.private-lessons.homework-submissions', compact('homework', 'session'));
+}
+
+/**
+ * Download homework file
+ *
+ * @param int $homeworkId
+ * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+ */
+public function downloadHomework($homeworkId)
+{
+    try {
+        $homework = PrivateLessonHomework::findOrFail($homeworkId);
+        
+        // Check if the homework belongs to a session taught by this teacher
+        $session = PrivateLessonSession::where('id', $homework->session_id)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+        
+        // Check if file exists
+        if (empty($homework->file_path) || !Storage::disk('local')->exists($homework->file_path)) {
+            return abort(404, 'Dosya bulunamadı veya silinmiş.');
+        }
+        
+        // Generate download name
+        $downloadName = $homework->title . '.' . pathinfo($homework->file_path, PATHINFO_EXTENSION);
+        
+        // Download the file
+        return Storage::disk('local')->download($homework->file_path, $downloadName);
+        
+    } catch (\Exception $e) {
+        Log::error('Ödev indirme hatası: ' . $e->getMessage());
+        return back()->with('error', 'Dosya indirilirken bir hata oluştu: ' . $e->getMessage());
+    }
+}
+
+/**
+ * View a specific homework submission
+ *
+ * @param int $submissionId
+ * @return \Illuminate\View\View
+ */
+public function viewSubmission($submissionId)
+{
+    $submission = PrivateLessonHomeworkSubmission::with(['homework.session', 'student'])
+        ->findOrFail($submissionId);
+    
+    // Check if the submission belongs to a session taught by this teacher
+    $session = PrivateLessonSession::where('id', $submission->homework->session_id)
+        ->where('teacher_id', Auth::id())
+        ->firstOrFail();
+    
+    return view('teacher.private-lessons.submission-detail', compact('submission', 'session'));
+}
+
+/**
+ * Grade a homework submission
+ *
+ * @param \Illuminate\Http\Request $request
+ * @param int $submissionId
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function gradeSubmission(Request $request, $submissionId)
+{
+    try {
+        $submission = PrivateLessonHomeworkSubmission::with(['homework.session'])
+            ->findOrFail($submissionId);
+        
+        // Check if the submission belongs to a session taught by this teacher
+        $session = PrivateLessonSession::where('id', $submission->homework->session_id)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+        
+        // Validate the input
+        $validated = $request->validate([
+            'teacher_feedback' => 'required|string',
+            'score' => 'required|numeric|min:0|max:100',
+        ]);
+        
+        // Update the submission
+        $submission->update([
+            'teacher_feedback' => $validated['teacher_feedback'],
+            'score' => $validated['score'],
+        ]);
+        
+        return redirect()->route('ogretmen.private-lessons.homework.submissions', $submission->homework_id)
+            ->with('success', 'Ödev değerlendirmesi başarıyla kaydedildi.');
+            
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Değerlendirme kaydedilirken bir hata oluştu: ' . $e->getMessage())
+            ->withInput();
+    }
+}
+
+/**
+ * Download homework submission file
+ *
+ * @param int $submissionId
+ * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+ */
+public function downloadSubmission($submissionId)
+{
+    try {
+        $submission = PrivateLessonHomeworkSubmission::with(['homework.session', 'student'])
+            ->findOrFail($submissionId);
+        
+        // Check if the submission belongs to a session taught by this teacher
+        $session = PrivateLessonSession::where('id', $submission->homework->session_id)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+        
+        // Check if file exists
+        if (empty($submission->file_path) || !Storage::disk('local')->exists($submission->file_path)) {
+            return abort(404, 'Dosya bulunamadı veya silinmiş.');
+        }
+        
+        // Generate download name
+        $downloadName = $submission->student->name . '_' . $submission->homework->title . '.' . 
+                       pathinfo($submission->file_path, PATHINFO_EXTENSION);
+        
+        // Download the file
+        return Storage::disk('local')->download($submission->file_path, $downloadName);
+        
+    } catch (\Exception $e) {
+        Log::error('Ödev teslimi indirme hatası: ' . $e->getMessage());
+        return back()->with('error', 'Dosya indirilirken bir hata oluştu: ' . $e->getMessage());
+    }
+}
+/**
+ * Ders düzenleme formunu göster (tüm seansları değil)
+ */
+public function editLesson($lessonId)
+{
+    $teacherId = Auth::id();
+    
+    // Dersi getir
+    $lesson = PrivateLesson::findOrFail($lessonId);
+    
+    // Bu derse ait bir seans getir (öğrenci bilgisi için)
+    $session = PrivateLessonSession::where('private_lesson_id', $lessonId)
+        ->where('teacher_id', $teacherId)
+        ->first();
+    
+    // Öğrenci listesini çekelim
+    $students = User::role('ogrenci')->get();
+    
+    return view('teacher.private-lessons.edit-lesson', compact('lesson', 'session', 'students'));
+}
+/**
+ * Özel dersin aktiflik durumunu değiştirir
+ * 
+ * @param int $lessonId Özel ders ID
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function toggleLessonActive($lessonId)
+{
+    try {
+        $teacherId = Auth::id();
+        
+        // Dersi getir
+        $lesson = PrivateLesson::findOrFail($lessonId);
+        
+        // Öğretmenin yetkisi var mı kontrol et
+        $sessionCheck = PrivateLessonSession::where('private_lesson_id', $lessonId)
+            ->where('teacher_id', $teacherId)
+            ->first();
+            
+        if (!$sessionCheck) {
+            return redirect()->back()
+                ->with('error', 'Bu dersi değiştirme yetkiniz bulunmuyor.');
+        }
+        
+        // Aktiflik durumunu değiştir
+        $lesson->is_active = !$lesson->is_active;
+        $lesson->save();
+        
+        $status = $lesson->is_active ? 'aktif' : 'pasif';
+        return redirect()->back()
+            ->with('success', "Ders başarıyla {$status} duruma getirildi.");
+            
+    } catch (\Exception $e) {
+        Log::error("Ders durumu değiştirme hatası: " . $e->getMessage());
+        return redirect()->back()
+            ->with('error', 'Bir hata oluştu: ' . $e->getMessage());
+    }
+}
+/**
+ * Dersi güncelle (tüm seansları günceller)
+ */
+public function updateLesson(Request $request, $lessonId)
+{
+    try {
+        $teacherId = Auth::id();
+
+        $lesson = PrivateLesson::findOrFail($lessonId);
+
+        $sessions = PrivateLessonSession::where('private_lesson_id', $lessonId)
+            ->where('teacher_id', $teacherId)
+            ->get();
+
+        $validated = $request->validate([
+            'lesson_name' => 'required|string|max:255',
+            'student_id' => 'required|exists:users,id',
+            'fee' => 'required|numeric|min:0',
+            'location' => 'nullable|string|max:255',
+            'status' => 'required|in:approved,cancelled',
+            'notes' => 'nullable|string',
+            'day_of_week' => 'nullable|integer|min:0|max:6',
+            'start_time' => 'nullable',
+            'skip_past_sessions' => 'required|boolean',
+            'update_all_times' => 'required|boolean'
+        ]);
+
+        $lesson->update([
+            'name' => $validated['lesson_name'],
+            'price' => $validated['fee']
+        ]);
+
+        $updateTimes = $validated['update_all_times'];
+        $newDayOfWeek = $validated['day_of_week'] ?? null;
+        $newStartTime = $validated['start_time'] ?? null;
+
+        // Carbon gün isimleri dizisi
+        $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        foreach ($sessions as $session) {
+            if ($validated['skip_past_sessions'] &&
+                strtotime($session->start_date . ' ' . $session->start_time) < time()) {
+                continue;
+            }
+
+            $updateData = [
+                'student_id' => $validated['student_id'],
+                'fee' => $validated['fee'],
+                'location' => $validated['location'] ?? null,
+                'status' => $validated['status'],
+                'notes' => $validated['notes'] ?? null
+            ];
+
+            if ($updateTimes) {
+                $oldDate = Carbon::parse($session->start_date);
+
+                if (!is_null($newDayOfWeek) && !is_null($newStartTime)) {
+                    $dayName = $days[$newDayOfWeek];
+                    $newDate = $oldDate->copy()->next($dayName);
+                    $endTime = Carbon::parse($newStartTime)->addHour()->format('H:i');
+
+                    $updateData['day_of_week'] = $newDayOfWeek;
+                    $updateData['start_date'] = $newDate->format('Y-m-d');
+                    $updateData['start_time'] = $newStartTime;
+                    $updateData['end_time'] = $endTime;
+                } elseif (!is_null($newDayOfWeek)) {
+                    $dayName = $days[$newDayOfWeek];
+                    $newDate = $oldDate->copy()->next($dayName);
+
+                    $updateData['day_of_week'] = $newDayOfWeek;
+                    $updateData['start_date'] = $newDate->format('Y-m-d');
+                } elseif (!is_null($newStartTime)) {
+                    $endTime = Carbon::parse($newStartTime)->addHour()->format('H:i');
+
+                    $updateData['start_time'] = $newStartTime;
+                    $updateData['end_time'] = $endTime;
+                }
+
+                // Çakışma kontrolü
+                if (isset($updateData['day_of_week']) || isset($updateData['start_time'])) {
+                    $conflictExists = $this->checkLessonConflict(
+                        $teacherId,
+                        $updateData['day_of_week'] ?? $session->day_of_week,
+                        $updateData['start_time'] ?? $session->start_time,
+                        $updateData['end_time'] ?? $session->end_time,
+                        $updateData['start_date'] ?? $session->start_date,
+                        $session->id
+                    );
+
+                    if ($conflictExists) {
+                        return redirect()->back()
+                            ->with('error', 'Seans saatinde çakışma var! Lütfen önce diğer dersi iptal edin veya başka bir saat seçin.')
+                            ->withInput();
+                    }
+                }
+            }
+
+            $session->update($updateData);
+        }
+
+        return redirect()->route('ogretmen.private-lessons.showLesson', $lessonId)
+            ->with('success', 'Özel ders başarıyla güncellendi.');
+
+    } catch (\Exception $e) {
+        Log::error("Ders güncelleme hatası: " . $e->getMessage());
+        Log::error("Hata satırı: " . $e->getLine());
+        Log::error("Hata dosyası: " . $e->getFile());
+        Log::error("Hata izi: " . $e->getTraceAsString());
+
+        return redirect()->back()
+            ->with('error', 'Bir hata oluştu: ' . $e->getMessage())
+            ->withInput();
+    }
+}
+
     /**
  * Show the form for adding materials to a lesson
  *

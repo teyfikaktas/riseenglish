@@ -8,6 +8,7 @@ use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\Admin\PrivateLessonController;
 
 use App\Http\Controllers\Teacher\TeacherPrivateLessonController;
+use App\Http\Controllers\Student\StudentPrivateLessonController;
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -177,13 +178,40 @@ Route::middleware(['auth', 'role:ogretmen', 'verified.phone'])->group(function (
             ->name('panel');
             Route::get('/check-lesson-conflict', [TeacherPrivateLessonController::class, 'checkLessonConflictApi'])->name('check.lesson.conflict');
 
-
+// Ders bazlı route'lar
+// Öğretmen rotaları içinde, özel ders rotaları arasına ekleyin
+Route::get('/ozel-ders-grup/{id}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'showLesson'])
+    ->name('private-lessons.showLesson');
+Route::get('/ozel-ders-grup/{id}/duzenle', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'editLesson'])
+    ->name('private-lessons.editLesson');
+Route::put('/ozel-ders-grup/{id}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'updateLesson'])
+    ->name('private-lessons.updateLesson');
         // Kurs yönetimi route'ları
         Route::post('/kurs/{id}/toplanti-bilgileri', [App\Http\Controllers\Teacher\TeacherController::class, 'updateMeetingInfo'])
             ->name('course.update-meeting-info');
-            
+            Route::post('/ozel-ders/{id}/tamamla', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'completeLesson'])
+    ->name('private-lessons.completeLesson');
         Route::get('/kurs/{id}', [App\Http\Controllers\Teacher\TeacherController::class, 'courseDetail'])
             ->name('course.detail');
+            // Homework management routes
+Route::get('/ozel-ders/{id}/odev-ekle', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'showAddHomework'])
+->name('private-lessons.homework.create');
+Route::post('/ozel-ders/{id}/odev-ekle', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'storeHomework'])
+->name('private-lessons.homework.store');
+Route::get('/ozel-ders/{id}/odevler', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'viewHomeworks'])
+->name('private-lessons.homework.index');
+Route::delete('/ozel-ders-odev/{homeworkId}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'deleteHomework'])
+->name('private-lessons.homework.delete');
+Route::get('/ozel-ders-odev/{homeworkId}/teslimler', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'viewHomeworkSubmissions'])
+->name('private-lessons.homework.submissions');
+Route::get('/ozel-ders-odev/{homeworkId}/indir', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'downloadHomework'])
+->name('private-lessons.homework.download');
+Route::get('/ozel-ders-teslim/{submissionId}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'viewSubmission'])
+->name('private-lessons.submission.view');
+Route::post('/ozel-ders-teslim/{submissionId}/degerlendir', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'gradeSubmission'])
+->name('private-lessons.submission.grade');
+Route::get('/ozel-ders-teslim/{submissionId}/indir', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'downloadSubmission'])
+->name('private-lessons.submission.download');
             // Öğretmen rotaları içinde, özel ders rotaları arasına ekleyin
         Route::get('/ozel-ders-seans/{id}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'showSession'])
         ->name('private-lessons.session.show');
@@ -193,7 +221,8 @@ Route::middleware(['auth', 'role:ogretmen', 'verified.phone'])->group(function (
     ->name('private-lessons.complete');
         Route::get('/kurs/{courseId}/teslimler/{studentId?}', [App\Http\Controllers\Teacher\TeacherController::class, 'loadStudentSubmissions'])
             ->name('course.submissions.load');
-            
+            Route::post('/private-lessons/{lessonId}/toggle-active', [TeacherPrivateLessonController::class, 'toggleLessonActive'])
+    ->name('private-lessons.toggleActive');
         Route::post('/kurs/{courseId}/duyuru', [App\Http\Controllers\Teacher\TeacherController::class, 'createAnnouncement'])
             ->name('course.create-announcement');
             
@@ -255,7 +284,8 @@ Route::middleware(['auth', 'role:ogretmen', 'verified.phone'])->group(function (
             
         Route::post('/ozel-ders/{id}/reddet', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'reject'])
             ->name('private-lessons.reject');
-            
+            // Ders bazlı route'lar
+
         // Yeni ödeme işlemleri rotaları
         Route::post('/ozel-ders/{id}/odeme-al', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'takePayment'])
             ->name('private-lessons.takePayment');
@@ -278,7 +308,39 @@ Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function ()
         // Öğrencinin kursları
         Route::get('/kurslarim', [App\Http\Controllers\Student\StudentCourseController::class, 'index'])
             ->name('kurslarim');
-            
+             // Özel Ders Yönetimi için rotalar
+        Route::get('/ozel-derslerim', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'index'])
+        ->name('private-lessons.index');
+        Route::get('/tamamlanan-dersler', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'completed'])
+    ->name('private-lessons.completed');
+    Route::get('/ozel-ders/{id}', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'showLesson'])
+        ->name('private-lessons.lesson');
+        
+    Route::get('/ozel-ders-seans/{id}', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'showSession'])
+        ->name('private-lessons.session');
+        
+    // Materyal yönetimi
+    Route::get('/ders-materyalleri', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'materials'])
+        ->name('private-lessons.materials');
+        
+    Route::get('/materyal/{id}/indir', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'downloadMaterial'])
+        ->name('private-lessons.material.download');
+        
+    // Ödev yönetimi
+    Route::get('/odevlerim', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'homeworks'])
+        ->name('private-lessons.homeworks');
+        
+    Route::get('/odev/{id}', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'showHomework'])
+        ->name('private-lessons.homework');
+        
+    Route::get('/odev/{id}/indir', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'downloadHomework'])
+        ->name('private-lessons.homework.download');
+        
+    Route::post('/odev/{id}/teslim-et', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'submitHomework'])
+        ->name('private-lessons.homework.submit');
+        
+    Route::get('/odev-teslim/{id}/indir', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'downloadSubmission'])
+        ->name('private-lessons.submission.download');
         // Kurs detay sayfası - Sadece kayıtlı öğrenciler için
         Route::get('/kurslarim/{slug}', [App\Http\Controllers\Student\StudentCourseController::class, 'showCourseDetail'])
         ->name('kurs-detay');

@@ -178,7 +178,41 @@
     </div>
   </div>
 </div>
-
+<div class="bg-white py-16">
+    <div class="container mx-auto px-6">
+      <div class="flex flex-col md:flex-row items-center gap-12">
+        <!-- Logo area -->
+        <div class="w-full md:w-1/3 flex justify-center">
+          <div class="relative">
+            <!-- Logo image with larger sizes -->
+            <img src="{{ asset('images/logo.png') }}" alt="Rise English Logo" class="h-32 sm:h-40 md:h-48">
+          </div>
+        </div>
+        
+        <!-- Founder's message area -->
+        <div class="w-full md:w-2/3">
+          <h2 class="text-3xl font-bold text-[#1a2e5a] mb-6">Welcome to Rise English!</h2>
+          <div class="mb-8 text-gray-700">
+            <p class="mb-4">As the founder of Rise English, I am proud to present a platform designed not just to teach English, but to inspire confidence, growth, and real communication skills. Our mission is simple: to help every learner rise to their full potential through quality, personalized, and motivating English education.</p>
+            <p class="mb-4">At Rise English, we believe language learning should be engaging, practical, and goal-oriented. Whether you're preparing for an exam, improving your speaking, or starting from scratch — we are here to guide you every step of the way.</p>
+            <p class="mb-4">This journey started with a passion for education and a belief that with the right support, anyone can master English. I'm excited to see how far we can go — together.</p>
+            <p class="mb-2 font-semibold">Let's rise, learn, and grow</p>
+            <p class="font-bold text-[#e63946]">Hakan Ekinci</p>
+          </div>
+          
+          <div class="pt-6 border-t border-gray-200">
+            <h2 class="text-3xl font-bold text-[#1a2e5a] mb-6">Rise English'e Hoş Geldiniz!</h2>
+            <div class="text-gray-700">
+              <p class="mb-4">Rise English'in kurucusu olarak sizlere sadece bir dil kursu değil, aynı zamanda özgüven kazandıran, gelişimi destekleyen ve gerçek iletişim becerileri kazandıran bir öğrenme ortamı sunmaktan gurur duyuyorum. Amacımız basit: Her öğrencinin kendi potansiyelini keşfetmesine yardımcı olmak ve onu en iyi şekilde ortaya çıkarmak.</p>
+              <p class="mb-4">Rise English'te dil öğrenmenin ilham verici, pratik ve hedef odaklı olması gerektiğine inanıyoruz. İster sınava hazırlanıyor olun, ister konuşma becerilerinizi geliştirmek ya da sıfırdan başlamak istiyor olun — bu yolculukta her adımda yanınızdayız.</p>
+              <p class="mb-4">Bu platform, eğitime duyduğum tutku ve doğru destekle herkesin İngilizceyi öğrenebileceğine olan inancımla doğdu. Şimdi birlikte ne kadar yol kat edebileceğimizi görmek için sabırsızlanıyorum.</p>
+              <p class="font-bold text-[#e63946]">Hakan Ekinci</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 <div class="container mx-auto px-4 py-16 bg-gray-50">
   <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-[#1a2e5a] mb-2">Öne Çıkan Eğitimler</h2>
@@ -381,14 +415,14 @@
                           </div>
                           
                           <div class="flex justify-between items-center">
-                              <div>
+                              {{-- <div>
                                   @if($course->discount_price)
                                       <span class="text-gray-500 line-through text-sm">{{ number_format($course->price, 2) }} ₺</span>
                                       <span class="text-[#e63946] font-bold ml-2">{{ number_format($course->discount_price, 2) }} ₺</span>
                                   @else
                                       <span class="text-[#1a2e5a] font-bold">{{ number_format($course->price, 2) }} ₺</span>
                                   @endif
-                              </div>
+                              </div> --}}
                               <a href="{{ url('/egitimler/' . $course->slug) }}" class="bg-[#e63946] hover:bg-[#d32836] text-white px-4 py-2 rounded-lg transition-colors duration-300 font-medium text-sm">Detayları Gör</a>
                           </div>
                       </div>
@@ -406,12 +440,27 @@
           </div>
       </div>
       
-      <!-- Slider Pagination/Dots - Mobil için -->
-      <div class="flex justify-center mt-6 md:hidden">
-          <div id="sliderDots" class="flex space-x-2">
-              <!-- Dots will be added with JS -->
-          </div>
-      </div>
+<!-- Slider Pagination/Dots - Mobil için -->
+<div class="flex justify-center mt-6 md:hidden">
+    <!-- Mobil Ok Tuşları - Dots üzerinde -->
+    <div class="flex justify-between items-center w-full max-w-xs mb-3">
+        <button id="mobilePrevButton" class="bg-white p-3 rounded-full shadow-lg text-[#1a2e5a] focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+        </button>
+        
+        <div id="sliderDots" class="flex space-x-2">
+            <!-- Dots will be added with JS -->
+        </div>
+        
+        <button id="mobileNextButton" class="bg-white p-3 rounded-full shadow-lg text-[#1a2e5a] focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </button>
+    </div>
+</div>
   </div>
   
   <div class="mt-10 text-center">
@@ -608,39 +657,12 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const floatingPanel = document.getElementById('floatingSignupPanel');
-    const closeButton = document.getElementById('closeFloatingPanel');
-    
-    // Panel ilk yüklendiğinde animasyon için
-    setTimeout(() => {
-        floatingPanel.classList.add('animate-bounce');
-        setTimeout(() => {
-            floatingPanel.classList.remove('animate-bounce');
-        }, 1000);
-    }, 3000);
-    
-    // Düzenli aralıklarla hafif bir sallanma animasyonu
-    setInterval(() => {
-        floatingPanel.classList.add('animate-pulse');
-        setTimeout(() => {
-            floatingPanel.classList.remove('animate-pulse');
-        }, 1000);
-    }, 10000);
-    
-    // Kapama butonu işlevselliği
-    closeButton.addEventListener('click', function() {
-        floatingPanel.classList.add('opacity-0', 'translate-y-10');
-        setTimeout(() => {
-            floatingPanel.classList.add('hidden');
-        }, 500);
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
     const slidesWrapper = document.getElementById('slidesWrapper');
     const sliderDots = document.getElementById('sliderDots');
     const nextButton = document.getElementById('nextButton');
     const prevButton = document.getElementById('prevButton');
+    const mobileNextButton = document.getElementById('mobileNextButton');
+    const mobilePrevButton = document.getElementById('mobilePrevButton');
     const sliderItems = document.querySelectorAll('.slider-item');
     
     if (sliderItems.length === 0) return;
@@ -706,7 +728,8 @@ document.addEventListener('DOMContentLoaded', function() {
             currentIndex = maxIndex;
         }
         
-        // Transform ile yatay kaydırma
+        // Transform ile yatay kaydırma - Animasyonu yumuşat
+        slidesWrapper.style.transition = 'transform 0.5s ease';
         slidesWrapper.style.transform = `translateX(-${currentIndex * slideWidthPercent}%)`;
         
         // Aktif dot'u güncelle
@@ -739,7 +762,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentIndex < sliderItems.length - visibleSlides) {
             updateSlide(currentIndex + visibleSlides);
         } else {
-            // Son slide'daysa başa dön (opsiyonel)
+            // Son slide'daysa başa dön
             updateSlide(0);
         }
     }
@@ -749,14 +772,33 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentIndex > 0) {
             updateSlide(currentIndex - visibleSlides);
         } else {
-            // İlk slide'daysa sona git (opsiyonel)
+            // İlk slide'daysa sona git
             updateSlide(Math.max(0, sliderItems.length - visibleSlides));
+        }
+    }
+    
+    // Tek slide hareketi için fonksiyonlar (mobil için)
+    function nextSingleSlide() {
+        if (currentIndex < sliderItems.length - 1) {
+            updateSlide(currentIndex + 1);
+        } else {
+            updateSlide(0);
+        }
+    }
+    
+    function prevSingleSlide() {
+        if (currentIndex > 0) {
+            updateSlide(currentIndex - 1);
+        } else {
+            updateSlide(sliderItems.length - 1);
         }
     }
     
     // Buton event listener'ları
     if (nextButton) nextButton.addEventListener('click', nextSlide);
     if (prevButton) prevButton.addEventListener('click', prevSlide);
+    if (mobileNextButton) mobileNextButton.addEventListener('click', nextSingleSlide);
+    if (mobilePrevButton) mobilePrevButton.addEventListener('click', prevSingleSlide);
     
     // Swipe desteği için dokunmatik ekran olayları (mobil için)
     let touchStartX = 0;
@@ -772,14 +814,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function handleSwipe() {
-        const swipeThreshold = 50; // px
+        const swipeThreshold = 30; // Eşik değerini düşürdük, daha kolay kaydırma için
         
         if (touchEndX < touchStartX - swipeThreshold) {
             // Sola kaydırma
-            nextSlide();
+            nextSingleSlide(); // Mobilde tek slide hareket
         } else if (touchEndX > touchStartX + swipeThreshold) {
             // Sağa kaydırma
-            prevSlide();
+            prevSingleSlide(); // Mobilde tek slide hareket
         }
     }
     
@@ -789,8 +831,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // İlk yükleme
     updateSlidesConfig();
     
-    // Otomatik geçiş için (opsiyonel)
-    // setInterval(nextSlide, 5000);
+    // Otomatik geçiş
+    const autoSlide = setInterval(nextSlide, 6000);
+    
+    // Kullanıcı etkileşiminde otomatik geçişi durdur
+    const sliderContainer = document.querySelector('.slider-container');
+    if (sliderContainer) {
+        sliderContainer.addEventListener('mouseenter', () => {
+            clearInterval(autoSlide);
+        });
+    }
 });
 </script>
 @endsection

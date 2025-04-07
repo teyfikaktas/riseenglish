@@ -82,6 +82,65 @@
             </span>
         </p>
     </div>
+    <!-- In teacher.private-lessons.session.blade.php -->
+
+@if(isset($isLessonCompleted) && $isLessonCompleted)
+<div class="mt-4">
+    <div class="flex justify-between items-center mb-2">
+        <h3 class="text-lg font-semibold">Ödevler</h3>
+        <a href="{{ route('ogretmen.private-lessons.homework.create', $session->id) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+            Ödev Ekle
+        </a>
+    </div>
+
+    @if($session->homeworks && $session->homeworks->count() > 0)
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Başlık</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teslim Tarihi</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teslimler</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($session->homeworks as $homework)
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ $homework->title }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ \Carbon\Carbon::parse($homework->due_date)->format('d.m.Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ $homework->submissions->count() }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ route('ogretmen.private-lessons.homework.submissions', $homework->id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Teslimleri Gör</a>
+                            
+                            @if($homework->file_path)
+                            <a href="{{ route('ogretmen.private-lessons.homework.download', $homework->id) }}" class="text-green-600 hover:text-green-900 mr-3">İndir</a>
+                            @endif
+                            
+                            <form class="inline" action="{{ route('ogretmen.private-lessons.homework.delete', $homework->id) }}" method="POST" onsubmit="return confirm('Bu ödevi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:text-red-900">Sil</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 p-3 rounded">
+            Bu derse henüz ödev eklenmemiş.
+        </div>
+    @endif
+</div>
+@endif
     <!-- Notlar Bölümü - Daha kompakt -->
     @if($session->notes)
     <div class="bg-gray-50 p-3 rounded-lg shadow-sm mb-4">

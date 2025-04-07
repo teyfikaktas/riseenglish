@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PrivateLessonHomework extends Model
 {
+    protected $table = 'private_lesson_homeworks'; // Add this line to specify the correct table name
+
     protected $fillable = [
         'session_id',
         'title',

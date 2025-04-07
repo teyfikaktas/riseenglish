@@ -71,9 +71,9 @@
                         <div>
                             <h3 class="font-semibold text-[#1a2e5a] text-lg mb-1">Çalışma Saatleri</h3>
                             <p class="text-gray-700">
-                                Pazartesi - Cuma: 09:00 - 18:00<br>
-                                Cumartesi: 09:00 - 13:00<br>
-                                Pazar: Kapalı
+                                Pazartesi - Cuma: 09:00 - 21:00<br>
+                                Cumartesi: 09:00 - 18:00<br>
+                                Pazar: 09:00 - 18:00
                             </p>
                         </div>
                     </div>

@@ -59,6 +59,11 @@
                         <label for="parent_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Veli Telefon Numarası (Öğrenciler için)</label>
                         <input type="text" name="parent_phone_number" id="parent_phone_number" value="{{ old('parent_phone_number', $user->parent_phone_number) }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     </div>
+                    <!-- İkinci Veli Telefon Numarası (Öğrenciler için) -->
+                    <div>
+                        <label for="parent_phone_number_2" class="block text-sm font-medium text-gray-700 mb-1">İkinci Veli Telefon Numarası</label>
+                        <input type="text" name="parent_phone_number_2" id="parent_phone_number_2" value="{{ old('parent_phone_number_2', $user->parent_phone_number_2) }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

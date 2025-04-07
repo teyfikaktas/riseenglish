@@ -158,11 +158,11 @@
                                         </label>
                                         <input type="time" name="start_times[]" class="start-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                                     </div>
-                                    <div class="hidden">
+                                    <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Bitiş Saati <span class="text-red-500">*</span>
                                         </label>
-                                        <input type="time" name="end_times[]" class="end-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" readonly>
+                                        <input type="time" name="end_times[]" class="end-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                                     </div>
                                 </div>
                             </div>
@@ -253,18 +253,18 @@
         const addLessonDayBtn = document.getElementById('add-lesson-day');
         const lessonDaysContainer = document.getElementById('lesson-days-container');
         
-        // Başlangıç saati değiştiğinde bitiş saatini otomatik ayarla
+        // Başlangıç saati değiştiğinde bitiş saatini tavsiye olarak ayarla
         function setupTimeInputListeners() {
             document.querySelectorAll('.start-time-input').forEach(input => {
                 if (!input.hasAttribute('data-has-listener')) {
                     input.setAttribute('data-has-listener', 'true');
                     input.addEventListener('change', function() {
                         const endTimeInput = this.closest('.lesson-day-row').querySelector('.end-time-input');
-                        if (this.value) {
+                        if (this.value && !endTimeInput.value) {
                             // Başlangıç saatini ayrıştır
                             const [hours, minutes] = this.value.split(':').map(Number);
                             
-                            // Bir saat sonrasını hesapla
+                            // Bir saat sonrasını hesapla (sadece önerme amaçlı)
                             let endHours = hours + 1;
                             if (endHours >= 24) {
                                 endHours = 23;
@@ -272,8 +272,6 @@
                             } else {
                                 endTimeInput.value = `${String(endHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
                             }
-                        } else {
-                            endTimeInput.value = '';
                         }
                     });
                 }
@@ -309,11 +307,11 @@
                         </label>
                         <input type="time" name="start_times[]" class="start-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
-                    <div class="hidden">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Bitiş Saati <span class="text-red-500">*</span>
                         </label>
-                        <input type="time" name="end_times[]" class="end-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" readonly>
+                        <input type="time" name="end_times[]" class="end-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
                 </div>
                 <div class="mt-2 text-right">

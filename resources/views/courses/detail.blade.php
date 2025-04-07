@@ -26,11 +26,11 @@
                         </div>
                     @endif
 
-                    @if($course->discount_price)
+                    {{-- @if($course->discount_price)
                         <div class="absolute top-2 right-2 bg-[#e63946] text-white px-4 py-2 rounded-lg font-bold">
                             %{{ number_format((($course->price - $course->discount_price) / $course->price) * 100) }} İNDİRİM
                         </div>
-                    @endif
+                    @endif --}}
                     
                     <!-- Etiketler ve durum -->
                     <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
@@ -141,14 +141,14 @@
 <!-- resources/views/courses/detail.blade.php dosyasında butonun bulunduğu kısmı değiştiriyoruz -->
 <!-- Fiyat ve kayıt butonu -->
 <div class="flex flex-col md:flex-row items-center justify-between mt-6 space-y-4 md:space-y-0">
-    <div>
+    {{-- <div>
         @if($course->discount_price)
             <span class="text-gray-500 line-through text-xl">{{ number_format($course->price, 2) }} ₺</span>
             <span class="text-[#e63946] font-bold text-2xl ml-2">{{ number_format($course->discount_price, 2) }} ₺</span>
         @else
             <span class="text-[#1a2e5a] font-bold text-2xl">{{ number_format($course->price, 2) }} ₺</span>
         @endif
-    </div>
+    </div> --}}
     
     @if(Auth::check())
     @php
@@ -199,16 +199,16 @@
                             class="py-2 px-1 transition-colors whitespace-nowrap">
                             Genel Bakış
                         </button>
-                        <button @click="activeTab = 'objectives'" 
+                        {{-- <button @click="activeTab = 'objectives'" 
                             :class="{'border-b-2 border-[#1a2e5a] text-[#1a2e5a] font-bold': activeTab === 'objectives', 'text-gray-500 hover:text-[#1a2e5a]': activeTab !== 'objectives'}" 
                             class="py-2 px-1 transition-colors whitespace-nowrap">
                             Kazanımlar
-                        </button>
-                        <button @click="activeTab = 'location'" 
+                        </button> --}}
+                        {{-- <button @click="activeTab = 'location'" 
                             :class="{'border-b-2 border-[#1a2e5a] text-[#1a2e5a] font-bold': activeTab === 'location', 'text-gray-500 hover:text-[#1a2e5a]': activeTab !== 'location'}" 
                             class="py-2 px-1 transition-colors whitespace-nowrap">
                             Konum ve Erişim
-                        </button>
+                        </button> --}}
                         <button @click="activeTab = 'instructor'" 
                             :class="{'border-b-2 border-[#1a2e5a] text-[#1a2e5a] font-bold': activeTab === 'instructor', 'text-gray-500 hover:text-[#1a2e5a]': activeTab !== 'instructor'}" 
                             class="py-2 px-1 transition-colors whitespace-nowrap">
@@ -267,7 +267,7 @@
                         </div>
                         
                         <!-- Kazanımlar -->
-                        <div x-show="activeTab === 'objectives'" class="prose max-w-none">
+                        {{-- <div x-show="activeTab === 'objectives'" class="prose max-w-none">
                             <h3 class="text-xl font-semibold mb-4">Kurs Kazanımları</h3>
                             @if($course->objectives)
                                 <div class="text-gray-700">
@@ -303,7 +303,7 @@
                                     </p>
                                 </div>
                             @endif
-                        </div>
+                        </div> --}}
                         
                         <!-- Konum ve Erişim -->
                         <div x-show="activeTab === 'location'" class="prose max-w-none">
@@ -430,11 +430,11 @@
                                 </svg>
                             </div>
                         @endif
-                        @if($similarCourse->discount_price)
+                        {{-- @if($similarCourse->discount_price)
                             <div class="absolute top-2 right-2 bg-[#e63946] text-white px-3 py-1 rounded-full font-bold text-sm">
                                 %{{ number_format((($similarCourse->price - $similarCourse->discount_price) / $similarCourse->price) * 100) }} İNDİRİM
                             </div>
-                        @endif
+                        @endif --}}
                         
                         <!-- Kurs tipi ve seviye etiketi -->
                         <div class="absolute bottom-2 left-2 flex space-x-2">
@@ -472,14 +472,14 @@
                         </div>
                         
                         <div class="flex justify-between items-center">
-                            <div>
+                            {{-- <div>
                                 @if($similarCourse->discount_price)
                                     <span class="text-gray-500 line-through text-sm">{{ number_format($similarCourse->price, 2) }} ₺</span>
                                     <span class="text-[#e63946] font-bold ml-2">{{ number_format($similarCourse->discount_price, 2) }} ₺</span>
                                 @else
                                     <span class="text-[#1a2e5a] font-bold">{{ number_format($similarCourse->price, 2) }} ₺</span>
                                 @endif
-                            </div>
+                            </div> --}}
                             <a href="{{ url('/egitimler/' . $similarCourse->slug) }}" class="bg-[#e63946] hover:bg-[#d32836] text-white px-3 py-1 rounded-lg transition-colors duration-300 text-sm">Detayları Gör</a>
                         </div>
                     </div>
@@ -559,7 +559,7 @@
                     </div>
                 </div>
             </div>
-            <span class="text-gray-500 text-sm">23.02.2023</span>
+            <span class="text-gray-500 text-sm">23.02.2025</span>
         </div>
         <p class="text-gray-700">Harika bir eğitimdi. Öğretmen çok sabırlı ve konulara hakimdi. Kesinlikle tavsiye ederim!</p>
     </div>
@@ -591,7 +591,7 @@
                     </div>
                 </div>
             </div>
-            <span class="text-gray-500 text-sm">15.01.2023</span>
+            <span class="text-gray-500 text-sm">15.01.2025</span>
         </div>
         <p class="text-gray-700">İyi bir kurstu, ancak daha fazla pratik yapma imkanı olabilirdi. Yine de İngilizcemi geliştirmeme çok yardımcı oldu.</p>
     </div>
@@ -623,7 +623,7 @@
                     </div>
                 </div>
             </div>
-            <span class="text-gray-500 text-sm">5.12.2022</span>
+            <span class="text-gray-500 text-sm">5.4.2025</span>
         </div>
         <p class="text-gray-700">Mükemmel bir deneyimdi! Eğitmen çok profesyonel ve samimiydi. Dersler son derece akıcı ve öğretici geçti. Her seviyeye uygun içerikler sunuldu. İngilizce konuşma pratiği için çok faydalı oldu. Teşekkürler Rise English!</p>
     </div>

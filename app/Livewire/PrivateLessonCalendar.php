@@ -23,7 +23,18 @@ class PrivateLessonCalendar extends Component
     public $selectedLesson = null; // Modal için seçilen ders
     public $compactView = false; // varsayılan olarak normal görünüm
     public $nextLesson = null;
-
+    public $timeInterval = 15; // dakika cinsinden zaman aralığı (değiştirilebilir)
+   
+    // Hata alınan $statuses değişkenini public olarak tanımlıyoruz
+    public $statuses = [
+        'pending' => 'Beklemede',
+        'approved' => 'Onaylandı',
+        'active' => 'Aktif',
+        'rejected' => 'Reddedildi',
+        'cancelled' => 'İptal Edildi',
+        'completed' => 'Tamamlandı',
+        'scheduled' => 'Planlandı',
+    ];
     protected $listeners = [
         'dateChanged' => 'setWeek',
         'filterByTeacher' => 'filterByTeacher',
@@ -40,7 +51,8 @@ class PrivateLessonCalendar extends Component
             'hasData' => !empty($this->calendarData),
             'loadedSessionsCount' => collect($this->calendarData)->flatten(1)->flatten(1)->count(),
             'selectedTeacher' => $this->selectedTeacher,
-            'selectedStatus' => $this->selectedStatus
+            'selectedStatus' => $this->selectedStatus,
+            'timeSlots' => $this->timeSlots
         ];
     }
     
@@ -56,83 +68,85 @@ class PrivateLessonCalendar extends Component
         Carbon::setLocale('tr');
         date_default_timezone_set('Europe/Istanbul');
         setlocale(LC_TIME, 'tr_TR.utf8', 'tr_TR', 'tr', 'turkish'); // PHP yerel ayarları
+        
         // Varsayılan olarak bu haftayı göster
         $this->setWeek(Carbon::now('Europe/Istanbul'));
-        $this->timeSlots = $this->getTimeSlots();
+        $this->generateDynamicTimeSlots(); // Dinamik zaman dilimleri
         $this->loadOccurrences();
-
     }
-// Aşağıdaki yeni metodu sınıfa ekleyin
-/**
- * Öğretmenin gelecek en yakın dersini bul
- */
-public function getNextLesson()
-{
-    try {
-        $query = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
-            ->where('start_date', '>=', Carbon::now('Europe/Istanbul')->format('Y-m-d'))
-            ->where(function($q) {
-                // Aynı gün içindeki dersler için saat kontrolü
-                $q->where('start_date', '>', Carbon::now('Europe/Istanbul')->format('Y-m-d'))
-                  ->orWhere(function($q2) {
-                      $q2->where('start_date', '=', Carbon::now('Europe/Istanbul')->format('Y-m-d'))
-                         ->where('start_time', '>=', Carbon::now('Europe/Istanbul')->format('H:i:s'));
-                  });
-            })
-            ->orderBy('start_date', 'asc')
-            ->orderBy('start_time', 'asc');
+
+    /**
+     * Öğretmenin gelecek en yakın dersini bul
+     */
+    public function getNextLesson()
+    {
+        try {
+            $query = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+                ->where('start_date', '>=', Carbon::now('Europe/Istanbul')->format('Y-m-d'))
+                ->where(function($q) {
+                    // Aynı gün içindeki dersler için saat kontrolü
+                    $q->where('start_date', '>', Carbon::now('Europe/Istanbul')->format('Y-m-d'))
+                      ->orWhere(function($q2) {
+                          $q2->where('start_date', '=', Carbon::now('Europe/Istanbul')->format('Y-m-d'))
+                             ->where('start_time', '>=', Carbon::now('Europe/Istanbul')->format('H:i:s'));
+                      });
+                })
+                ->orderBy('start_date', 'asc')
+                ->orderBy('start_time', 'asc');
+                
+            // Eğer öğretmen olarak giriş yapılmışsa sadece onun derslerini göster
+            if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
+                $query->where('teacher_id', Auth::id());
+            }
             
-        // Eğer öğretmen olarak giriş yapılmışsa sadece onun derslerini göster
-        if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
-            $query->where('teacher_id', Auth::id());
-        }
-        
-        $nextSession = $query->first();
-        
-        if ($nextSession) {
-            $this->nextLesson = [
-                'id' => $nextSession->id,
-                'title' => $nextSession->privateLesson ? $nextSession->privateLesson->name : 'Ders',
-                'teacher' => $nextSession->teacher ? $nextSession->teacher->name : 'Öğretmen Atanmamış',
-                'student' => $nextSession->student ? $nextSession->student->name : 'Öğrenci Atanmamış',
-                'date' => Carbon::parse($nextSession->start_date, 'Europe/Istanbul')->locale('tr')->translatedFormat('d F Y, l'),
-                'start_time' => substr($nextSession->start_time, 0, 5),
-                'end_time' => substr($nextSession->end_time, 0, 5),
-                'status' => $nextSession->status,
-                'location' => $nextSession->location,
-                'days_left' => Carbon::now('Europe/Istanbul')->diffInDays(Carbon::parse($nextSession->start_date, 'Europe/Istanbul')),
-                'hours_left' => Carbon::now('Europe/Istanbul')->diffInHours(Carbon::parse($nextSession->start_date . ' ' . $nextSession->start_time, 'Europe/Istanbul')),
-                'time_left_formatted' => $this->formatTimeLeft(
-                    Carbon::now('Europe/Istanbul'), 
-                    Carbon::parse($nextSession->start_date . ' ' . $nextSession->start_time, 'Europe/Istanbul')
-                ),
-            ];
+            $nextSession = $query->first();
             
-            Log::info("En yakın ders bulundu: " . json_encode($this->nextLesson));
-        } else {
-            Log::info("Gelecek ders bulunamadı");
+            if ($nextSession) {
+                $this->nextLesson = [
+                    'id' => $nextSession->id,
+                    'title' => $nextSession->privateLesson ? $nextSession->privateLesson->name : 'Ders',
+                    'teacher' => $nextSession->teacher ? $nextSession->teacher->name : 'Öğretmen Atanmamış',
+                    'student' => $nextSession->student ? $nextSession->student->name : 'Öğrenci Atanmamış',
+                    'date' => Carbon::parse($nextSession->start_date, 'Europe/Istanbul')->locale('tr')->translatedFormat('d F Y, l'),
+                    'start_time' => substr($nextSession->start_time, 0, 5),
+                    'end_time' => substr($nextSession->end_time, 0, 5),
+                    'status' => $nextSession->status,
+                    'location' => $nextSession->location,
+                    'days_left' => Carbon::now('Europe/Istanbul')->diffInDays(Carbon::parse($nextSession->start_date, 'Europe/Istanbul')),
+                    'hours_left' => Carbon::now('Europe/Istanbul')->diffInHours(Carbon::parse($nextSession->start_date . ' ' . $nextSession->start_time, 'Europe/Istanbul')),
+                    'time_left_formatted' => $this->formatTimeLeft(
+                        Carbon::now('Europe/Istanbul'), 
+                        Carbon::parse($nextSession->start_date . ' ' . $nextSession->start_time, 'Europe/Istanbul')
+                    ),
+                ];
+                
+                Log::info("En yakın ders bulundu: " . json_encode($this->nextLesson));
+            } else {
+                Log::info("Gelecek ders bulunamadı");
+                $this->nextLesson = null;
+            }
+        } catch (\Exception $e) {
+            Log::error("En yakın ders aranırken hata: " . $e->getMessage());
             $this->nextLesson = null;
         }
-    } catch (\Exception $e) {
-        Log::error("En yakın ders aranırken hata: " . $e->getMessage());
-        $this->nextLesson = null;
     }
-}
-/**
- * Kalan süreyi daha anlaşılır bir formatta formatlar
- */
-private function formatTimeLeft($currentTime, $futureTime)
-{
-    $diff = $currentTime->diff($futureTime);
-    
-    if ($diff->days > 0) {
-        return $diff->days . ' gün ' . $diff->h . ' saat';
-    } elseif ($diff->h > 0) {
-        return $diff->h . ' saat ' . $diff->i . ' dakika';
-    } else {
-        return $diff->i . ' dakika';
+
+    /**
+     * Kalan süreyi daha anlaşılır bir formatta formatlar
+     */
+    private function formatTimeLeft($currentTime, $futureTime)
+    {
+        $diff = $currentTime->diff($futureTime);
+        
+        if ($diff->days > 0) {
+            return $diff->days . ' gün ' . $diff->h . ' saat';
+        } elseif ($diff->h > 0) {
+            return $diff->h . ' saat ' . $diff->i . ' dakika';
+        } else {
+            return $diff->i . ' dakika';
+        }
     }
-}
+
     public function setWeek($date)
     {
         $this->weekStart = Carbon::parse($date, 'Europe/Istanbul')->startOfWeek();
@@ -274,45 +288,44 @@ private function formatTimeLeft($currentTime, $futureTime)
             Log::error("SMS gönderimi sırasında hata: " . $e->getMessage());
         }
     }
-/**
- * Tek bir ders seansının detaylarını göster
- *
- * @param int $id
- * @return \Illuminate\View\View
- */
-public function showSession($id)
-{
-    try {
-        // Veritabanından ders bilgilerini çek
-        $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
-            ->findOrFail($id);
-        
-        // Ders durumları için renkler ve etiketler
-        $statuses = [
-            'pending' => 'Beklemede',
-            'approved' => 'Onaylandı',
-            'active' => 'Aktif',
-            'rejected' => 'Reddedildi',
-            'cancelled' => 'İptal Edildi',
-            'completed' => 'Tamamlandı',
-            'scheduled' => 'Planlandı',
-        ];
-        
-        // Şu anki zamanı kontrol et (ders tamamlandı mı vs. için)
-        $currentTime = now();
-        $lessonEndTime = Carbon::parse($session->start_date . ' ' . $session->end_time);
-        $isLessonCompleted = $session->status === 'completed';
-        $isLessonPassed = $currentTime->isAfter($lessonEndTime);
-        
-        return view('teacher.private-lessons.session', compact('session', 'statuses', 'isLessonCompleted', 'isLessonPassed'));
-        
-    } catch (\Exception $e) {
-        // Hata durumunda
-        Log::error("Ders bilgileri yüklenirken hata: " . $e->getMessage());
-        return redirect()->route('ogretmen.private-lessons.index')
-            ->with('error', 'Ders detayları yüklenirken bir hata oluştu: ' . $e->getMessage());
+
+    /**
+     * Tek bir ders seansının detaylarını göster
+     */
+    public function showSession($id)
+    {
+        try {
+            // Veritabanından ders bilgilerini çek
+            $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+                ->findOrFail($id);
+            
+            // Ders durumları için renkler ve etiketler
+            $statuses = [
+                'pending' => 'Beklemede',
+                'approved' => 'Onaylandı',
+                'active' => 'Aktif',
+                'rejected' => 'Reddedildi',
+                'cancelled' => 'İptal Edildi',
+                'completed' => 'Tamamlandı',
+                'scheduled' => 'Planlandı',
+            ];
+            
+            // Şu anki zamanı kontrol et (ders tamamlandı mı vs. için)
+            $currentTime = now();
+            $lessonEndTime = Carbon::parse($session->start_date . ' ' . $session->end_time);
+            $isLessonCompleted = $session->status === 'completed';
+            $isLessonPassed = $currentTime->isAfter($lessonEndTime);
+            
+            return view('teacher.private-lessons.session', compact('session', 'statuses', 'isLessonCompleted', 'isLessonPassed'));
+            
+        } catch (\Exception $e) {
+            // Hata durumunda
+            Log::error("Ders bilgileri yüklenirken hata: " . $e->getMessage());
+            return redirect()->route('ogretmen.private-lessons.index')
+                ->with('error', 'Ders detayları yüklenirken bir hata oluştu: ' . $e->getMessage());
+        }
     }
-}
+
     public function showLessonDetails($lessonId)
     {
         try {
@@ -389,135 +402,234 @@ public function showSession($id)
         $this->selectedLesson = null;
     }
 
-    public function loadOccurrences()
-    {
-        try {
-            $this->dispatch('debug', ['message' => 'Yükleme başladı']);
-            
-            $startDate = $this->weekDates[0]->format('Y-m-d');
-            $endDate = $this->viewType === 'week' 
-                ? $this->weekDates[count($this->weekDates) - 1]->format('Y-m-d')
-                : $startDate;
-                
-            $query = PrivateLessonSession::with(['privateLesson', 'teacher', 'student']);
-            
-            if ($this->viewType === 'week') {
-                $query->whereBetween('start_date', [$startDate, $endDate]);
-            } else {
-                $query->where('start_date', $startDate);
-            }
-            
-            if ($this->selectedTeacher) {
-                $query->where('teacher_id', $this->selectedTeacher);
-            }
-            
-            if ($this->selectedStatus) {
-                $query->where('status', $this->selectedStatus);
-            }
-            
-            if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
-                $query->where('teacher_id', Auth::id());
-            }
-            
-            $sessions = $query->get();
-            
-            $this->calendarData = [];
-            
-            foreach ($sessions as $session) {
-                $date = Carbon::parse($session->start_date)->format('Y-m-d');
-                $startTime = Carbon::parse($session->start_time)->format('H:i');
-                
-                if (!isset($this->calendarData[$date])) {
-                    $this->calendarData[$date] = [];
-                }
-                
-                if (!isset($this->calendarData[$date][$startTime])) {
-                    $this->calendarData[$date][$startTime] = [];
-                }
-                
-                $occurrence = [
-                    'id' => $session->id,
-                    'title' => $session->privateLesson ? $session->privateLesson->name : 'Ders',
-                    'teacher' => $session->teacher ? $session->teacher->name : 'Öğretmen Atanmamış',
-                    'teacher_id' => $session->teacher_id,
-                    'student' => $session->student ? $session->student->name : 'Öğrenci Atanmamış',
-                    'student_id' => $session->student_id,
-                    'start_time' => $session->start_time,
-                    'end_time' => $session->end_time,
-                    'status' => $session->status,
-                    'notes' => $session->notes,
-                    'location' => $session->location,
-                    'lesson_date' => $session->start_date,
-                    'fee' => $session->fee,
-                    'price' => $session->fee !== null ? $session->fee : 
-                        ($session->privateLesson && $session->privateLesson->price ? $session->privateLesson->price : 0),
-                ];
-                
-                // Her occurrence'ı logla
-                Log::info("Occurrence verisi: " . json_encode($occurrence));
-                
-                $this->calendarData[$date][$startTime][] = $occurrence;
-            }
-            $this->getNextLesson();
-            $this->dispatch('debug', ['message' => "Takvim veri boyutu: " . count($this->calendarData)]);
-            
-        } catch (\Exception $e) {
-            $this->dispatch('debug', ['message' => "Hata: " . $e->getMessage()]);
-            session()->flash('error', 'Ders bilgileri yüklenirken hata oluştu: ' . $e->getMessage());
+    /**
+     * Dinamik zaman dilimlerini oluştur
+     */
+/**
+ * Dinamik zaman dilimlerini oluştur - sadece seçili hafta/gün için
+ */
+public function generateDynamicTimeSlots()
+{
+    try {
+        // Başlangıç olarak varsayılan saatlik dilimleri ayarla
+        $defaultSlots = [];
+        for ($hour = 7; $hour <= 23; $hour++) { // 7:00'dan 23:00'a
+            $defaultSlots[] = sprintf('%02d:00', $hour);
         }
+        
+        // Tüm derslerin başlangıç ve bitiş saatlerini topla
+        $allSessionTimes = [];
+        
+        // Tarih aralığını belirle - sadece görüntülenen hafta veya gün
+        $startDate = $this->weekDates[0]->format('Y-m-d');
+        $endDate = $this->viewType === 'week' 
+            ? $this->weekDates[count($this->weekDates) - 1]->format('Y-m-d')
+            : $startDate;
+        
+        // Sorgu oluştur
+        $query = PrivateLessonSession::select('start_time', 'end_time')
+            ->whereBetween('start_date', [$startDate, $endDate]) // Sadece görüntülenen tarih aralığındaki dersler
+            ->distinct();
+        
+        // Öğretmen filtresi
+        if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
+            $query->where('teacher_id', Auth::id());
+        } elseif ($this->selectedTeacher) {
+            $query->where('teacher_id', $this->selectedTeacher);
+        }
+        
+        // Durum filtresi
+        if ($this->selectedStatus) {
+            $query->where('status', $this->selectedStatus);
+        }
+        
+        $sessions = $query->get();
+        
+        // Tüm ders saatlerini topla
+        foreach ($sessions as $session) {
+            // Başlangıç saati
+            $startTime = Carbon::parse($session->start_time)->format('H:i');
+            $allSessionTimes[$startTime] = true;
+            
+            // Bitiş saati
+            $endTime = Carbon::parse($session->end_time)->format('H:i');
+            $allSessionTimes[$endTime] = true;
+        }
+
+        // Varsayılan saatlik dilimleri ekle
+        foreach ($defaultSlots as $slot) {
+            $allSessionTimes[$slot] = true;
+        }
+
+        // Tüm zaman dilimlerini al ve sırala
+        $timeSlots = array_keys($allSessionTimes);
+        sort($timeSlots);
+
+        // Zaman dilimlerini ayarla
+        $this->timeSlots = $timeSlots;
+
+        Log::info("Dinamik zaman dilimleri oluşturuldu. Hafta: {$startDate} - {$endDate}, Toplam: " . count($this->timeSlots));
+
+    } catch (\Exception $e) {
+        Log::error("Zaman dilimleri oluşturulurken hata: " . $e->getMessage());
+        // Hata durumunda varsayılan saatlik dilimleri kullan
+        $this->timeSlots = $this->getDefaultTimeSlots();
     }
-    private function getTimeSlots()
-    {
-        $slots = [];
-        $start = 8; // Sabah 8
-        $end = 23; // Akşam 11
+}
+
+/**
+ * Varsayılan saatlik dilimleri döndür
+ */
+private function getDefaultTimeSlots()
+{
+    $slots = [];
+    for ($hour = 7; $hour <= 23; $hour++) {
+        $slots[] = sprintf('%02d:00', $hour);
+    }
+    return $slots;
+}
+
+public function loadOccurrences()
+{
+    try {
+        $this->dispatch('debug', ['message' => 'Yükleme başladı']);
         
-        for ($i = $start; $i <= $end; $i++) {
-            $slots[] = sprintf('%02d:00', $i);
-            // 30 dakikalık dilimleri kaldırdık
+        $startDate = $this->weekDates[0]->format('Y-m-d');
+        $endDate = $this->viewType === 'week' 
+            ? $this->weekDates[count($this->weekDates) - 1]->format('Y-m-d')
+            : $startDate;
+            
+        $query = PrivateLessonSession::with(['privateLesson', 'teacher', 'student']);
+        
+        if ($this->viewType === 'week') {
+            $query->whereBetween('start_date', [$startDate, $endDate]);
+        } else {
+            $query->where('start_date', $startDate);
         }
         
-        return $slots;
+        if ($this->selectedTeacher) {
+            $query->where('teacher_id', $this->selectedTeacher);
+        }
+        
+        if ($this->selectedStatus) {
+            $query->where('status', $this->selectedStatus);
+        }
+        
+        if (Auth::check() && Auth::user()->hasRole('ogretmen')) {
+            $query->where('teacher_id', Auth::id());
+        }
+        
+        $sessions = $query->get();
+        
+        // Zaman dilimlerini yeniden oluştur (varolan derslere göre)
+        $this->generateDynamicTimeSlots();
+        
+        $this->calendarData = [];
+        
+        foreach ($sessions as $session) {
+            $date = Carbon::parse($session->start_date)->format('Y-m-d');
+            $startTime = Carbon::parse($session->start_time)->format('H:i');
+            
+            // Dersin başlangıç saati için en yakın zaman dilimini bul
+            $closestTimeSlot = $this->findClosestTimeSlot($startTime);
+            
+            if (!isset($this->calendarData[$date])) {
+                $this->calendarData[$date] = [];
+            }
+            
+            if (!isset($this->calendarData[$date][$closestTimeSlot])) {
+                $this->calendarData[$date][$closestTimeSlot] = [];
+            }
+            
+            $occurrence = [
+                'id' => $session->id,
+                'title' => $session->privateLesson ? $session->privateLesson->name : 'Ders',
+                'teacher' => $session->teacher ? $session->teacher->name : 'Öğretmen Atanmamış',
+                'teacher_id' => $session->teacher_id,
+                'student' => $session->student ? $session->student->name : 'Öğrenci Atanmamış',
+                'student_id' => $session->student_id,
+                'start_time' => $session->start_time,
+                'end_time' => $session->end_time,
+                'status' => $session->status,
+                'notes' => $session->notes,
+                'location' => $session->location,
+                'lesson_date' => $session->start_date,
+                'fee' => $session->fee,
+                'price' => $session->fee !== null ? $session->fee : 
+                    ($session->privateLesson && $session->privateLesson->price ? $session->privateLesson->price : 0),
+                // Ders süresi hesaplaması (kaç zaman dilimi kaplayacak)
+                'rowspan' => $this->calculateSessionRowspan($session->start_time, $session->end_time),
+            ];
+            
+            // Her occurrence'ı logla
+            Log::info("Occurrence verisi: " . json_encode($occurrence));
+            
+            $this->calendarData[$date][$closestTimeSlot][] = $occurrence;
+        }
+        
+        $this->getNextLesson();
+        $this->dispatch('debug', ['message' => "Takvim veri boyutu: " . count($this->calendarData)]);
+        
+    } catch (\Exception $e) {
+        $this->dispatch('debug', ['message' => "Hata: " . $e->getMessage()]);
+        session()->flash('error', 'Ders bilgileri yüklenirken hata oluştu: ' . $e->getMessage());
+    }
+}
+
+/**
+ * En yakın zaman dilimini bul
+ */
+private function findClosestTimeSlot($time)
+{
+    if (empty($this->timeSlots)) {
+        return $time; // Eğer zaman dilimleri boşsa, gelen zamanı döndür
     }
     
-    public function changeViewType($type)
-    {
-        $this->viewType = $type;
+    $targetCarbon = Carbon::parse($time);
+    $closestSlot = $this->timeSlots[0];
+    $minDiff = PHP_INT_MAX;
+    
+    foreach ($this->timeSlots as $slot) {
+        $slotCarbon = Carbon::parse($slot);
+        $diff = abs($targetCarbon->diffInMinutes($slotCarbon));
         
-        // 'day' görünümüne geçildiğinde bugüne odaklan
-        if ($type === 'day') {
-            $this->setWeek(Carbon::now('Europe/Istanbul')->startOfDay());
-        } else {
-            $this->setWeek($this->weekStart);
+        if ($diff < $minDiff) {
+            $minDiff = $diff;
+            $closestSlot = $slot;
         }
     }
+    
+    return $closestSlot;
+}
 
-    public function render()
-    {
-        // Öğretmen listesini veritabanından çek
-        $teachers = User::when(Auth::check() && !Auth::user()->hasRole('admin'), function($query) {
-            // Admin değilse sadece öğretmenleri getir
-            return $query->role('ogretmen');
-        })->get()->map(function($teacher) {
-            return [
-                'id' => $teacher->id,
-                'name' => $teacher->name
-            ];
-        });
+/**
+ * Dersin süreceği satır sayısını hesapla
+ */
+private function calculateSessionRowspan($startTime, $endTime)
+{
+    $start = Carbon::parse($startTime);
+    $end = Carbon::parse($endTime);
+    
+    // Toplam dakika farkını hesapla
+    $diffInMinutes = $end->diffInMinutes($start);
+    
+    // Her zaman dilimi arasındaki ortalama süreyi hesapla
+    $avgSlotDuration = 60; // Varsayılan olarak 60 dakika (1 saat)
+    
+    if (count($this->timeSlots) > 1) {
+        $firstSlot = Carbon::parse($this->timeSlots[0]);
+        $lastSlot = Carbon::parse($this->timeSlots[count($this->timeSlots) - 1]);
+        $totalDuration = $lastSlot->diffInMinutes($firstSlot);
+        $avgSlotDuration = $totalDuration / (count($this->timeSlots) - 1);
         
-        // Durum adlandırmaları - veritabanındaki gerçek değerlerle eşleştirildi
-        $statuses = [
-            'pending' => 'Beklemede',
-            'approved' => 'Onaylandı',
-            'active' => 'Aktif',
-            'rejected' => 'Reddedildi',
-            'cancelled' => 'İptal Edildi',
-            'completed' => 'Tamamlandı',
-        ];
-        
-        return view('livewire.private-lesson-calendar', [
-            'teachers' => $teachers,
-            'statuses' => $statuses,
-        ]);
+        // Minimum 30 dakika olarak ayarla (çok küçük değerler için)
+        $avgSlotDuration = max(30, $avgSlotDuration);
     }
+    
+    // Kaç zaman dilimi kaplayacağını hesapla
+    $rowspan = ceil($diffInMinutes / $avgSlotDuration);
+    
+    // Minimum 1 satır olmalı
+    return max(1, $rowspan);
+}
 }

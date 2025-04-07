@@ -241,21 +241,40 @@
         </div>
         @endforeach
         
-        {{-- Newsletter --}}
-        <div class="max-w-4xl mx-auto bg-gradient-to-r from-[#2c3e7f] to-[#1e3370] rounded-2xl shadow-xl p-10 mb-16 text-white overflow-hidden relative">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-20 -mt-20"></div>
-            <div class="absolute bottom-0 left-0 w-40 h-40 bg-white opacity-10 rounded-full -ml-10 -mb-10"></div>
-            <div class="relative z-10">
-                <div class="text-center mb-8">
-                    <h3 class="text-3xl font-bold mb-3">Yeni Kaynaklar Eklendiğinde Haberdar Olun</h3>
-                    <p class="text-blue-100 text-lg max-w-2xl mx-auto">Email adresinizi bırakarak yeni eklenen kaynaklardan anında haberdar olabilirsiniz.</p>
-                </div>
-                <div class="flex flex-col md:flex-row gap-4 max-w-xl mx-auto">
-                    <input type="email" placeholder="Email adresinizi giriniz" class="w-full md:flex-1 px-5 py-4 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#e43546]">
-                    <button class="bg-[#e43546] text-white font-bold px-8 py-4 rounded-xl hover:bg-[#c52e3d] transition duration-300 shadow-md">Abone Ol</button>
-                </div>
-            </div>
+{{-- Newsletter --}}
+<div class="max-w-4xl mx-auto bg-gradient-to-r from-[#2c3e7f] to-[#1e3370] 
+            rounded-2xl shadow-xl p-10 mb-16 text-white overflow-hidden relative">
+    <!-- Dekoratif arka plan elementleri (daha belirgin) -->
+    <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-20 
+                rounded-full -mr-20 -mt-20"></div>
+    <div class="absolute bottom-0 left-0 w-40 h-40 bg-white opacity-20 
+                rounded-full -ml-10 -mb-10"></div>
+    
+    <!-- İçerik alanı -->
+    <div class="relative z-10">
+        <!-- Başlık ve açıklama metni (daha belirgin) -->
+        <div class="text-center mb-8">
+            <h3 class="text-3xl font-bold mb-3 text-white">Yeni Kaynaklar Eklendiğinde Haberdar Olun</h3>
+            <p class="text-white text-lg max-w-2xl mx-auto">
+                Email adresinizi bırakarak yeni eklenen kaynaklardan anında haberdar olabilirsiniz.
+            </p>
         </div>
+        
+        <!-- Form alanı (daha belirgin) -->
+        <div class="flex flex-col md:flex-row gap-4 max-w-xl mx-auto">
+            <input type="email" 
+                   placeholder="Email adresinizi giriniz" 
+                   class="w-full md:flex-1 px-5 py-4 rounded-xl text-gray-800 
+                          border-2 border-gray-300 bg-white
+                          focus:outline-none focus:ring-2 focus:ring-[#e43546]">
+            <button class="bg-[#e43546] text-white font-bold px-8 py-4 rounded-xl 
+                           hover:bg-[#c52e3d] transition duration-300 shadow-lg
+                           border-2 border-[#ff4757]">
+                Abone Ol
+            </button>
+        </div>
+    </div>
+</div>
     </div>
 </div>
 

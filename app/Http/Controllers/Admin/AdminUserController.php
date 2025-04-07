@@ -78,6 +78,7 @@ class AdminUserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'parent_phone_number' => 'nullable|string|max:20',
+            'parent_phone_number_2' => 'nullable|string|max:20', // Eklendi
             'phone' => 'nullable|string|max:20',
             'roles' => 'required|array|min:1',
         ]);
@@ -87,10 +88,10 @@ class AdminUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'parent_phone_number' => $request->parent_phone_number,
+            'parent_phone_number_2' => $request->parent_phone_number_2, // Eklendi
             'phone' => $request->phone,
         ]);
     
-        // Rolleri atama (Spatie permission paketi kullanılıyorsa)
         foreach ($request->roles as $role) {
             $user->assignRole($role);
         }
@@ -98,6 +99,7 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.index')
             ->with('success', 'Kullanıcı başarıyla oluşturuldu.');
     }
+    
     
     /**
      * Kullanıcı detaylarını göster
@@ -156,6 +158,7 @@ public function update(Request $request, User $user)
         ],
         'phone' => 'nullable|string|max:20',
         'parent_phone_number' => 'nullable|string|max:20',
+        'parent_phone_number_2' => 'nullable|string|max:20', // Eklendi
         'roles' => 'required|array|min:1',
     ]);
 
@@ -164,9 +167,9 @@ public function update(Request $request, User $user)
         'email' => $request->email,
         'phone' => $request->phone,
         'parent_phone_number' => $request->parent_phone_number,
+        'parent_phone_number_2' => $request->parent_phone_number_2, // Eklendi
     ]);
 
-    // Şifre güncelleme (opsiyonel)
     if ($request->filled('password')) {
         $request->validate([
             'password' => 'required|string|min:8|confirmed',
@@ -177,7 +180,6 @@ public function update(Request $request, User $user)
         ]);
     }
 
-    // Rolleri güncelle (Spatie permission paketi kullanılıyorsa)
     $user->syncRoles($request->roles);
 
     return redirect()->route('admin.users.show', $user)
