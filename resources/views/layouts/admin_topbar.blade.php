@@ -16,13 +16,13 @@
                 <a href="{{ url('/admin/users') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/users*') ? 'text-red-400' : '' }}">Kullanıcılar</a>
                 <a href="{{ url('/admin/courses') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/courses*') ? 'text-red-400' : '' }}">Kurslar</a>
 
-
-
                 <a href="{{ url('/admin/sms') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/sms*') ? 'text-red-400' : '' }}">SMS Yönetimi</a>
                 
-                <!-- Kaynaklar Yönetimi Açılır Menü -->
-                <div class="relative group">
-                    <a href="{{ url('/admin/resources') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/resources*') || request()->is('admin/resource-categories*') || request()->is('admin/resource-types*') || request()->is('admin/resource-tags*') ? 'text-red-400' : '' }} flex items-center">
+                <!-- Kaynaklar Yönetimi Açılır Menü - DÜZELTILDI -->
+                <div class="relative">
+                    <a href="javascript:void(0)" 
+                       class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/resources*') || request()->is('admin/resource-categories*') || request()->is('admin/resource-types*') || request()->is('admin/resource-tags*') ? 'text-red-400' : '' }} flex items-center"
+                       onclick="toggleDropdown('resources-dropdown')">
                         Kaynaklar Yönetimi
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -30,7 +30,7 @@
                     </a>
                     
                     <!-- Dropdown Menü -->
-                    <div class="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block z-50">
+                    <div id="resources-dropdown" class="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
                         <div class="py-1" role="menu" aria-orientation="vertical">
                             <a href="{{ url('/admin/resources') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
                                 Tüm Kaynaklar
@@ -153,6 +153,16 @@
                 adminMobileMenu.classList.toggle('hidden');
             });
         }
+        
+        // Document click event to close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdowns = document.querySelectorAll('.absolute > [id$="-dropdown"]');
+            dropdowns.forEach(function(dropdown) {
+                if (!event.target.closest('.relative') && !dropdown.classList.contains('hidden')) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        });
     });
     
     // Mobile submenu toggle function
@@ -160,6 +170,25 @@
         const submenu = document.getElementById(id);
         if (submenu) {
             submenu.classList.toggle('hidden');
+        }
+    }
+    
+    // Dropdown toggle function for desktop
+    function toggleDropdown(id) {
+        const dropdown = document.getElementById(id);
+        if (dropdown) {
+            dropdown.classList.toggle('hidden');
+            
+            // Close other open dropdowns
+            const allDropdowns = document.querySelectorAll('.absolute > [id$="-dropdown"]');
+            allDropdowns.forEach(function(item) {
+                if (item.id !== id && !item.classList.contains('hidden')) {
+                    item.classList.add('hidden');
+                }
+            });
+            
+            // Prevent event from bubbling up to document
+            event.stopPropagation();
         }
     }
 </script>
