@@ -665,19 +665,19 @@ const floatingSignupPanel = document.getElementById('floatingSignupPanel');
 if (closeFloatingPanelButton && floatingSignupPanel) {
     closeFloatingPanelButton.addEventListener('click', function() {
         floatingSignupPanel.classList.add('hidden');
-        // Alternatif olarak: floatingSignupPanel.style.display = 'none';
+        floatingSignupPanel.style.display = 'none';
         
         // İsteğe bağlı: Kullanıcı tercihi olarak bir cookie ayarlayın
         // böylece kullanıcı sayfayı yenilediğinde panel görünmez
-        document.cookie = "hideFloatingPanel=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+        // document.cookie = "hideFloatingPanel=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
     });
     
-    // İsteğe bağlı: Cookie kontrolü
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-    }
+    // // İsteğe bağlı: Cookie kontrolü
+    // function getCookie(name) {
+    //     const value = `; ${document.cookie}`;
+    //     const parts = value.split(`; ${name}=`);
+    //     if (parts.length === 2) return parts.pop().split(';').shift();
+    // }
     
     // Eğer kullanıcı daha önce paneli kapattıysa, gizli başlat
     if (getCookie('hideFloatingPanel') === 'true') {
