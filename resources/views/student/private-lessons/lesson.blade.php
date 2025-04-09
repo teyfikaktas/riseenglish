@@ -32,10 +32,10 @@
                         <p class="text-sm text-gray-600 mb-1">Toplam Seans</p>
                         <p class="font-medium text-gray-800">{{ $sessions->count() }} Seans</p>
                     </div>
-                    <div>
+                    {{-- <div>
                         <p class="text-sm text-gray-600 mb-1">Ücret</p>
                         <p class="font-medium text-gray-800">{{ $sessions->first()->fee ?? 0 }} ₺ / Seans</p>
-                    </div>
+                    </div> --}}
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Durum</p>
                         <p class="font-medium">
