@@ -2,9 +2,9 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen flex bg-gradient-to-r from-[#1a2e5a] to-[#283b6a]">
+<div class="min-h-screen flex flex-col md:flex-row bg-gradient-to-r from-[#1a2e5a] to-[#283b6a]">
     <!-- Sol taraf - Login formu -->
-    <div class="w-full md:w-1/2 flex items-center justify-center">
+    <div class="w-full md:w-1/2 flex items-center justify-center py-8">
         <div class="max-w-md w-full p-8 bg-white rounded-lg shadow-lg">
             <!-- Logo -->
             <div class="text-center mb-8">
@@ -73,7 +73,7 @@
         </div>
     </div>
     
-    <!-- Sağ taraf - Görsel ve bilgi -->
+    <!-- Sağ taraf - Görsel ve bilgi (Sadece desktop) -->
     <div class="hidden md:flex md:w-1/2 bg-white relative">
         <!-- Arka plan deseni -->
         <div class="absolute inset-0 opacity-10">
@@ -99,10 +99,30 @@
                     </div>
                 </div>
                 
-                <div class="absolute -top-4 -left-4 bg-[#e63946] text-white rounded-lg p-4 shadow-xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                <!-- Etiketin pozisyonunu değiştiriyorum - resmin üstüne -->
+                <div class="absolute -top-12 right-4 bg-[#e63946] text-white rounded-lg p-4 shadow-xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
                     <div class="text-xl font-extrabold">İngilizce Öğretiyoruz!</div>
                     <div class="text-sm font-semibold">Profesyonel Eğitmenler</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobil için resim (Sadece mobil görünümde) -->
+    <div class="block md:hidden w-full bg-white p-4">
+        <div class="relative max-w-sm mx-auto my-6">
+            <img src="{{ asset('images/teachers.jpg') }}" alt="İki Eğitmen" class="rounded-lg shadow-xl w-full">
+            
+            <div class="absolute bottom-2 right-2 bg-white rounded-lg p-3 shadow-lg text-sm">
+                <div class="flex items-center">
+                    <div class="bg-[#1a2e5a] rounded-full h-2 w-2 mr-2 animate-pulse"></div>
+                    <span class="font-bold text-[#1a2e5a]">50+ Uzman Eğitmen</span>
+                </div>
+            </div>
+            
+            <div class="absolute -top-8 right-2 bg-[#e63946] text-white rounded-lg p-3 shadow-xl">
+                <div class="text-sm font-extrabold">İngilizce Öğretiyoruz!</div>
+                <div class="text-xs font-semibold">Profesyonel Eğitmenler</div>
             </div>
         </div>
     </div>

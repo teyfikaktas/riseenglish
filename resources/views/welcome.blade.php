@@ -11,9 +11,24 @@
    </button>
 </form> --}}
 <!-- Başarı mesajı için ekleme yapıyoruz -->
+
 @if (session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded fixed top-4 right-4 shadow-lg z-50">
-        {{ session('success') }}
+    <div id="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded fixed top-4 right-4 shadow-lg z-50 transform transition-transform duration-300 ease-in-out">
+        <div class="flex items-center">
+            <div class="py-1">
+                <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>{{ session('success') }}</div>
+            <button onclick="closeSuccessMessage()" class="ml-4 text-green-700 hover:text-green-900 focus:outline-none">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <!-- Progress bar for auto-dismiss -->
+        <div id="successMessageProgress" class="h-1 bg-green-500 mt-2 w-full transform origin-left"></div>
     </div>
 @endif
 <div class="relative bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] py-20 overflow-hidden">
@@ -58,24 +73,42 @@
           </p>
         @endif
         <div class="flex flex-col sm:flex-row justify-center md:justify-start gap-4">
-          @if(auth()->check() && auth()->user()->hasRole('ogrenci'))
-            <!-- Giriş yapmış öğrenci için kurslarım butonu -->
-            <a href="{{ url('/ogrenci/kurslarim') }}" class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-              <i class="fas fa-book-reader mr-2"></i>Kurslarıma Git
-            </a>
-            <a href="{{ url('/egitimler') }}" class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-              <i class="fas fa-book-open mr-2"></i>Yeni Eğitimler
-            </a>
-          @else
-            <!-- Giriş yapmamış kullanıcı için standart butonlar -->
-            <a href="{{ url('/egitimler') }}" class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-              Eğitimleri Keşfet
-            </a>
-            <a href="{{ url('/kayit-ol') }}" class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-              Hemen Başla
-            </a>
+            @if(auth()->check() && auth()->user()->hasRole('ogrenci'))
+              <!-- Giriş yapmış öğrenci için kurslarım butonu -->
+              <a href="{{ url('/ogrenci/kurslarim') }}" class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                <i class="fas fa-book-reader mr-2"></i>Kurslarıma Git
+              </a>
+              <a href="{{ url('/egitimler') }}" class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                <i class="fas fa-book-open mr-2"></i>Yeni Eğitimler
+              </a>
+            @else
+              <!-- Giriş yapmamış kullanıcı için standart butonlar -->
+              <a href="{{ url('/egitimler') }}" class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                Eğitimleri Keşfet
+              </a>
+              <a href="{{ url('/kayit-ol') }}" class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                Hemen Başla
+              </a>
+            @endif
+          </div>
+          
+          <!-- Giriş yapmamış kullanıcılar için indirim banner'ı (butonların dışında) -->
+          @if(!auth()->check() || !auth()->user()->hasRole('ogrenci'))
+            <div class="mt-6 bg-gradient-to-r from-[#e63946] to-[#d62836] rounded-lg p-3 shadow-lg transform -rotate-1 hover:rotate-0 transition-transform duration-300 mx-auto sm:mx-0 max-w-xs">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-white font-bold text-lg">%15 İNDİRİM</div>
+                  <div class="text-xs text-white opacity-90">Tüm eğitimlerde geçerli</div>
+                </div>
+                <div class="bg-white text-[#e63946] text-xs font-bold py-1 px-3 rounded-full shadow">
+                  RiseEnglish
+                </div>
+              </div>
+              <div class="w-full h-1 bg-white bg-opacity-30 mt-2 rounded-full overflow-hidden">
+                <div class="w-1/2 h-full bg-white rounded-full animate-pulse"></div>
+              </div>
+            </div>
           @endif
-        </div>
       </div>
       
       <!-- Sağ taraf (görsel) - İdiom bölümü (HER KULLANICI İÇİN) -->
@@ -163,15 +196,7 @@
               </div>
             </div>
           @else
-            <!-- İndirim kutusu - Giriş yapmayan kullanıcı için -->
-            <div class="absolute -top-4 -left-4 bg-[#e63946] text-white rounded-lg p-3 shadow-lg transform -rotate-2 hover:rotate-0 transition-transform duration-300">
-              <div class="text-lg font-bold">
-                %15 İNDİRİM
-              </div>
-              <div class="text-xs mt-1 bg-white text-[#e63946] px-2 py-1 rounded-full font-bold inline-block">
-                SINIRLI SÜRE!
-              </div>
-            </div>
+
           @endif
         </div>
       </div>
@@ -657,33 +682,63 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
-// Floating panel kapatma işlemi
-const closeFloatingPanelButton = document.getElementById('closeFloatingPanel');
-const floatingSignupPanel = document.getElementById('floatingSignupPanel');
-
-if (closeFloatingPanelButton && floatingSignupPanel) {
-    closeFloatingPanelButton.addEventListener('click', function() {
-        floatingSignupPanel.classList.add('hidden');
-        floatingSignupPanel.style.display = 'none';
+    // Success message auto-hide functionality
+    const successMessage = document.getElementById('successMessage');
+    const progressBar = document.getElementById('successMessageProgress');
+    
+    if (successMessage) {
+        // Start the progress bar animation
+        progressBar.style.transition = 'width 5s linear';
+        progressBar.style.width = '0';
         
-        // İsteğe bağlı: Kullanıcı tercihi olarak bir cookie ayarlayın
-        // böylece kullanıcı sayfayı yenilediğinde panel görünmez
-        // document.cookie = "hideFloatingPanel=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
-    });
-    
-    // // İsteğe bağlı: Cookie kontrolü
-    // function getCookie(name) {
-    //     const value = `; ${document.cookie}`;
-    //     const parts = value.split(`; ${name}=`);
-    //     if (parts.length === 2) return parts.pop().split(';').shift();
-    // }
-    
-    // Eğer kullanıcı daha önce paneli kapattıysa, gizli başlat
-    if (getCookie('hideFloatingPanel') === 'true') {
-        floatingSignupPanel.classList.add('hidden');
+        // Set a timeout to remove the message
+        setTimeout(function() {
+            successMessage.classList.add('translate-x-full');
+            setTimeout(function() {
+                successMessage.remove();
+            }, 300);
+        }, 5000);
     }
-}
+    
+    // Floating panel kapatma işlemi
+    const closeFloatingPanelButton = document.getElementById('closeFloatingPanel');
+    const floatingSignupPanel = document.getElementById('floatingSignupPanel');
+
+    if (closeFloatingPanelButton && floatingSignupPanel) {
+        closeFloatingPanelButton.addEventListener('click', function() {
+            floatingSignupPanel.classList.add('hidden');
+            floatingSignupPanel.style.display = 'none';
+            
+            // İsteğe bağlı: Kullanıcı tercihi olarak bir cookie ayarlayın
+            // böylece kullanıcı sayfayı yenilediğinde panel görünmez
+            document.cookie = "hideFloatingPanel=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+        });
+        
+        // Cookie kontrolü
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        
+        // Eğer kullanıcı daha önce paneli kapattıysa, gizli başlat
+        if (getCookie('hideFloatingPanel') === 'true') {
+            floatingSignupPanel.classList.add('hidden');
+        }
+    }
+
+    // Function to close the success message manually
+    window.closeSuccessMessage = function() {
+        const successMessage = document.getElementById('successMessage');
+        if (successMessage) {
+            successMessage.classList.add('translate-x-full');
+            setTimeout(function() {
+                successMessage.remove();
+            }, 300);
+        }
+    };
+
+    // Slider functionality
     const slidesWrapper = document.getElementById('slidesWrapper');
     const sliderDots = document.getElementById('sliderDots');
     const nextButton = document.getElementById('nextButton');
@@ -725,6 +780,8 @@ if (closeFloatingPanelButton && floatingSignupPanel) {
     
     // Dot navigasyonunu oluştur (özellikle mobil için)
     function createDots() {
+        if (!sliderDots) return;
+        
         sliderDots.innerHTML = '';
         const totalDots = Math.ceil(sliderItems.length / visibleSlides);
         
@@ -747,6 +804,8 @@ if (closeFloatingPanelButton && floatingSignupPanel) {
     
     // Slide'ı güncelle
     function updateSlide(index) {
+        if (!slidesWrapper) return;
+        
         currentIndex = index;
         
         // Slide'ın maksimum sınırını kontrol et
@@ -765,6 +824,8 @@ if (closeFloatingPanelButton && floatingSignupPanel) {
     
     // Aktif dot'u güncelle
     function updateActiveDot() {
+        if (!sliderDots) return;
+        
         const dots = sliderDots.querySelectorAll('div');
         const activeDotIndex = Math.floor(currentIndex / visibleSlides);
         
@@ -831,14 +892,16 @@ if (closeFloatingPanelButton && floatingSignupPanel) {
     let touchStartX = 0;
     let touchEndX = 0;
     
-    slidesWrapper.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    });
-    
-    slidesWrapper.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    });
+    if (slidesWrapper) {
+        slidesWrapper.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        slidesWrapper.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+    }
     
     function handleSwipe() {
         const swipeThreshold = 30; // Eşik değerini düşürdük, daha kolay kaydırma için
@@ -858,14 +921,22 @@ if (closeFloatingPanelButton && floatingSignupPanel) {
     // İlk yükleme
     updateSlidesConfig();
     
-    // Otomatik geçiş
-    const autoSlide = setInterval(nextSlide, 6000);
-    
-    // Kullanıcı etkileşiminde otomatik geçişi durdur
+    // Otomatik geçiş - sadece slider varsa
+    let autoSlide;
     const sliderContainer = document.querySelector('.slider-container');
-    if (sliderContainer) {
+    
+    if (sliderContainer && slidesWrapper) {
+        autoSlide = setInterval(nextSlide, 6000);
+        
+        // Kullanıcı etkileşiminde otomatik geçişi durdur
         sliderContainer.addEventListener('mouseenter', () => {
             clearInterval(autoSlide);
+        });
+        
+        // Kullanıcı ayrıldığında otomatik geçişi tekrar başlat
+        sliderContainer.addEventListener('mouseleave', () => {
+            clearInterval(autoSlide);
+            autoSlide = setInterval(nextSlide, 6000);
         });
     }
 });

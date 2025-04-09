@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PrivateLessonSession;
 use App\Models\PrivateLesson;
-use App\Models\PrivateLessonHomeWork;
+use App\Models\PrivateLessonHomework;
 use App\Models\PrivateLessonHomeworkSubmission;
 use App\Models\User;
 use Carbon\Carbon;
