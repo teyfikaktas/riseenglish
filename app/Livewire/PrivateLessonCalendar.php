@@ -405,6 +405,27 @@ class PrivateLessonCalendar extends Component
     /**
      * Dinamik zaman dilimlerini oluştur
      */
+    public function changeViewType($type)
+{
+    // Görünüm tipini ayarla
+    $this->viewType = $type;
+    
+    // Tarihleri yeniden oluştur
+    if ($type === 'day') {
+        // Günlük görünüm - sadece seçili günü göster
+        $this->weekDates = [Carbon::parse($this->weekStart)];
+    } else {
+        // Haftalık görünüm - varsayılan olarak tüm haftayı göster
+        $this->weekDates = [];
+        for ($i = 0; $i < 7; $i++) {
+            $this->weekDates[] = $this->weekStart->copy()->addDays($i);
+        }
+    }
+    
+    // Zaman dilimlerini ve dersleri yeniden yükle
+    $this->generateDynamicTimeSlots();
+    $this->loadOccurrences();
+}
 /**
  * Dinamik zaman dilimlerini oluştur - sadece seçili hafta/gün için
  */
