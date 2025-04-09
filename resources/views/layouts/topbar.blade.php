@@ -1,137 +1,4 @@
 <div class="sticky top-0 w-full bg-white shadow-sm z-50 border-b border-gray-200">
-    {{-- Stil ve Medya Sorguları --}}
-    <style>
-        .text-xxs { font-size: 0.65rem; }
-        @media (max-width: 768px) { .login-signup-button { width: 100%; justify-content: center; margin-top: 0.5rem; } }
-        @media (max-width: 370px) { .xs\:text-xs { font-size: 0.65rem; } }
-        
-        /* Menü kutusu stilleri */
-        .menu-box {
-            position: relative;
-            border: 2px solid #1a2e5a;
-            border-radius: 10px;
-            padding: 2px;
-            background-color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            margin: 0.25rem 0.35rem;
-        }
-        
-        .menu-box:hover {
-            border-color: #e63946;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(230, 57, 70, 0.15);
-        }
-        
-        .menu-inner {
-            border-radius: 7px;
-            padding: 0.5rem 0.75rem;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-        }
-        
-        .menu-box:hover .menu-inner {
-            background-color: #f7f7f7;
-        }
-        
-        /* Aktif menü kutusu stilleri */
-        .menu-box.active {
-            background-color: #1a2e5a;
-            border-color: #e63946;
-            border-width: 2px;
-        }
-        
-        .menu-box.active .menu-inner {
-            background-color: #1a2e5a;
-        }
-        
-        .menu-box.active a {
-            color: white !important;
-        }
-        
-        .menu-box.active:after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30%;
-            height: 3px;
-            background-color: #e63946;
-        }
-        
-        /* iPad Pro ve tablet ekranlar için düzenlemeler */
-        @media (min-width: 769px) and (max-width: 1199px) {
-            .menu-box {
-                margin: 0.25rem;
-            }
-            .menu-inner {
-                padding: 0.4rem 0.6rem;
-                font-size: 0.85rem;
-            }
-            nav.lg\:flex {
-                flex-wrap: wrap;
-                justify-content: center;
-                padding-top: 0.5rem;
-                padding-bottom: 0.5rem;
-            }
-            .nav-container {
-                flex-direction: row;
-                align-items: center;
-                justify-content: center;
-            }
-            .relative.ml-auto.lg\:ml-4 {
-                margin: 0.5rem auto;
-            }
-        }
-        
-        /* iPad Pro 12.9" için özel düzenlemeler (1024x1366) */
-        @media (min-width: 1024px) and (max-width: 1199px) {
-            .container {
-                max-width: 1020px;
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-            nav.lg\:flex {
-                display: flex !important;
-                flex-wrap: wrap;
-                justify-content: flex-end;
-                padding-top: 0;
-                padding-bottom: 0;
-                margin-bottom: 0;
-            }
-            .nav-container {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                width: 100%;
-            }
-            .menu-box {
-                margin: 0.15rem;
-            }
-            .menu-inner {
-                padding: 0.35rem 0.5rem;
-                font-size: 0.8rem;
-            }
-            .login-button {
-                margin-left: 0.5rem;
-            }
-            .auth-buttons {
-                margin-left: auto;
-            }
-        }
-        
-        /* Küçük mobil cihazlar için düzenlemeler */
-        @media (max-width: 640px) {
-            .menu-inner {
-                padding: 0.4rem 0.5rem;
-            }
-        }
-    </style>
-
     <div class="container mx-auto px-3">
         <div class="flex flex-wrap items-center justify-between py-3 md:py-2">
             <!-- Logo ve Slogan Bölümü -->
@@ -147,72 +14,71 @@
             </div>
 
             <!-- Sağ Taraftaki İçerik (Nav + Giriş Butonu) -->
-            <div class="w-full md:w-auto flex flex-wrap items-center justify-between nav-container lg:flex-row lg:justify-end xl:justify-between">
-                <!-- Navigation (Masaüstünde görünür) - YENİ MENÜ KUTUSU TASARIMI -->
-                <nav class="hidden lg:flex items-center space-x-4 xl:space-x-6 text-sm mr-4 flex-wrap xl:flex-nowrap nav-items">
-                    @php
-                        $logoBlue = '#1a2e5a';
-                        $logoRed = '#e63946';
-                    @endphp
-
-                    <div class="{{ request()->is('ana-sayfa') ? 'menu-box active' : 'menu-box' }}">
-                        <a href="{{ url('/ana-sayfa') }}" class="menu-inner block font-semibold text-[#e63946]">
+            <div class="w-full md:w-auto md:flex md:items-center md:justify-end">
+                <!-- Navigation - sadece lg (1024px ve üzeri) ekranlarda görünür -->
+                <nav class="hidden lg:flex lg:flex-wrap lg:items-center lg:space-x-4 lg:mr-4">
+                    <!-- Ana Sayfa -->
+                    <div class="relative border-2 border-[#1a2e5a] rounded-lg p-0.5 bg-white shadow-sm hover:border-[#e63946] hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 {{ request()->is('ana-sayfa') ? 'bg-[#1a2e5a] border-[#e63946]' : '' }}">
+                        <a href="{{ url('/ana-sayfa') }}" class="block rounded px-3 py-1.5 font-semibold text-[#e63946] whitespace-nowrap {{ request()->is('ana-sayfa') ? 'text-white' : '' }}">
                             Ana Sayfa
                         </a>
                     </div>
                     
-                    <div class="{{ request()->routeIs('public.resources.index') ? 'menu-box active' : 'menu-box' }}">
-                        <a href="{{ route('public.resources.index') }}" class="menu-inner block font-semibold text-[#e63946]">
+                    <!-- Ücretsiz İçerikler -->
+                    <div class="relative border-2 border-[#1a2e5a] rounded-lg p-0.5 bg-white shadow-sm hover:border-[#e63946] hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 {{ request()->routeIs('public.resources.index') ? 'bg-[#1a2e5a] border-[#e63946]' : '' }}">
+                        <a href="{{ route('public.resources.index') }}" class="block rounded px-3 py-1.5 font-semibold text-[#e63946] whitespace-nowrap {{ request()->routeIs('public.resources.index') ? 'text-white' : '' }}">
                             Ücretsiz İçerikler
                         </a>
                     </div>
                     
-                    <div class="{{ request()->is('egitimler') ? 'menu-box active' : 'menu-box' }}">
-                        <a href="{{ url('/egitimler') }}" class="menu-inner block font-semibold text-[#e63946]">
+                    <!-- Eğitimler -->
+                    <div class="relative border-2 border-[#1a2e5a] rounded-lg p-0.5 bg-white shadow-sm hover:border-[#e63946] hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 {{ request()->is('egitimler') ? 'bg-[#1a2e5a] border-[#e63946]' : '' }}">
+                        <a href="{{ url('/egitimler') }}" class="block rounded px-3 py-1.5 font-semibold text-[#e63946] whitespace-nowrap {{ request()->is('egitimler') ? 'text-white' : '' }}">
                             Eğitimler
                         </a>
                     </div>
                     
-                    <div class="{{ request()->is('iletisim') ? 'menu-box active' : 'menu-box' }}">
-                        <a href="{{ url('/iletisim') }}" class="menu-inner block font-semibold text-[#e63946]">
+                    <!-- İletişim -->
+                    <div class="relative border-2 border-[#1a2e5a] rounded-lg p-0.5 bg-white shadow-sm hover:border-[#e63946] hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 {{ request()->is('iletisim') ? 'bg-[#1a2e5a] border-[#e63946]' : '' }}">
+                        <a href="{{ url('/iletisim') }}" class="block rounded px-3 py-1.5 font-semibold text-[#e63946] whitespace-nowrap {{ request()->is('iletisim') ? 'text-white' : '' }}">
                             İletişim
                         </a>
                     </div>
                     
-                    {{-- Özel Ders Linkleri --}}
+                    <!-- Özel Ders Linkleri -->
                     @if(auth()->check() && auth()->user()->hasRole('ogretmen'))
-                    <div class="{{ request()->routeIs('ogretmen.private-lessons.index') ? 'menu-box active' : 'menu-box' }}">
-                        <a href="{{ route('ogretmen.private-lessons.index') }}" class="menu-inner block font-semibold text-[#e63946]">
+                    <div class="relative border-2 border-[#1a2e5a] rounded-lg p-0.5 bg-white shadow-sm hover:border-[#e63946] hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 {{ request()->routeIs('ogretmen.private-lessons.index') ? 'bg-[#1a2e5a] border-[#e63946]' : '' }}">
+                        <a href="{{ route('ogretmen.private-lessons.index') }}" class="block rounded px-3 py-1.5 font-semibold text-[#e63946] whitespace-nowrap {{ request()->routeIs('ogretmen.private-lessons.index') ? 'text-white' : '' }}">
                             Özel Ders
                         </a>
                     </div>
                     @endif
                     
                     @if(auth()->check() && auth()->user()->hasRole('ogrenci'))
-                    <div class="{{ request()->routeIs('ogrenci.private-lessons.index') ? 'menu-box active' : 'menu-box' }}">
-                        <a href="{{ route('ogrenci.private-lessons.index') }}" class="menu-inner block font-semibold text-[#e63946]">
+                    <div class="relative border-2 border-[#1a2e5a] rounded-lg p-0.5 bg-white shadow-sm hover:border-[#e63946] hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 {{ request()->routeIs('ogrenci.private-lessons.index') ? 'bg-[#1a2e5a] border-[#e63946]' : '' }}">
+                        <a href="{{ route('ogrenci.private-lessons.index') }}" class="block rounded px-3 py-1.5 font-semibold text-[#e63946] whitespace-nowrap {{ request()->routeIs('ogrenci.private-lessons.index') ? 'text-white' : '' }}">
                             Özel Derslerim
                         </a>
                     </div>
                     @endif
                 </nav>
 
-                <!-- Sağ Taraf: Kimlik Doğrulama Düğmeleri ve Mobil Menü -->
-                <div class="flex items-center justify-between w-full lg:w-auto auth-buttons">
-                    <!-- Mobil Menü Butonu -->
+                <!-- Sağ Taraf Kimlik Doğrulama ve Mobil Menü -->
+                <div class="flex items-center justify-between w-full md:w-auto">
+                    <!-- Mobil Menü Butonu (lg ekrana kadar görünür) -->
                     <div class="lg:hidden flex items-center order-first">
                         <button class="mobile-menu-button p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#e63946]" aria-label="Menüyü Aç">
                             <i class="fas fa-bars text-[#1a2e5a] text-xl"></i>
                         </button>
                     </div>
 
-                    <!-- Oturum Aç/Kapat Düğmesi - YENİLENMİŞ TASARIM -->
-                    <div class="relative ml-auto lg:ml-4 login-btn-container">
+                    <!-- Oturum Aç/Kapat Düğmesi -->
+                    <div class="relative ml-auto md:ml-4">
                         @auth
                             @if(auth()->user()->hasRole('ogrenci'))
                                 <!-- Öğrenci: Profil -->
-                                <button id="profile-btn" class="menu-box flex items-center space-x-2 focus:outline-none cursor-pointer">
-                                    <div class="menu-inner flex items-center">
+                                <button id="profile-btn" class="flex items-center space-x-2 border-2 border-[#1a2e5a] rounded-lg p-0.5 bg-white shadow-sm hover:border-[#e63946] hover:shadow-md focus:outline-none">
+                                    <div class="flex items-center px-3 py-1.5">
                                         <span class="text-[#1a2e5a] font-semibold text-xs sm:text-sm">{{ auth()->user()->name }}</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#1a2e5a] ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -228,10 +94,10 @@
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;"> @csrf </form>
                             @else
                                 <!-- Diğer roller: Çıkış -->
-                                <div class="menu-box">
+                                <div class="border-2 border-[#1a2e5a] rounded-lg p-0.5 bg-white shadow-sm hover:border-[#e63946] hover:shadow-md">
                                     <a href="{{ route('logout') }}"
                                        onclick="event.preventDefault(); document.getElementById('logout-form-other').submit();"
-                                       class="menu-inner flex items-center text-[#e63946] font-semibold">
+                                       class="flex items-center px-3 py-1.5 text-[#e63946] font-semibold">
                                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                          </svg>
@@ -241,15 +107,13 @@
                                 <form id="logout-form-other" action="{{ route('logout') }}" method="POST" style="display: none;"> @csrf </form>
                             @endif
                         @else
-                            <!-- Giriş - LAÇİVERT TASARIMLI BUTON (BÜYÜTÜLMÜŞ) -->
-                            <div class="login-button">
-                                <a href="{{ url('/oturum-ac') }}" class="bg-[#1a2e5a] hover:bg-[#283b6a] text-white font-bold py-2.5 px-5 text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center space-x-1.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                     </svg>
-                                    <span>Giriş</span>
-                                </a>
-                            </div>
+                            <!-- Giriş Butonu -->
+                            <a href="{{ url('/oturum-ac') }}" class="inline-flex items-center bg-[#1a2e5a] hover:bg-[#283b6a] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                 </svg>
+                                <span>Giriş</span>
+                            </a>
                         @endauth
                     </div>
                 </div>
@@ -257,44 +121,44 @@
         </div>
     </div>
 
-    <!-- Mobil Menü (Varsayılan olarak gizlidir) - YENİ MENÜ KUTUSU TASARIMI MOBİL İÇİN -->
-    <div class="lg:hidden mobile-menu hidden absolute top-full left-0 w-full bg-white border-t border-gray-200 shadow-lg p-4 space-y-4">
-        <div class="{{ request()->is('ana-sayfa') ? 'menu-box active' : 'menu-box' }} w-full">
-            <a href="{{ url('/ana-sayfa') }}" class="menu-inner block font-semibold text-[#e63946] w-full">
+    <!-- Mobil/Tablet Menü - lg ekrana kadar görünür olacak şekilde ayarlandı -->
+    <div class="lg:hidden mobile-menu hidden absolute top-full left-0 w-full bg-white border-t border-gray-200 shadow-lg p-4 space-y-4 z-50">
+        <div class="w-full border-2 {{ request()->is('ana-sayfa') ? 'bg-[#1a2e5a] border-[#e63946]' : 'border-[#1a2e5a]' }} rounded-lg p-0.5 hover:border-[#e63946]">
+            <a href="{{ url('/ana-sayfa') }}" class="block w-full px-3 py-2 font-semibold {{ request()->is('ana-sayfa') ? 'text-white' : 'text-[#e63946]' }}">
                 Ana Sayfa
             </a>
         </div>
         
-        <div class="{{ request()->routeIs('public.resources.index') ? 'menu-box active' : 'menu-box' }} w-full">
-            <a href="{{ route('public.resources.index') }}" class="menu-inner block font-semibold text-[#e63946] w-full">
+        <div class="w-full border-2 {{ request()->routeIs('public.resources.index') ? 'bg-[#1a2e5a] border-[#e63946]' : 'border-[#1a2e5a]' }} rounded-lg p-0.5 hover:border-[#e63946]">
+            <a href="{{ route('public.resources.index') }}" class="block w-full px-3 py-2 font-semibold {{ request()->routeIs('public.resources.index') ? 'text-white' : 'text-[#e63946]' }}">
                 Ücretsiz İçerikler
             </a>
         </div>
         
-        <div class="{{ request()->is('egitimler') ? 'menu-box active' : 'menu-box' }} w-full">
-            <a href="{{ url('/egitimler') }}" class="menu-inner block font-semibold text-[#e63946] w-full">
+        <div class="w-full border-2 {{ request()->is('egitimler') ? 'bg-[#1a2e5a] border-[#e63946]' : 'border-[#1a2e5a]' }} rounded-lg p-0.5 hover:border-[#e63946]">
+            <a href="{{ url('/egitimler') }}" class="block w-full px-3 py-2 font-semibold {{ request()->is('egitimler') ? 'text-white' : 'text-[#e63946]' }}">
                 Eğitimler
             </a>
         </div>
         
-        <div class="{{ request()->is('iletisim') ? 'menu-box active' : 'menu-box' }} w-full">
-            <a href="{{ url('/iletisim') }}" class="menu-inner block font-semibold text-[#e63946] w-full">
+        <div class="w-full border-2 {{ request()->is('iletisim') ? 'bg-[#1a2e5a] border-[#e63946]' : 'border-[#1a2e5a]' }} rounded-lg p-0.5 hover:border-[#e63946]">
+            <a href="{{ url('/iletisim') }}" class="block w-full px-3 py-2 font-semibold {{ request()->is('iletisim') ? 'text-white' : 'text-[#e63946]' }}">
                 İletişim
             </a>
         </div>
         
-        {{-- Özel Ders Linkleri (Mobil) --}}
+        {{-- Özel Ders Linkleri (Mobil/Tablet) --}}
         @if(auth()->check() && auth()->user()->hasRole('ogretmen'))
-        <div class="{{ request()->routeIs('ogretmen.private-lessons.index') ? 'menu-box active' : 'menu-box' }} w-full">
-            <a href="{{ route('ogretmen.private-lessons.index') }}" class="menu-inner block font-semibold text-[#e63946] w-full">
+        <div class="w-full border-2 {{ request()->routeIs('ogretmen.private-lessons.index') ? 'bg-[#1a2e5a] border-[#e63946]' : 'border-[#1a2e5a]' }} rounded-lg p-0.5 hover:border-[#e63946]">
+            <a href="{{ route('ogretmen.private-lessons.index') }}" class="block w-full px-3 py-2 font-semibold {{ request()->routeIs('ogretmen.private-lessons.index') ? 'text-white' : 'text-[#e63946]' }}">
                 Özel Ders
             </a>
         </div>
         @endif
         
         @if(auth()->check() && auth()->user()->hasRole('ogrenci'))
-        <div class="{{ request()->routeIs('ogrenci.private-lessons.index') ? 'menu-box active' : 'menu-box' }} w-full">
-            <a href="{{ route('ogrenci.private-lessons.index') }}" class="menu-inner block font-semibold text-[#e63946] w-full">
+        <div class="w-full border-2 {{ request()->routeIs('ogrenci.private-lessons.index') ? 'bg-[#1a2e5a] border-[#e63946]' : 'border-[#1a2e5a]' }} rounded-lg p-0.5 hover:border-[#e63946]">
+            <a href="{{ route('ogrenci.private-lessons.index') }}" class="block w-full px-3 py-2 font-semibold {{ request()->routeIs('ogrenci.private-lessons.index') ? 'text-white' : 'text-[#e63946]' }}">
                 Özel Derslerim
             </a>
         </div>
