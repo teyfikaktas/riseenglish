@@ -116,10 +116,10 @@
                         <p class="text-sm text-gray-600 mb-1">Konum</p>
                         <p class="font-medium text-gray-800">{{ $session->location ?? 'Belirtilmemiş' }}</p>
                     </div>
-                    <div>
+                    {{-- <div>
                         <p class="text-sm text-gray-600 mb-1">Ücret</p>
                         <p class="font-medium text-gray-800">{{ $session->fee }} ₺</p>
-                    </div>
+                    </div> --}}
                     <div class="md:col-span-2">
                         <p class="text-sm text-gray-600 mb-1">Notlar</p>
                         <p class="font-medium text-gray-800">{{ $session->notes ?? 'Not bulunmamaktadır.' }}</p>
