@@ -195,99 +195,185 @@ class PrivateLessonCalendar extends Component
         $this->loadOccurrences();
     }
 
-    /**
-     * Dersi tamamlama işlemi
-     */
-    public function completeLesson($lessonId)
-    {
-        try {
-            // İşlem başlangıcını logla
-            Log::info("Ders tamamlama işlemi başlatıldı. Ders ID: " . $lessonId);
-            
-            // Ders kaydını bul
-            $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
-                ->findOrFail($lessonId);
-            
-            // Ders zamanını kontrol et
-            $currentTime = Carbon::now('Europe/Istanbul');
-            $lessonEndTime = Carbon::parse($session->start_date . ' ' . $session->end_time, 'Europe/Istanbul');
-            
-            // Eğer ders zamanı henüz geçmediyse tamamlanamaz
-            if ($currentTime->isBefore($lessonEndTime)) {
-                $this->dispatch('lessonError', 'Ders henüz bitmedi. Tamamlamak için ders saatinin bitmesini beklemelisiniz.');
-                Log::warning("Ders tamamlama işlemi başarısız: Ders zamanı henüz gelmedi. Ders ID: " . $lessonId);
-                return;
-            }
-            
-            // Ders durumunu zaten tamamlanmış mı kontrol et
-            if ($session->status === 'completed') {
-                $this->dispatch('lessonError', 'Bu ders zaten tamamlanmış durumda.');
-                Log::info("Ders tamamlama işlemi atlandı: Ders zaten tamamlanmış. Ders ID: " . $lessonId);
-                return;
-            }
-            
-            // Dersi tamamla
-            $session->status = 'completed';
-            $session->save();
-            
-            // SMS gönderimi yapılacak kısım
-            $this->sendCompletionSMS($session);
-            
-            // Kullanıcı arayüzünü güncelle
-            $this->loadOccurrences(); // Takvimi yenile
-            
-            if ($this->selectedLesson && $this->selectedLesson['id'] === $lessonId) {
-                // Seçili dersi güncelle
-                $this->showLessonDetails($lessonId);
-            }
-            
-            // Başarı bildirimi gönder
-            $this->dispatch('lessonCompleted', 'Ders başarıyla tamamlandı! Veli ve öğrenciye SMS gönderildi.');
-            Log::info("Ders tamamlama işlemi başarılı. Ders ID: " . $lessonId);
-            
-        } catch (\Exception $e) {
-            // Hata durumunda
-            Log::error("Ders tamamlama işleminde hata: " . $e->getMessage());
-            Log::error("Hata detayı: " . $e->getTraceAsString());
-            $this->dispatch('lessonError', 'Ders tamamlanırken bir hata oluştu: ' . $e->getMessage());
+/**
+ * Dersi tamamlama işlemi
+ */
+public function completeLesson($lessonId)
+{
+    try {
+        // İşlem başlangıcını logla
+        Log::info("Ders tamamlama işlemi başlatıldı. Ders ID: " . $lessonId);
+        
+        // Ders kaydını bul
+        $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+            ->findOrFail($lessonId);
+        
+        // Ders zamanını kontrol et
+        $currentTime = Carbon::now('Europe/Istanbul');
+        $lessonEndTime = Carbon::parse($session->start_date . ' ' . $session->end_time, 'Europe/Istanbul');
+        
+        // Eğer ders zamanı henüz geçmediyse tamamlanamaz
+        if ($currentTime->isBefore($lessonEndTime)) {
+            $this->dispatch('lessonError', 'Ders henüz bitmedi. Tamamlamak için ders saatinin bitmesini beklemelisiniz.');
+            Log::warning("Ders tamamlama işlemi başarısız: Ders zamanı henüz gelmedi. Ders ID: " . $lessonId);
+            return;
         }
+        
+        // Ders durumunu zaten tamamlanmış mı kontrol et
+        if ($session->status === 'completed') {
+            $this->dispatch('lessonError', 'Bu ders zaten tamamlanmış durumda.');
+            Log::info("Ders tamamlama işlemi atlandı: Ders zaten tamamlanmış. Ders ID: " . $lessonId);
+            return;
+        }
+        
+        // Dersi tamamla
+        $session->status = 'completed';
+        $session->save();
+        
+        // SMS gönderimi yapılacak kısım
+        $smsResult = $this->sendCompletionSMS($session);
+        
+        // Kullanıcı arayüzünü güncelle
+        $this->loadOccurrences(); // Takvimi yenile
+        
+        if ($this->selectedLesson && $this->selectedLesson['id'] === $lessonId) {
+            // Seçili dersi güncelle
+            $this->showLessonDetails($lessonId);
+        }
+        
+        // Başarı bildirimi gönder
+        $smsSessionNumber = isset($smsResult['session_number']) ? $smsResult['session_number'] : '';
+        $smsMessage = '';
+        
+        if (isset($smsResult['success']) && $smsResult['success']) {
+            $smsMessage = "Ders başarıyla tamamlandı! {$smsSessionNumber}. seans SMS bilgilendirmesi gönderildi.";
+        } else {
+            $smsMessage = "Ders başarıyla tamamlandı! Ancak SMS gönderiminde sorun oluştu.";
+        }
+        
+        $this->dispatch('lessonCompleted', $smsMessage);
+        Log::info("Ders tamamlama işlemi başarılı. Ders ID: " . $lessonId);
+        
+    } catch (\Exception $e) {
+        // Hata durumunda
+        Log::error("Ders tamamlama işleminde hata: " . $e->getMessage());
+        Log::error("Hata detayı: " . $e->getTraceAsString());
+        $this->dispatch('lessonError', 'Ders tamamlanırken bir hata oluştu: ' . $e->getMessage());
     }
+}
     
-    /**
-     * Ders tamamlandığında SMS gönderme fonksiyonu
-     */
-    private function sendCompletionSMS($session)
-    {
-        try {
-            // Bu kısım SMS gönderimi için entegrasyon kodunu içerecek
-            // Örnek bir log kaydı:
-            Log::info("SMS gönderimi için hazırlık yapılıyor. Ders ID: " . $session->id);
-            
-            $studentName = $session->student ? $session->student->name : 'Öğrenci';
-            $studentPhone = $session->student ? $session->student->phone : null;
-            $parentPhone = $session->student && $session->student->parent ? $session->student->parent->phone : null;
-            $lessonName = $session->privateLesson ? $session->privateLesson->name : 'Ders';
-            $lessonDate = Carbon::parse($session->start_date)->format('d.m.Y');
-            $lessonTime = substr($session->start_time, 0, 5) . ' - ' . substr($session->end_time, 0, 5);
-            
-            // SMS içeriği
-            $smsContent = "$studentName adlı öğrencinin $lessonDate tarihindeki $lessonName dersi başarıyla tamamlanmıştır. Ders saati: $lessonTime. İyi günler dileriz.";
-            
-            // Burada gerçek SMS gönderme kodu olacak
-            // Örnek:
-            // $this->smsService->send($studentPhone, $smsContent);
-            // $this->smsService->send($parentPhone, $smsContent);
-            
-            Log::info("SMS içeriği hazırlandı: " . $smsContent);
-            Log::info("SMS gönderilecek numaralar - Öğrenci: $studentPhone, Veli: $parentPhone");
-            
-            // Sadece log amaçlı, gerçek uygulamada burayı aktif SMS gönderimi ile değiştirin
-            Log::info("SMS başarıyla gönderildi (simülasyon)");
-            
-        } catch (\Exception $e) {
-            Log::error("SMS gönderimi sırasında hata: " . $e->getMessage());
+/**
+ * Ders tamamlandığında SMS gönderme fonksiyonu
+ */
+private function sendCompletionSMS($session)
+{
+    try {
+        // Seans numarasını hesapla - sadece iptal edilmemiş seansları dahil et
+        $sessionNumber = PrivateLessonSession::where('private_lesson_id', $session->private_lesson_id)
+            ->where('status', '!=', 'cancelled') // İptal edilmiş dersleri hariç tut
+            ->where('start_date', '<=', $session->start_date)
+            ->orderBy('start_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get()
+            ->search(function($item) use ($session) {
+                return $item->id === $session->id;
+            }) + 1; // 0-bazlı indekse +1 ekleyerek 1-bazlı numaralandırma yapıyoruz
+        
+        // Temel bilgileri hazırla
+        $studentName = $session->student ? $session->student->name : 'Öğrenci';
+        $studentPhone = $session->student ? $session->student->phone : null;
+        
+        // Veli telefon numaralarını al
+        $parentPhone = null;
+        $parentPhone2 = null;
+        
+        if ($session->student && $session->student->parent_phone_number) {
+            $parentPhone = $session->student->parent_phone_number;
         }
+        
+        if ($session->student && $session->student->parent_phone_number_2) {
+            $parentPhone2 = $session->student->parent_phone_number_2;
+        }
+        
+        $lessonName = $session->privateLesson ? $session->privateLesson->name : 'Ders';
+        $lessonDate = Carbon::parse($session->start_date)->format('d.m.Y');
+        $lessonTime = substr($session->start_time, 0, 5) . ' - ' . substr($session->end_time, 0, 5);
+        
+        // Log kayıtları
+        Log::info("SMS gönderimi için hazırlık yapılıyor. Ders ID: " . $session->id);
+        Log::info("Bu dersin {$sessionNumber}. seansı tamamlandı (iptal edilenler hariç).");
+        
+        // SMS sonuçlarını takip et
+        $smsResults = [];
+        
+        // Öğrenci için SMS içeriği
+        if ($studentPhone) {
+            $studentSmsContent = "Sayın Öğrenci, {$lessonDate} tarihindeki {$lessonName} dersinin {$sessionNumber}. seansı başarıyla tamamlanmıştır. Ders saati: {$lessonTime}. İyi günler dileriz.";
+            
+            // SMS servisini çağır
+            $studentResult = \App\Services\SmsService::sendSms($studentPhone, $studentSmsContent);
+            $smsResults[] = [
+                'recipient' => 'Öğrenci',
+                'phone' => $studentPhone,
+                'result' => $studentResult
+            ];
+        }
+        
+        // Veli için SMS içeriği
+        $parentSmsContent = "Sayın Veli, {$studentName} adlı öğrencinin {$lessonDate} tarihindeki {$lessonName} dersinin {$sessionNumber}. seansı başarıyla tamamlanmıştır. Ders saati: {$lessonTime}. İyi günler dileriz.";
+        
+        // 1. Veliye SMS gönder
+        if ($parentPhone) {
+            $parentResult = \App\Services\SmsService::sendSms($parentPhone, $parentSmsContent);
+            $smsResults[] = [
+                'recipient' => 'Veli-1',
+                'phone' => $parentPhone,
+                'result' => $parentResult
+            ];
+        }
+        
+        // 2. Veliye SMS gönder
+        if ($parentPhone2) {
+            $parent2Result = \App\Services\SmsService::sendSms($parentPhone2, $parentSmsContent);
+            $smsResults[] = [
+                'recipient' => 'Veli-2',
+                'phone' => $parentPhone2,
+                'result' => $parent2Result
+            ];
+        }
+        
+        // Sonuçları logla
+        foreach ($smsResults as $result) {
+            $status = isset($result['result']['success']) && $result['result']['success'] ? 'Başarılı' : 'Başarısız';
+            $message = isset($result['result']['message']) ? $result['result']['message'] : 'Bilinmeyen sonuç';
+            
+            Log::info("SMS gönderimi ({$result['recipient']} - {$result['phone']}): {$status} - {$message}");
+        }
+        
+        // En az bir başarılı gönderim var mı kontrol et
+        $anySuccess = false;
+        foreach ($smsResults as $result) {
+            if (isset($result['result']['success']) && $result['result']['success']) {
+                $anySuccess = true;
+                break;
+            }
+        }
+        
+        return [
+            'success' => $anySuccess,
+            'results' => $smsResults,
+            'session_number' => $sessionNumber
+        ];
+        
+    } catch (\Exception $e) {
+        Log::error("SMS gönderimi sırasında hata: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage(),
+            'session_number' => 0
+        ];
     }
+}
 
     /**
      * Tek bir ders seansının detaylarını göster
