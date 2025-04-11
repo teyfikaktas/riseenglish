@@ -49,11 +49,12 @@
                         </label>
                     </div>
                     
-                    @if (Route::has('password.request'))
-                    <a href="{{ route('password.request') }}" class="text-sm text-[#e63946] hover:text-[#d62836]">
-                        Şifremi Unuttum
+                    @if (Route::has('password.sms.request'))
+                    <span class="mx-2">|</span>
+                    <a href="{{ route('password.sms.request') }}" class="text-sm text-[#e63946] hover:text-[#d62836]">
+                        SMS ile Şifremi Unuttum
                     </a>
-                    @endif
+                @endif
                 </div>
                 
                 <div class="mb-6">

@@ -29,7 +29,22 @@ Route::get('/ucretsiz-kaynaklar/{slug}', [App\Http\Controllers\PublicResourceCon
 Route::post('/send-otp', [App\Http\Controllers\OtpController::class, 'sendOtp'])
     ->middleware('auth')
     ->name('send-otp');
+// SMS ile şifre sıfırlama route'ları
+Route::get('forgot-password-sms', [App\Http\Controllers\Auth\SmsPasswordResetController::class, 'showForgotForm'])
+    ->middleware('guest')
+    ->name('password.sms.request');
 
+Route::post('forgot-password-sms', [App\Http\Controllers\Auth\SmsPasswordResetController::class, 'sendResetLink'])
+    ->middleware('guest')
+    ->name('password.sms.email');
+
+Route::get('reset-password-sms/{token}', [App\Http\Controllers\Auth\SmsPasswordResetController::class, 'showResetForm'])
+    ->middleware('guest')
+    ->name('password.sms.reset');
+
+Route::post('reset-password-sms', [App\Http\Controllers\Auth\SmsPasswordResetController::class, 'reset'])
+    ->middleware('guest')
+    ->name('password.sms.update');
 // Telefon doğrulama için route'lar
 Route::middleware(['auth'])->group(function () {
     Route::get('/telefon-dogrulama', function () {
