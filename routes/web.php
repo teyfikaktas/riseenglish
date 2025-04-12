@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PrivateLessonController;
 
 use App\Http\Controllers\Teacher\TeacherPrivateLessonController;
 use App\Http\Controllers\Student\StudentPrivateLessonController;
+use App\Http\Controllers\ResourceDownloadController;
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -18,6 +19,9 @@ use App\Http\Controllers\Admin\CourseFrequencyController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\FrontendCourseController;
 use App\Models\Course;
+
+Route::post('/resources/download', [ResourceDownloadController::class, 'download'])->name('resources.download');
+
 
 Route::get('/iletisim', [\App\Http\Controllers\ContactController::class, 'index'])->name('contact');
 Route::post('/iletisim/gonder', [\App\Http\Controllers\ContactController::class, 'send'])->name('contact.send');

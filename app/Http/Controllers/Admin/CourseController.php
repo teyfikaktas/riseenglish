@@ -269,9 +269,6 @@ public function store(Request $request)
         'location' => 'nullable|string|max:255',
         'price' => 'nullable|numeric|min:0',
         'discount_price' => 'nullable|numeric|min:0', // Yeni indirimli fiyat
-        'is_active' => 'boolean',
-        'is_featured' => 'boolean', // Yeni öne çıkarma durumu
-        'has_certificate' => 'boolean',
         'display_order' => 'nullable|integer|min:0', // Yeni sıralama
         'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);

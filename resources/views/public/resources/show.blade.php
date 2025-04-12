@@ -70,9 +70,10 @@
                         </a>
                         <button 
                             data-download 
+                            data-id="{{ $resource->id }}"
                             data-title="{{ $resource->title }}" 
                             data-file="{{ asset('storage/' . $resource->file_path) }}"
-                                                        class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#2c3e7f] to-[#264285] text-white font-medium rounded-xl shadow-md hover:from-[#264285] hover:to-[#1e3370] transition duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
+                            class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#2c3e7f] to-[#264285] text-white font-medium rounded-xl shadow-md hover:from-[#264285] hover:to-[#1e3370] transition duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
@@ -145,6 +146,11 @@
                             <input type="email" name="email" id="email" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#2c3e7f] focus:border-[#2c3e7f]" required>
                         </div>
                         
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefon Numarası</label>
+                            <input type="tel" name="phone" id="phone" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#2c3e7f] focus:border-[#2c3e7f]" required>
+                        </div>
+                        
                         <div class="flex items-start">
                             <div class="flex items-center h-5">
                                 <input id="newsletter" name="newsletter" type="checkbox" class="h-4 w-4 text-[#2c3e7f] border-gray-300 rounded focus:ring-[#2c3e7f]">
@@ -199,15 +205,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadForm = document.getElementById('download-form');
     const modalResourceTitle = document.getElementById('modal-resource-title');
     
-    // Aktif indirme bağlantısını saklamak için değişken
+    // Aktif resource ID ve indirme linkini saklamak için değişkenler
+    let activeResourceId = '';
     let activeDownloadLink = '';
+    
+    // CSRF token al
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
     // İndirme butonlarına event listener ekleme
     downloadButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Aktif indirme bağlantısını sakla
+            // Aktif resource ID ve indirme linkini sakla
+            activeResourceId = button.dataset.id || '';
             activeDownloadLink = button.dataset.file || '';
             
             // Kaynak başlığını modalda güncelleme
@@ -245,22 +256,82 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Form verilerini alma
         const formData = new FormData(downloadForm);
-        const userData = {
-            fullname: formData.get('fullname'),
-            email: formData.get('email'),
-            newsletter: formData.get('newsletter') ? true : false
-        };
         
-        // Burada form verilerini kaydetme işlemi yapılabilir (Ajax isteği vs.)
-        console.log('Kullanıcı bilgileri:', userData);
+        // Resource ID ekleme
+        formData.append('resource_id', activeResourceId);
         
-        // Modalı kapatma
-        closeModal();
+        // Submit butonunu devre dışı bırak
+        const submitButton = downloadForm.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> İşleniyor...';
         
-        // İndirme işlemini başlatma
-        if (activeDownloadLink) {
-            window.location.href = activeDownloadLink;
-        }
+        // AJAX isteği gönder
+        fetch('/resources/download', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Modalı kapat
+                closeModal();
+                
+                // İndirme işlemini başlat
+                if (data.download_url) {
+                    window.location.href = data.download_url;
+                }
+            } else {
+                // Hata mesajlarını göster
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(key => {
+                        const inputField = downloadForm.querySelector(`#${key}`);
+                        if (inputField) {
+                            inputField.classList.add('border-red-500');
+                            
+                            // Mevcut hata mesajını temizle
+                            const existingError = inputField.parentNode.querySelector('.text-red-500');
+                            if (existingError) {
+                                existingError.remove();
+                            }
+                            
+                            // Hata mesajını göster
+                            const errorMessage = document.createElement('p');
+                            errorMessage.className = 'text-red-500 text-xs mt-1';
+                            errorMessage.textContent = data.errors[key][0];
+                            inputField.parentNode.appendChild(errorMessage);
+                        }
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Hata:', error);
+            // Genel hata mesajı göster
+            alert('Bir hata oluştu, lütfen daha sonra tekrar deneyin.');
+        })
+        .finally(() => {
+            // Submit butonunu tekrar etkinleştir
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+        });
+    });
+    
+    // Input alanlarına focus olduğunda hata sınıfını kaldır
+    downloadForm.querySelectorAll('input').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.classList.remove('border-red-500');
+            
+            // Hata mesajını temizle
+            const errorMessage = this.parentNode.querySelector('.text-red-500');
+            if (errorMessage) {
+                errorMessage.remove();
+            }
+        });
     });
 });
 </script>

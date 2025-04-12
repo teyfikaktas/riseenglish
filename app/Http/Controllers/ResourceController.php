@@ -18,8 +18,17 @@ class ResourceController extends Controller
      */
     public function index()
     {
-        $resources = Resource::with(['category', 'type', 'tags'])->paginate(15);
-        $popularResources = Resource::where('is_popular', true)->take(8)->get();
+        // Sadece aktif kaynakları getir (is_active=1)
+        $resources = Resource::where('is_active', 1)
+                            ->with(['category', 'type', 'tags'])
+                            ->paginate(15);
+        
+        // Popüler kaynakları da sadece aktiflerden getir
+        $popularResources = Resource::where('is_active', 1)
+                                ->where('is_popular', true)
+                                ->take(8)
+                                ->get();
+        
         $categories = ResourceCategory::whereNull('parent_id')->with('children')->get();
         $types = ResourceType::all();
         
@@ -74,6 +83,7 @@ public function store(Request $request)
     $resource->type_id = $request->type_id;
     $resource->is_free = $request->has('is_free');
     $resource->is_popular = $request->has('is_popular');
+    $resource->is_active = $request->has('is_active') || true; // BURAYA EKLEYİN
 
     // Dosya yükleme
     if ($request->hasFile('file') && $request->file('file')->isValid()) {
@@ -167,6 +177,7 @@ public function update(Request $request, Resource $resource)
     $resource->type_id = $request->type_id;
     $resource->is_free = $request->has('is_free');
     $resource->is_popular = $request->has('is_popular');
+    $resource->is_active = $request->has('is_active') || true; // BURAYA EKLEYİN
 
     // Dosyayı kaldır
     if ($request->has('remove_file') && $resource->file_path) {

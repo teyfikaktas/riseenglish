@@ -169,7 +169,7 @@
             </div>
         </div>
         
-        <!-- Fiyat Aralığı Filtresi -->
+        {{-- <!-- Fiyat Aralığı Filtresi -->
         <div class="mb-6" x-data="{ priceOpen: true }">
             <div @click="priceOpen = !priceOpen" class="flex justify-between items-center cursor-pointer mb-2">
                 <h4 class="font-semibold text-gray-700">Fiyat Aralığı</h4>
@@ -189,7 +189,7 @@
                     <input type="range" id="priceRange" min="0" max="5000" step="100" value="5000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                 </div>
             </div>
-        </div>
+        </div> --}}
         
         <div class="flex mt-8">
             <button id="applyFilters" class="flex-1 bg-[#1a2e5a] hover:bg-[#152347] text-white py-2 px-4 rounded-lg mr-2 transition-colors duration-300">
@@ -216,8 +216,8 @@
                             <select id="sortCourses" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1a2e5a] w-full">
                                 <option value="newest">En Yeni</option>
                                 <option value="popular">En Popüler</option>
-                                <option value="price_low">Fiyat: Düşükten Yükseğe</option>
-                                <option value="price_high">Fiyat: Yüksekten Düşüğe</option>
+                                {{-- <option value="price_low">Fiyat: Düşükten Yükseğe</option>
+                                <option value="price_high">Fiyat: Yüksekten Düşüğe</option> --}}
                                 <option value="name_asc">İsim: A-Z</option>
                                 <option value="name_desc">İsim: Z-A</option>
                             </select>
@@ -252,11 +252,11 @@
                                     </svg>
                                 </div>
                             @endif
-                            @if($course->discount_price)
+                            {{-- @if($course->discount_price)
                                 <div class="absolute top-2 right-2 bg-[#e63946] text-white px-3 py-1 rounded-full font-bold text-sm">
                                     %{{ number_format((($course->price - $course->discount_price) / $course->price) * 100) }} İNDİRİM
                                 </div>
-                            @endif
+                            @endif --}}
                             
                             <!-- Başlangıç durumu etiketi -->
                             @php
@@ -414,14 +414,14 @@
                             </div>
                             
                             <div class="flex justify-between items-center">
-                                <div>
+                                {{-- <div>
                                     @if($course->discount_price)
                                         <span class="text-gray-500 line-through text-sm">{{ number_format($course->price, 2) }} ₺</span>
                                         <span class="text-[#e63946] font-bold ml-2">{{ number_format($course->discount_price, 2) }} ₺</span>
                                     @else
                                         <span class="text-[#1a2e5a] font-bold">{{ number_format($course->price, 2) }} ₺</span>
                                     @endif
-                                </div>
+                                </div> --}}
                                 <a href="{{ url('/egitimler/' . $course->slug) }}" class="bg-[#e63946] hover:bg-[#d32836] text-white px-4 py-2 rounded-lg transition-colors duration-300 font-medium text-sm">Detayları Gör</a>
                             </div>
                         </div>
@@ -456,11 +456,11 @@
                                         </svg>
                                     </div>
                                 @endif
-                                @if($course->discount_price)
+                                {{-- @if($course->discount_price)
                                     <div class="absolute top-2 right-2 bg-[#e63946] text-white px-3 py-1 rounded-full font-bold text-sm">
                                         %{{ number_format((($course->price - $course->discount_price) / $course->price) * 100) }} İNDİRİM
                                     </div>
-                                @endif
+                                @endif --}}
                                 
                                 <!-- Başlangıç durumu etiketi -->
                                 @php
@@ -503,14 +503,14 @@
                                         </div>
                                         <h3 class="text-2xl font-semibold mb-2 text-[#1a2e5a]">{{ $course->name }}</h3>
                                     </div>
-                                    <div class="text-right">
+                                    {{-- <div class="text-right">
                                         @if($course->discount_price)
                                             <span class="text-gray-500 line-through text-sm">{{ number_format($course->price, 2) }} ₺</span>
                                             <div class="text-[#e63946] font-bold text-xl">{{ number_format($course->discount_price, 2) }} ₺</div>
                                         @else
                                             <div class="text-[#1a2e5a] font-bold text-xl">{{ number_format($course->price, 2) }} ₺</div>
                                         @endif
-                                    </div>
+                                    </div> --}}
                                 </div>
                                 
                                 <p class="text-gray-600 mb-4">{{ Str::limit($course->description, 200) }}</p>
