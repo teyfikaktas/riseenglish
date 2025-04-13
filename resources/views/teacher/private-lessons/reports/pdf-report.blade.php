@@ -6,116 +6,197 @@
     <title>Ders Raporu</title>
     <style>
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: DejaVu Sans, sans-serif;
             margin: 20px;
             color: #333;
+            background-color: #f8fafc;
         }
+        
         .header {
+            position: relative;
             text-align: center;
             margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
+            background: linear-gradient(135deg, #1a2e5a 0%, #283b6a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-bottom: 4px solid #e63946;
         }
+        
         .logo {
             max-width: 150px;
+            margin-bottom: 10px;
         }
+        
         h1 {
-            color: #2563eb;
-            font-size: 24px;
+            color: white;
+            font-size: 26px;
+            margin: 0;
+            font-weight: bold;
         }
+        
         .details {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
+        
         .details-table {
             width: 100%;
             border-collapse: collapse;
         }
+        
         .details-table td {
             padding: 8px;
             border-bottom: 1px solid #eee;
         }
+        
         .details-table td:first-child {
             font-weight: bold;
             width: 30%;
+            color: #1a2e5a;
         }
+        
         .section {
             margin-bottom: 25px;
         }
+        
         .section-title {
-            background-color: #f3f4f6;
-            padding: 8px 10px;
-            border-radius: 4px;
+            background-color: #1a2e5a;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
             font-size: 16px;
             font-weight: bold;
-            color: #1f2937;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
+        
         .questions-stats {
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
+        
         .stat-box {
-            width: 24%;
+            width: 22%;
             padding: 15px;
             text-align: center;
             border-radius: 8px;
         }
-        .total-box { background-color: #e0f2fe; }
-        .correct-box { background-color: #dcfce7; }
-        .wrong-box { background-color: #fee2e2; }
-        .empty-box { background-color: #f3f4f6; }
+        
+        .total-box { 
+            background-color: #e0f2fe; 
+            border-top: 3px solid #0284c7;
+        }
+        
+        .correct-box { 
+            background-color: #dcfce7; 
+            border-top: 3px solid #16a34a;
+        }
+        
+        .wrong-box { 
+            background-color: #fee2e2; 
+            border-top: 3px solid #dc2626;
+        }
+        
+        .empty-box { 
+            background-color: #f3f4f6; 
+            border-top: 3px solid #6b7280;
+        }
+        
         .stat-number {
             font-size: 28px;
             font-weight: bold;
             margin: 10px 0;
         }
+        
+        .total-box .stat-number { color: #0284c7; }
+        .correct-box .stat-number { color: #16a34a; }
+        .wrong-box .stat-number { color: #dc2626; }
+        .empty-box .stat-number { color: #6b7280; }
+        
         .stat-label {
             font-size: 14px;
             color: #6b7280;
         }
+        
         .subject-row {
             margin-bottom: 15px;
             border: 1px solid #eee;
             border-radius: 8px;
             padding: 10px;
+            background: white;
         }
+        
         .subject-name {
             font-weight: bold;
             margin-bottom: 10px;
+            color: #1a2e5a;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
         }
+        
         .subject-stats {
             display: flex;
             justify-content: space-between;
         }
+        
         .subject-stat {
             text-align: center;
             padding: 8px;
             border-radius: 4px;
             width: 30%;
         }
+        
         .correct-stat { background-color: #dcfce7; color: #166534; }
         .wrong-stat { background-color: #fee2e2; color: #991b1b; }
         .empty-stat { background-color: #f3f4f6; color: #6b7280; }
+        
         .content-box {
             background-color: #f9fafb;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
+            border-left: 4px solid #1a2e5a;
         }
+        
+        .chart-container {
+            text-align: center;
+            margin: 20px 0;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chart-image {
+            max-width: 100%;
+            height: auto;
+        }
+        
         .footer {
             text-align: center;
             margin-top: 30px;
             font-size: 12px;
-            color: #6b7280;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
+            color: white;
+            background-color: #1a2e5a;
+            padding: 15px;
+            border-radius: 8px;
+            border-top: 4px solid #e63946;
+        }
+        
+        .text-center {
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Özel Ders Raporu</h1>
+        <img src="{{ public_path('images/logo.png') }}" alt="Rise English Logo" class="logo">
+        <h1>ÖZEL DERS RAPORU</h1>
     </div>
     
     <div class="details section">
@@ -164,11 +245,23 @@
                 <div class="stat-number">{{ $report->questions_unanswered }}</div>
             </div>
         </div>
+        
+        <!-- Ana sorular için grafik -->
+        <div class="chart-container">
+            <img class="chart-image" src="{{ $mainChartImage }}" alt="Çözülen Sorular Grafiği">
+        </div>
     </div>
     
     @if($report->examResults && $report->examResults->count() > 0)
     <div class="exam-results section">
         <div class="section-title">Çözülen Denemeler</div>
+        
+        <!-- Denemeler için çubuk grafik -->
+        <div class="chart-container">
+            <img class="chart-image" src="{{ $subjectsChartImage }}" alt="Deneme Sonuçları Grafiği">
+        </div>
+        
+        <!-- Denemeler detay tablosu -->
         @foreach($report->examResults as $examResult)
             <div class="subject-row">
                 <div class="subject-name">{{ $examResult->subject_name }}</div>
@@ -216,7 +309,8 @@
     @endif
     
     <div class="footer">
-        Rapor Oluşturma Tarihi: {{ now()->format('d.m.Y H:i') }}
+        <div>© {{ date('Y') }} Rise English - Tüm Hakları Saklıdır</div>
+        <div style="margin-top: 5px">Rapor Oluşturma Tarihi: {{ now()->format('d.m.Y H:i') }}</div>
     </div>
 </body>
 </html>

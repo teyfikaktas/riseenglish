@@ -174,13 +174,13 @@
             </div>
             <div class="p-6">
                 @php
-                    $materials = collect();
-                    foreach($completedSessions as $session) {
-                        if ($session->materials && $session->materials->count() > 0) {
-                            $materials = $materials->merge($session->materials);
-                        }
+                $materials = collect();
+                foreach($sessions as $session) {
+                    if ($session->materials && $session->materials->count() > 0) {
+                        $materials = $materials->merge($session->materials);
                     }
-                @endphp
+                }
+            @endphp
                 
                 @if($materials->count() > 0)
                     <div class="space-y-3">
@@ -232,13 +232,13 @@
             </div>
             <div class="p-6">
                 @php
-                    $homeworks = collect();
-                    foreach($completedSessions as $session) {
-                        if ($session->homeworks && $session->homeworks->count() > 0) {
-                            $homeworks = $homeworks->merge($session->homeworks);
-                        }
+                $homeworks = collect();
+                foreach($sessions as $session) {
+                    if ($session->homeworks && $session->homeworks->count() > 0) {
+                        $homeworks = $homeworks->merge($session->homeworks);
                     }
-                @endphp
+                }
+            @endphp
                 
                 @if($homeworks->count() > 0)
                     <div class="space-y-4">

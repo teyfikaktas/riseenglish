@@ -158,7 +158,6 @@
         </div>
     </div>
 
-    @if($session->status == 'completed')
     <!-- Materyaller ve Ödevler (Sadece tamamlanan dersler için) -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Ders Materyalleri -->
@@ -263,6 +262,5 @@
             </div>
         </div>
     </div>
-    @endif
 </div>
 @endsection

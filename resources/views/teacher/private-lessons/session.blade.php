@@ -141,7 +141,7 @@
     @endif
 </div>
 @endif
-@if($isLessonCompleted)
+{{-- @if($isLessonCompleted)
     @php
         $reportExists = \App\Models\PrivateLessonReport::where('session_id', $session->id)->exists();
     @endphp
@@ -163,7 +163,7 @@
             Ders Raporu Oluştur
         </a>
     @endif
-@endif
+@endif --}}
     <!-- Notlar Bölümü - Daha kompakt -->
     @if($session->notes)
     <div class="bg-gray-50 p-3 rounded-lg shadow-sm mb-4">
@@ -210,15 +210,6 @@
             <div class="flex flex-col">
                 <h5 class="text-xs font-semibold text-gray-700 mb-2">Ders Materyalleri</h5>
                 
-                @if(!$isLessonCompleted)
-                    <button disabled class="px-3 py-1.5 bg-gray-200 text-gray-500 rounded-lg transition-colors shadow-sm cursor-not-allowed flex items-center text-xs">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        Materyal Ekle
-                    </button>
-                    <p class="mt-1.5 text-xs text-orange-600">Ders tamamlanmadan materyal yüklenemez.</p>
-                @else
                     <a href="{{ route('ogretmen.private-lessons.material.create', $session->id) }}" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 shadow-sm flex items-center text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -226,7 +217,6 @@
                         Materyal Ekle
                     </a>
                     <p class="mt-1.5 text-xs text-gray-600">Ders materyallerini yükleyebilirsiniz.</p>
-                @endif
                 
                 <!-- Mevcut Materyaller Listesi -->
                 @if($session->materials && $session->materials->count() > 0)

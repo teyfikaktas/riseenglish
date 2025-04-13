@@ -133,7 +133,6 @@ class StudentPrivateLessonController extends Controller
         
         // Öğrencinin tüm derslerinin seanslarını getir
         $sessions = PrivateLessonSession::where('student_id', $studentId)
-            ->where('status', 'completed')
             ->pluck('id');
             
         // Bu seanslara ait tüm materyalleri getir
@@ -154,7 +153,6 @@ class StudentPrivateLessonController extends Controller
         
         // Öğrencinin tüm derslerinin seanslarını getir
         $sessions = PrivateLessonSession::where('student_id', $studentId)
-            ->where('status', 'completed')
             ->pluck('id');
             
         // Bu seanslara ait tüm ödevleri getir

@@ -44,6 +44,24 @@ class TeacherPrivateLessonController extends Controller
  * @param int $id Session ID
  * @return \Illuminate\Http\Response
  */
+/**
+ * Generate PDF report for a lesson
+ *
+ * @param int $id Session ID
+ * @return \Illuminate\Http\Response
+ */
+/**
+ * Generate PDF report for a lesson
+ *
+ * @param int $id Session ID
+ * @return \Illuminate\Http\Response
+ */
+/**
+ * Generate PDF report for a lesson
+ *
+ * @param int $id Session ID
+ * @return \Illuminate\Http\Response
+ */
 public function generatePdfReport($id)
 {
     $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
@@ -55,29 +73,478 @@ public function generatePdfReport($id)
         ->where('session_id', $id)
         ->firstOrFail();
     
-    // Prepare data for chart
-    $chartData = [];
-    foreach ($report->examResults as $examResult) {
-        $chartData[] = [
-            'subject' => $examResult->subject_name,
-            'correct' => $examResult->questions_correct,
-            'wrong' => $examResult->questions_wrong,
-            'unanswered' => $examResult->questions_unanswered
+    // For main questions chart
+    $mainChartData = [
+        'labels' => ['Doğru', 'Yanlış', 'Boş'],
+        'datasets' => [
+            [
+                'data' => [$report->questions_correct, $report->questions_wrong, $report->questions_unanswered],
+                'backgroundColor' => ['#10b981', '#ef4444', '#9ca3af']
+            ]
+        ]
+    ];
+
+    // For subjects chart
+    $subjectChartData = [];
+    
+    if ($report->examResults && $report->examResults->count() > 0) {
+        $subjects = [];
+        $correctData = [];
+        $wrongData = [];
+        $unansweredData = [];
+        
+        foreach ($report->examResults as $examResult) {
+            $subjects[] = $examResult->subject_name;
+            $correctData[] = $examResult->questions_correct;
+            $wrongData[] = $examResult->questions_wrong;
+            $unansweredData[] = $examResult->questions_unanswered;
+        }
+        
+        $subjectChartData = [
+            'labels' => $subjects,
+            'datasets' => [
+                [
+                    'label' => 'Doğru',
+                    'data' => $correctData,
+                    'backgroundColor' => '#10b981'
+                ],
+                [
+                    'label' => 'Yanlış',
+                    'data' => $wrongData,
+                    'backgroundColor' => '#ef4444'
+                ],
+                [
+                    'label' => 'Boş',
+                    'data' => $unansweredData,
+                    'backgroundColor' => '#9ca3af'
+                ]
+            ]
         ];
     }
     
-    // Convert to JSON for use in JS
-    $chartDataJson = json_encode($chartData);
+    // Generate chart images using our custom function
+    $mainChartImage = $this->generateChartImage($mainChartData, 'pie', 500, 300);
+    $subjectsChartImage = $this->generateChartImage($subjectChartData, 'bar', 600, 400);
+    
+    // Generate watermark image
+    $watermarkImage = $this->generateWatermark();
     
     // Generate PDF view
     $pdf = \PDF::loadView('teacher.private-lessons.reports.pdf-report', 
-        compact('session', 'report', 'chartDataJson'));
+        compact('session', 'report', 'mainChartImage', 'subjectsChartImage', 'watermarkImage'));
     
-    // Set PDF options if needed
+    // Set PDF options
     $pdf->setPaper('a4');
     
-    // Download or stream
-    return $pdf->download('ders_raporu_' . $session->id . '.pdf');
+    // Download the PDF
+    return $pdf->download('rise_english_ders_raporu_' . $session->id . '.pdf');
+}
+
+/**
+ * Generate a watermark image with logo
+ *
+ * @return string Base64 encoded image
+ */
+private function generateWatermark()
+{
+    // Create a blank transparent image
+    $width = 600;
+    $height = 600;
+    $image = imagecreatetruecolor($width, $height);
+    
+    // Make the background transparent
+    imagesavealpha($image, true);
+    $transparent = imagecolorallocatealpha($image, 0, 0, 0, 127);
+    imagefill($image, 0, 0, $transparent);
+    
+    // Try to load the logo
+    $logoPath = public_path('images/logo.png');
+    $logo = null;
+    
+    if (file_exists($logoPath)) {
+        // Get logo image info
+        $logoInfo = getimagesize($logoPath);
+        if ($logoInfo !== false) {
+            switch ($logoInfo[2]) {
+                case IMAGETYPE_JPEG:
+                    $logo = imagecreatefromjpeg($logoPath);
+                    break;
+                case IMAGETYPE_PNG:
+                    $logo = imagecreatefrompng($logoPath);
+                    break;
+                case IMAGETYPE_GIF:
+                    $logo = imagecreatefromgif($logoPath);
+                    break;
+            }
+        }
+    }
+    
+    // If logo loaded successfully
+    if ($logo) {
+        // Get logo dimensions
+        $logoWidth = imagesx($logo);
+        $logoHeight = imagesy($logo);
+        
+        // Calculate center position for logo
+        $centerX = ($width - $logoWidth) / 2;
+        $centerY = ($height - $logoHeight) / 2;
+        
+        // Set transparency for the logo (20% opacity)
+        imagealphablending($image, true);
+        
+        // Create a new transparent image for the logo with 20% opacity
+        $logoTransparent = imagecreatetruecolor($logoWidth, $logoHeight);
+        imagesavealpha($logoTransparent, true);
+        imagefill($logoTransparent, 0, 0, $transparent);
+        
+        // Copy the logo to the transparent image
+        imagecopy($logoTransparent, $logo, 0, 0, 0, 0, $logoWidth, $logoHeight);
+        
+        // Set alpha for each pixel
+        for ($x = 0; $x < $logoWidth; $x++) {
+            for ($y = 0; $y < $logoHeight; $y++) {
+                $colorIndex = imagecolorat($logoTransparent, $x, $y);
+                $color = imagecolorsforindex($logoTransparent, $colorIndex);
+                
+                // If not fully transparent, adjust alpha
+                if ($color['alpha'] < 127) {
+                    $alpha = 115; // ~10% opacity (127 is fully transparent)
+                    $newColor = imagecolorallocatealpha($logoTransparent, $color['red'], $color['green'], $color['blue'], $alpha);
+                    imagesetpixel($logoTransparent, $x, $y, $newColor);
+                }
+            }
+        }
+        
+        // Copy the semi-transparent logo to the main image
+        imagecopy($image, $logoTransparent, $centerX, $centerY, 0, 0, $logoWidth, $logoHeight);
+        
+        // Clean up
+        imagedestroy($logo);
+        imagedestroy($logoTransparent);
+    } else {
+        // Fallback: Create a text watermark if logo is not available
+        $blue = imagecolorallocatealpha($image, 26, 46, 90, 115); // ~10% opacity
+        $text = "RISE ENGLISH";
+        
+        // Calculate text size for centering
+        $fontSize = 60;
+        $angle = 45; // Diagonal
+        
+        // Draw the text watermark
+        for ($i = 0; $i < $width; $i += 200) {
+            for ($j = 0; $j < $height; $j += 200) {
+                imagettftext($image, $fontSize, $angle, $i, $j + $fontSize, $blue, public_path('BebasNeue-Regular.ttf'), $text);
+            }
+        }
+    }
+    
+    // Output the image to buffer
+    ob_start();
+    imagepng($image);
+    $imageData = ob_get_clean();
+    
+    // Clean up
+    imagedestroy($image);
+    
+    // Return base64 encoded image
+    return 'data:image/png;base64,' . base64_encode($imageData);
+}
+
+/**
+ * Generate a chart image and return it as base64 encoded string
+ *
+ * @param array $chartData The chart data
+ * @param string $type Chart type (pie, bar, etc)
+ * @param int $width Image width
+ * @param int $height Image height
+ * @return string Base64 encoded image
+ */
+private function generateChartImage($chartData, $type = 'pie', $width = 500, $height = 300)
+{
+    // Boş bir resim oluştur
+    $image = imagecreatetruecolor($width, $height);
+    
+    // Arka plan rengi beyaz olsun
+    $white = imagecolorallocate($image, 255, 255, 255);
+    imagefill($image, 0, 0, $white);
+    
+    // Pasta grafiği için implementasyon
+    if ($type == 'pie' && isset($chartData['datasets'][0]['data'])) {
+        $data = $chartData['datasets'][0]['data'];
+        $colors = $chartData['datasets'][0]['backgroundColor'];
+        
+        $total = array_sum($data);
+        $centerX = $width / 2;
+        $centerY = $height / 2;
+        $radius = min($width, $height) / 2 - 40; // Biraz küçültüldü
+        
+        $startAngle = 0;
+        
+        // İlk olarak pasta dilimlerini çiz
+        foreach ($data as $i => $value) {
+            $sliceAngle = ($value / $total) * 360;
+            
+            // Renkleri çevir
+            $colorHex = str_replace('#', '', $colors[$i % count($colors)]);
+            $r = hexdec(substr($colorHex, 0, 2));
+            $g = hexdec(substr($colorHex, 2, 2));
+            $b = hexdec(substr($colorHex, 4, 2));
+            $color = imagecolorallocate($image, $r, $g, $b);
+            
+            // Pasta dilimini çiz
+            imagefilledarc($image, $centerX, $centerY, $radius * 2, $radius * 2, $startAngle, $startAngle + $sliceAngle, $color, IMG_ARC_PIE);
+            
+            $startAngle += $sliceAngle;
+        }
+        
+        // Pasta grafiğinin etrafını siyah bir çember ile çerçevele
+        $black = imagecolorallocate($image, 0, 0, 0);
+        imageellipse($image, $centerX, $centerY, $radius * 2, $radius * 2, $black);
+        
+        // Renklerin ne anlama geldiğini göstermek için lejant ekle
+        $legends = ['Dogru', 'Yanlis', 'Bos']; // Türkçe karakter sorunu için basitleştirildi
+        $legendHeight = 25;
+        $legendY = $height - $legendHeight * count($legends) - 10;
+        
+        for ($i = 0; $i < count($legends); $i++) {
+            // Renk kutusu çiz
+            $colorHex = str_replace('#', '', $colors[$i % count($colors)]);
+            $r = hexdec(substr($colorHex, 0, 2));
+            $g = hexdec(substr($colorHex, 2, 2));
+            $b = hexdec(substr($colorHex, 4, 2));
+            $color = imagecolorallocate($image, $r, $g, $b);
+            
+            $boxX = $width - 120;
+            $boxY = $legendY + ($i * $legendHeight);
+            
+            imagefilledrectangle($image, $boxX, $boxY, $boxX + 15, $boxY + 15, $color);
+            imagerectangle($image, $boxX, $boxY, $boxX + 15, $boxY + 15, $black);
+            
+            // Lejant metnini ekle
+            $legendText = $legends[$i] . ': ' . $data[$i] . ' (' . round(($data[$i] / $total) * 100) . '%)';
+            
+            // Her karakteri ayrı ayrı çiz
+            $textX = $boxX + 25;
+            for ($c = 0; $c < strlen($legendText); $c++) {
+                $char = $legendText[$c];
+                imagechar($image, 2, $textX + ($c * 6), $boxY + 2, $char, $black);
+            }
+        }
+        
+        // Merkeze toplam değeri göster
+        $totalText = "Toplam: $total";
+        $textWidth = strlen($totalText) * 6;
+        $textX = $centerX - ($textWidth / 2);
+        $textY = $centerY - 5;
+        
+        // Zemini temizle
+        imagefilledrectangle($image, $textX - 5, $textY - 5, $textX + $textWidth + 5, $textY + 15, $white);
+        
+        // Her karakteri tek tek çiz
+        for ($i = 0; $i < strlen($totalText); $i++) {
+            imagechar($image, 2, $textX + ($i * 6), $textY, $totalText[$i], $black);
+        }
+    }
+    
+    // Çubuk grafiği için implementasyon (yan yana 3 çubuk şeklinde)
+    if ($type == 'bar' && isset($chartData['datasets'])) {
+        $datasets = $chartData['datasets'];
+        $labels = $chartData['labels'];
+        
+        if (empty($labels)) {
+            // Veri yoksa boş grafik döndür
+            $black = imagecolorallocate($image, 0, 0, 0);
+            imagestring($image, 4, $width/2 - 50, $height/2 - 10, "Veri yok", $black);
+            
+            // Resmi buffer'a yaz
+            ob_start();
+            imagepng($image);
+            $imageData = ob_get_clean();
+            
+            // Belleği temizle
+            imagedestroy($image);
+            
+            // Base64 ile encode et
+            return 'data:image/png;base64,' . base64_encode($imageData);
+        }
+        
+        // Maksimum değeri bul
+        $maxValue = 0;
+        foreach ($datasets as $dataset) {
+            $maxValue = max($maxValue, max($dataset['data']));
+        }
+        $maxValue = ceil($maxValue * 1.1); // %10 marj ekle
+        
+        // Grafik bölgesini oluştur
+        $margin = 60; // Sol marjini artırdık
+        $graphWidth = $width - (2 * $margin);
+        $graphHeight = $height - (2 * $margin);
+        
+        // Arka plan ve çerçeve
+        $lightGray = imagecolorallocate($image, 245, 245, 245);
+        $gray = imagecolorallocate($image, 200, 200, 200);
+        $black = imagecolorallocate($image, 0, 0, 0);
+        imagefilledrectangle($image, $margin, $margin, $width - $margin, $height - $margin, $lightGray);
+        imagerectangle($image, $margin, $margin, $width - $margin, $height - $margin, $gray);
+        
+        // Y ekseni çizgisi
+        imageline($image, $margin, $margin, $margin, $height - $margin, $black);
+        
+        // X ekseni çizgisi
+        imageline($image, $margin, $height - $margin, $width - $margin, $height - $margin, $black);
+        
+        // Y ekseni bölünme çizgileri ve değerleri
+        $steps = 5;
+        for ($i = 0; $i <= $steps; $i++) {
+            $y = $height - $margin - ($i * $graphHeight / $steps);
+            $value = ceil($i * $maxValue / $steps);
+            
+            // Yatay çizgi
+            imageline($image, $margin - 5, $y, $width - $margin, $y, $gray);
+            
+            // Y değeri
+            $valueText = (string)$value;
+            $textWidth = strlen($valueText) * 6;
+            imagefilledrectangle($image, $margin - $textWidth - 10, $y - 5, $margin - 5, $y + 5, $white);
+            
+            // Her rakamı tek tek çiz
+            for ($j = 0; $j < strlen($valueText); $j++) {
+                imagechar($image, 2, $margin - $textWidth - 5 + ($j * 6), $y - 5, $valueText[$j], $black);
+            }
+        }
+        
+        // Her bir konu için gruplandırılmış çubuklar oluştur
+        $barCount = count($labels);
+        $datasetCount = count($datasets);
+        
+        // Toplam grup genişliği ve çubuk genişliği
+        $groupWidth = $graphWidth / $barCount; 
+        $barWidth = ($groupWidth * 0.6) / $datasetCount; // Her grup içinde %60 alan kullan
+        $barPadding = ($groupWidth * 0.4) / ($datasetCount + 1); // Gruplar arasında %40 boşluk
+        
+        // Lejant oluştur (üst kısımda)
+        $legendTexts = ['Dogru', 'Yanlis', 'Bos']; // Türkçe karakter sorunu için basitleştirildi
+        $legendX = $width - 200;
+        $legendY = 20;
+        
+        for ($i = 0; $i < count($legendTexts); $i++) {
+            // Renk kutusu
+            $colorHex = str_replace('#', '', $datasets[$i]['backgroundColor']);
+            $r = hexdec(substr($colorHex, 0, 2));
+            $g = hexdec(substr($colorHex, 2, 2));
+            $b = hexdec(substr($colorHex, 4, 2));
+            $color = imagecolorallocate($image, $r, $g, $b);
+            
+            imagefilledrectangle($image, $legendX, $legendY + ($i * 20), $legendX + 15, $legendY + 15 + ($i * 20), $color);
+            imagerectangle($image, $legendX, $legendY + ($i * 20), $legendX + 15, $legendY + 15 + ($i * 20), $black);
+            
+            // Metin
+            for ($j = 0; $j < strlen($legendTexts[$i]); $j++) {
+                imagechar($image, 2, $legendX + 20 + ($j * 6), $legendY + 5 + ($i * 20), $legendTexts[$i][$j], $black);
+            }
+        }
+        
+        // Çubukları çiz
+        for ($i = 0; $i < $barCount; $i++) {
+            $groupX = $margin + ($i * $groupWidth) + $barPadding;
+            
+            // Konu başlığı (X ekseni etiketi)
+            $labelText = $this->simplifyText($labels[$i]); // Türkçe karakter sorunu için basitleştir
+            $labelWidth = strlen($labelText) * 6;
+            $labelX = $groupX + ($groupWidth / 2) - ($labelWidth / 2);
+            
+            // Başlığı çiz
+            imagefilledrectangle($image, $labelX - 2, $height - $margin + 2, $labelX + $labelWidth + 2, $height - $margin + 15, $white);
+            
+            // Daraltılmış metin için karakter sayısını sınırla
+            $maxChars = 10; // Maksimum karakter sayısı
+            $displayText = strlen($labelText) > $maxChars ? substr($labelText, 0, $maxChars) . '..' : $labelText;
+            
+            // Her karakteri tek tek çiz
+            for ($j = 0; $j < strlen($displayText); $j++) {
+                imagechar($image, 1, $labelX + ($j * 6), $height - $margin + 4, $displayText[$j], $black);
+            }
+            
+            // Her veri seti için çubukları çiz
+            for ($j = 0; $j < $datasetCount; $j++) {
+                $value = $datasets[$j]['data'][$i];
+                $barHeight = ($value / $maxValue) * $graphHeight;
+                
+                // Rengi çevir
+                $colorHex = str_replace('#', '', $datasets[$j]['backgroundColor']);
+                $r = hexdec(substr($colorHex, 0, 2));
+                $g = hexdec(substr($colorHex, 2, 2));
+                $b = hexdec(substr($colorHex, 4, 2));
+                $color = imagecolorallocate($image, $r, $g, $b);
+                
+                // Çubuk konumu
+                $barX = $groupX + ($j * ($barWidth + $barPadding));
+                $barY = $height - $margin - $barHeight;
+                
+                // Çubuğu çiz
+                imagefilledrectangle($image, $barX, $barY, $barX + $barWidth, $height - $margin, $color);
+                imagerectangle($image, $barX, $barY, $barX + $barWidth, $height - $margin, $black);
+                
+                // Değeri çubuğun üzerine yaz (sadece yeterince büyükse)
+                if ($barHeight > 15) {
+                    $valueText = (string)$value;
+                    $textWidth = strlen($valueText) * 5;
+                    $textX = $barX + ($barWidth / 2) - ($textWidth / 2);
+                    
+                    // Değeri yazdır
+                    for ($k = 0; $k < strlen($valueText); $k++) {
+                        imagechar($image, 1, $textX + ($k * 5), $barY + 2, $valueText[$k], $black);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Resmi buffer'a yaz
+    ob_start();
+    imagepng($image);
+    $imageData = ob_get_clean();
+    
+    // Belleği temizle
+    imagedestroy($image);
+    
+    // Base64 ile encode et
+    return 'data:image/png;base64,' . base64_encode($imageData);
+}
+
+/**
+ * Türkçe karakterleri ASCII karakterlere dönüştürür ve metni kısaltır
+ *
+ * @param string $text
+ * @return string
+ */
+private function simplifyText($text)
+{
+    $turkishChars = ['ç', 'Ç', 'ğ', 'Ğ', 'ı', 'İ', 'ö', 'Ö', 'ş', 'Ş', 'ü', 'Ü'];
+    $latinChars = ['c', 'C', 'g', 'G', 'i', 'I', 'o', 'O', 's', 'S', 'u', 'U'];
+    
+    $text = str_replace($turkishChars, $latinChars, $text);
+    
+    // Kısaltma yap (20 karakterden uzunsa)
+    if (strlen($text) > 20) {
+        $text = substr($text, 0, 20) . '..';
+    }
+    
+    return $text;
+}
+
+/**
+ * Türkçe karakterleri ASCII karakterlere dönüştürür
+ *
+ * @param string $text
+ * @return string
+ */
+private function transliterateText($text)
+{
+    $turkishChars = ['ç', 'Ç', 'ğ', 'Ğ', 'ı', 'İ', 'ö', 'Ö', 'ş', 'Ş', 'ü', 'Ü'];
+    $latinChars = ['c', 'C', 'g', 'G', 'i', 'I', 'o', 'O', 's', 'S', 'u', 'U'];
+    
+    return str_replace($turkishChars, $latinChars, $text);
 }
     /**
  * Dersin tüm seanslarını göster (Lesson bazlı)
@@ -1119,10 +1586,10 @@ public function showAddMaterial($id)
         ->findOrFail($id);
     
     // Check if the lesson is completed
-    if ($session->status !== 'completed') {
-        return redirect()->route('ogretmen.private-lessons.session.show', $id)
-            ->with('error', 'Ders tamamlanmadan materyal eklenemez.');
-    }
+    // if ($session->status !== 'completed') {
+    //     return redirect()->route('ogretmen.private-lessons.session.show', $id)
+    //         ->with('error', 'Ders tamamlanmadan materyal eklenemez.');
+    // }
     
     return view('teacher.private-lessons.add-material', compact('session'));
 }
