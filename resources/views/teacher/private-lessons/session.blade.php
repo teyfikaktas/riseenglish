@@ -141,6 +141,29 @@
     @endif
 </div>
 @endif
+@if($isLessonCompleted)
+    @php
+        $reportExists = \App\Models\PrivateLessonReport::where('session_id', $session->id)->exists();
+    @endphp
+    
+    @if($reportExists)
+        <a href="{{ route('ogretmen.private-lessons.session.showReport', $session->id) }}" 
+           class="flex items-center text-blue-600 hover:text-blue-800 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Ders Raporunu Görüntüle
+        </a>
+    @else
+        <a href="{{ route('ogretmen.private-lessons.session.createReport', $session->id) }}" 
+           class="flex items-center text-green-600 hover:text-green-800 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Ders Raporu Oluştur
+        </a>
+    @endif
+@endif
     <!-- Notlar Bölümü - Daha kompakt -->
     @if($session->notes)
     <div class="bg-gray-50 p-3 rounded-lg shadow-sm mb-4">

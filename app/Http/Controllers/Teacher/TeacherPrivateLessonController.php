@@ -10,6 +10,11 @@ use App\Models\PrivateLesson;
 use App\Models\PrivateLessonHomework;
 use App\Models\PrivateLessonHomeworkSubmission;
 use App\Models\User;
+use App\Models\Subject;
+use App\Models\PrivateLessonExamResult;
+use App\Models\PrivateLessonReport;
+use Illuminate\Support\Facades\DB; // Bu satırı ekleyin
+
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\PrivateLessonMaterial;
@@ -33,7 +38,47 @@ class TeacherPrivateLessonController extends Controller
         return view('teacher.private-lessons.index', compact('sessions'));
     }
 
+    /**
+ * Generate PDF report for a lesson
+ *
+ * @param int $id Session ID
+ * @return \Illuminate\Http\Response
+ */
+public function generatePdfReport($id)
+{
+    $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+        ->where('teacher_id', Auth::id())
+        ->findOrFail($id);
     
+    // Get the report
+    $report = PrivateLessonReport::with('examResults')
+        ->where('session_id', $id)
+        ->firstOrFail();
+    
+    // Prepare data for chart
+    $chartData = [];
+    foreach ($report->examResults as $examResult) {
+        $chartData[] = [
+            'subject' => $examResult->subject_name,
+            'correct' => $examResult->questions_correct,
+            'wrong' => $examResult->questions_wrong,
+            'unanswered' => $examResult->questions_unanswered
+        ];
+    }
+    
+    // Convert to JSON for use in JS
+    $chartDataJson = json_encode($chartData);
+    
+    // Generate PDF view
+    $pdf = \PDF::loadView('teacher.private-lessons.reports.pdf-report', 
+        compact('session', 'report', 'chartDataJson'));
+    
+    // Set PDF options if needed
+    $pdf->setPaper('a4');
+    
+    // Download or stream
+    return $pdf->download('ders_raporu_' . $session->id . '.pdf');
+}
     /**
  * Dersin tüm seanslarını göster (Lesson bazlı)
  */
@@ -147,7 +192,283 @@ public function storeHomework(Request $request, $id)
             ->withInput();
     }
 }
+/**
+ * Show the form for creating a new lesson report
+ *
+ * @param int $id Session ID
+ * @return \Illuminate\View\View
+ */
+public function showCreateReport($id)
+{
+    $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+        ->where('teacher_id', Auth::id())
+        ->findOrFail($id);
+    
+    // Check if the lesson is completed
+    if ($session->status !== 'completed') {
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('error', 'Ders tamamlanmadan rapor oluşturulamaz.');
+    }
+    
+    // Get a list of subjects for the exam results dropdown
+    $subjects = Subject::where('is_active', true)->orderBy('name')->get();
+    
+    // Check if a report already exists for this session
+    $existingReport = PrivateLessonReport::where('session_id', $id)->first();
+    if ($existingReport) {
+        return redirect()->route('ogretmen.private-lessons.session.editReport', $id)
+            ->with('info', 'Bu ders için zaten bir rapor oluşturulmuş. Raporu düzenleyebilirsiniz.');
+    }
+    
+    return view('teacher.private-lessons.create-report', compact('session', 'subjects'));
+}
 
+/**
+ * Store a newly created lesson report
+ *
+ * @param \Illuminate\Http\Request $request
+ * @param int $id Session ID
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function storeReport(Request $request, $id)
+{
+    $session = PrivateLessonSession::where('teacher_id', Auth::id())->findOrFail($id);
+    
+    // Check if the lesson is completed
+    if ($session->status !== 'completed') {
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('error', 'Ders tamamlanmadan rapor oluşturulamaz.');
+    }
+    
+    // Validate the input
+    $validated = $request->validate([
+        'questions_solved' => 'required|integer|min:0',
+        'questions_correct' => 'required|integer|min:0',
+        'questions_wrong' => 'required|integer|min:0',
+        'questions_unanswered' => 'required|integer|min:0',
+        'pros' => 'nullable|string',
+        'cons' => 'nullable|string',
+        'participation' => 'nullable|string',
+        'teacher_notes' => 'nullable|string',
+        'exam_subjects' => 'nullable|array',
+        'exam_subjects.*' => 'nullable|exists:subjects,id',
+        'exam_correct' => 'nullable|array',
+        'exam_correct.*' => 'nullable|integer|min:0',
+        'exam_wrong' => 'nullable|array',
+        'exam_wrong.*' => 'nullable|integer|min:0',
+        'exam_unanswered' => 'nullable|array',
+        'exam_unanswered.*' => 'nullable|integer|min:0',
+    ]);
+    
+    try {
+        // Start a transaction
+        DB::beginTransaction();
+        
+        // Create the report
+        $report = PrivateLessonReport::create([
+            'session_id' => $session->id,
+            'questions_solved' => $validated['questions_solved'],
+            'questions_correct' => $validated['questions_correct'],
+            'questions_wrong' => $validated['questions_wrong'],
+            'questions_unanswered' => $validated['questions_unanswered'],
+            'pros' => $validated['pros'],
+            'cons' => $validated['cons'],
+            'participation' => $validated['participation'],
+            'teacher_notes' => $validated['teacher_notes'],
+        ]);
+        
+        // Create exam results if any
+        if (isset($validated['exam_subjects']) && is_array($validated['exam_subjects'])) {
+            foreach ($validated['exam_subjects'] as $key => $subjectId) {
+                if (empty($subjectId)) continue;
+                
+                $subject = Subject::findOrFail($subjectId);
+                
+                PrivateLessonExamResult::create([
+                    'report_id' => $report->id,
+                    'subject_id' => $subjectId,
+                    'subject_name' => $subject->name,
+                    'questions_correct' => $validated['exam_correct'][$key] ?? 0,
+                    'questions_wrong' => $validated['exam_wrong'][$key] ?? 0,
+                    'questions_unanswered' => $validated['exam_unanswered'][$key] ?? 0,
+                ]);
+            }
+        }
+        
+        // Commit the transaction
+        DB::commit();
+        
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('success', 'Ders raporu başarıyla oluşturuldu.');
+            
+    } catch (\Exception $e) {
+        // Rollback in case of error
+        DB::rollBack();
+        
+        return redirect()->back()
+            ->with('error', 'Rapor oluşturulurken bir hata oluştu: ' . $e->getMessage())
+            ->withInput();
+    }
+}
+
+/**
+ * Show the form for editing a lesson report
+ *
+ * @param int $id Session ID
+ * @return \Illuminate\View\View
+ */
+public function editReport($id)
+{
+    $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+        ->where('teacher_id', Auth::id())
+        ->findOrFail($id);
+    
+    // Get the existing report
+    $report = PrivateLessonReport::with('examResults')
+        ->where('session_id', $id)
+        ->firstOrFail();
+    
+    // Get a list of subjects for the exam results dropdown
+    $subjects = Subject::where('is_active', true)->orderBy('name')->get();
+    
+    return view('teacher.private-lessons.edit-report', compact('session', 'report', 'subjects'));
+}
+
+/**
+ * Update the specified lesson report
+ *
+ * @param \Illuminate\Http\Request $request
+ * @param int $id Session ID
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function updateReport(Request $request, $id)
+{
+    $session = PrivateLessonSession::where('teacher_id', Auth::id())->findOrFail($id);
+    
+    // Find the report
+    $report = PrivateLessonReport::where('session_id', $id)->firstOrFail();
+    
+    // Validate the input
+    $validated = $request->validate([
+        'questions_solved' => 'required|integer|min:0',
+        'questions_correct' => 'required|integer|min:0',
+        'questions_wrong' => 'required|integer|min:0',
+        'questions_unanswered' => 'required|integer|min:0',
+        'pros' => 'nullable|string',
+        'cons' => 'nullable|string',
+        'participation' => 'nullable|string',
+        'teacher_notes' => 'nullable|string',
+        'exam_subjects' => 'nullable|array',
+        'exam_subjects.*' => 'nullable|exists:subjects,id',
+        'exam_correct' => 'nullable|array',
+        'exam_correct.*' => 'nullable|integer|min:0',
+        'exam_wrong' => 'nullable|array',
+        'exam_wrong.*' => 'nullable|integer|min:0',
+        'exam_unanswered' => 'nullable|array',
+        'exam_unanswered.*' => 'nullable|integer|min:0',
+    ]);
+    
+    try {
+        // Start a transaction
+        DB::beginTransaction();
+        
+        // Update the report
+        $report->update([
+            'questions_solved' => $validated['questions_solved'],
+            'questions_correct' => $validated['questions_correct'],
+            'questions_wrong' => $validated['questions_wrong'],
+            'questions_unanswered' => $validated['questions_unanswered'],
+            'pros' => $validated['pros'],
+            'cons' => $validated['cons'],
+            'participation' => $validated['participation'],
+            'teacher_notes' => $validated['teacher_notes'],
+        ]);
+        
+        // Delete existing exam results
+        PrivateLessonExamResult::where('report_id', $report->id)->delete();
+        
+        // Create new exam results if any
+        if (isset($validated['exam_subjects']) && is_array($validated['exam_subjects'])) {
+            foreach ($validated['exam_subjects'] as $key => $subjectId) {
+                if (empty($subjectId)) continue;
+                
+                $subject = Subject::findOrFail($subjectId);
+                
+                PrivateLessonExamResult::create([
+                    'report_id' => $report->id,
+                    'subject_id' => $subjectId,
+                    'subject_name' => $subject->name,
+                    'questions_correct' => $validated['exam_correct'][$key] ?? 0,
+                    'questions_wrong' => $validated['exam_wrong'][$key] ?? 0,
+                    'questions_unanswered' => $validated['exam_unanswered'][$key] ?? 0,
+                ]);
+            }
+        }
+        
+        // Commit the transaction
+        DB::commit();
+        
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('success', 'Ders raporu başarıyla güncellendi.');
+            
+    } catch (\Exception $e) {
+        // Rollback in case of error
+        DB::rollBack();
+        
+        return redirect()->back()
+            ->with('error', 'Rapor güncellenirken bir hata oluştu: ' . $e->getMessage())
+            ->withInput();
+    }
+}
+
+/**
+ * Show a lesson report
+ *
+ * @param int $id Session ID
+ * @return \Illuminate\View\View
+ */
+public function showReport($id)
+{
+    $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+        ->where('teacher_id', Auth::id())
+        ->findOrFail($id);
+    
+    // Get the report
+    $report = PrivateLessonReport::with('examResults')
+        ->where('session_id', $id)
+        ->firstOrFail();
+    
+    return view('teacher.private-lessons.show-report', compact('session', 'report'));
+}
+
+/**
+ * Delete a lesson report
+ *
+ * @param int $id Session ID
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function deleteReport($id)
+{
+    try {
+        $session = PrivateLessonSession::where('teacher_id', Auth::id())->findOrFail($id);
+        
+        // Find the report
+        $report = PrivateLessonReport::where('session_id', $id)->firstOrFail();
+        
+        // Delete exam results first (cascade delete would work too if defined in migration)
+        PrivateLessonExamResult::where('report_id', $report->id)->delete();
+        
+        // Delete the report
+        $report->delete();
+        
+        return redirect()->route('ogretmen.private-lessons.session.show', $id)
+            ->with('success', 'Ders raporu başarıyla silindi.');
+            
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Rapor silinirken bir hata oluştu: ' . $e->getMessage());
+    }
+}
 /**
  * Ödev eklendiğinde SMS gönderme metodu
  */

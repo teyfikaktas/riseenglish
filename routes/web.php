@@ -196,7 +196,21 @@ Route::middleware(['auth', 'role:ogretmen', 'verified.phone'])->group(function (
         Route::get('/panel', [App\Http\Controllers\Teacher\TeacherController::class, 'index'])
             ->name('panel');
             Route::get('/check-lesson-conflict', [TeacherPrivateLessonController::class, 'checkLessonConflictApi'])->name('check.lesson.conflict');
-
+// Ders Raporu Routes - Bu route'ları özel ders yönetimi route'larının arasına ekleyin
+Route::get('/ozel-ders-seans/{id}/rapor-olustur', [TeacherPrivateLessonController::class, 'showCreateReport'])
+    ->name('private-lessons.session.createReport');
+Route::post('/ozel-ders-seans/{id}/rapor-kaydet', [TeacherPrivateLessonController::class, 'storeReport'])
+    ->name('private-lessons.session.storeReport');
+Route::get('/ozel-ders-seans/{id}/rapor', [TeacherPrivateLessonController::class, 'showReport'])
+    ->name('private-lessons.session.showReport');
+Route::get('/ozel-ders-seans/{id}/rapor-duzenle', [TeacherPrivateLessonController::class, 'editReport'])
+    ->name('private-lessons.session.editReport');
+Route::put('/ozel-ders-seans/{id}/rapor-guncelle', [TeacherPrivateLessonController::class, 'updateReport'])
+    ->name('private-lessons.session.updateReport');
+Route::delete('/ozel-ders-seans/{id}/rapor-sil', [TeacherPrivateLessonController::class, 'deleteReport'])
+    ->name('private-lessons.session.deleteReport');
+    Route::get('/ozel-ders-seans/{id}/pdf-rapor', [TeacherPrivateLessonController::class, 'generatePdfReport'])
+    ->name('private-lessons.session.pdfReport');
 // Ders bazlı route'lar
 // Öğretmen rotaları içinde, özel ders rotaları arasına ekleyin
 Route::get('/ozel-ders-grup/{id}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'showLesson'])
