@@ -57,6 +57,7 @@ class TeacherPrivateLessonController extends Controller
  * @return \Illuminate\Http\Response
  */
 /**
+
  * Generate PDF report for a lesson
  *
  * @param int $id Session ID
@@ -126,128 +127,15 @@ public function generatePdfReport($id)
     $mainChartImage = $this->generateChartImage($mainChartData, 'pie', 500, 300);
     $subjectsChartImage = $this->generateChartImage($subjectChartData, 'bar', 600, 400);
     
-    // Generate watermark image
-    $watermarkImage = $this->generateWatermark();
-    
     // Generate PDF view
     $pdf = \PDF::loadView('teacher.private-lessons.reports.pdf-report', 
-        compact('session', 'report', 'mainChartImage', 'subjectsChartImage', 'watermarkImage'));
+        compact('session', 'report', 'mainChartImage', 'subjectsChartImage'));
     
     // Set PDF options
     $pdf->setPaper('a4');
     
     // Download the PDF
     return $pdf->download('rise_english_ders_raporu_' . $session->id . '.pdf');
-}
-
-/**
- * Generate a watermark image with logo
- *
- * @return string Base64 encoded image
- */
-private function generateWatermark()
-{
-    // Create a blank transparent image
-    $width = 600;
-    $height = 600;
-    $image = imagecreatetruecolor($width, $height);
-    
-    // Make the background transparent
-    imagesavealpha($image, true);
-    $transparent = imagecolorallocatealpha($image, 0, 0, 0, 127);
-    imagefill($image, 0, 0, $transparent);
-    
-    // Try to load the logo
-    $logoPath = public_path('images/logo.png');
-    $logo = null;
-    
-    if (file_exists($logoPath)) {
-        // Get logo image info
-        $logoInfo = getimagesize($logoPath);
-        if ($logoInfo !== false) {
-            switch ($logoInfo[2]) {
-                case IMAGETYPE_JPEG:
-                    $logo = imagecreatefromjpeg($logoPath);
-                    break;
-                case IMAGETYPE_PNG:
-                    $logo = imagecreatefrompng($logoPath);
-                    break;
-                case IMAGETYPE_GIF:
-                    $logo = imagecreatefromgif($logoPath);
-                    break;
-            }
-        }
-    }
-    
-    // If logo loaded successfully
-    if ($logo) {
-        // Get logo dimensions
-        $logoWidth = imagesx($logo);
-        $logoHeight = imagesy($logo);
-        
-        // Calculate center position for logo
-        $centerX = ($width - $logoWidth) / 2;
-        $centerY = ($height - $logoHeight) / 2;
-        
-        // Set transparency for the logo (20% opacity)
-        imagealphablending($image, true);
-        
-        // Create a new transparent image for the logo with 20% opacity
-        $logoTransparent = imagecreatetruecolor($logoWidth, $logoHeight);
-        imagesavealpha($logoTransparent, true);
-        imagefill($logoTransparent, 0, 0, $transparent);
-        
-        // Copy the logo to the transparent image
-        imagecopy($logoTransparent, $logo, 0, 0, 0, 0, $logoWidth, $logoHeight);
-        
-        // Set alpha for each pixel
-        for ($x = 0; $x < $logoWidth; $x++) {
-            for ($y = 0; $y < $logoHeight; $y++) {
-                $colorIndex = imagecolorat($logoTransparent, $x, $y);
-                $color = imagecolorsforindex($logoTransparent, $colorIndex);
-                
-                // If not fully transparent, adjust alpha
-                if ($color['alpha'] < 127) {
-                    $alpha = 115; // ~10% opacity (127 is fully transparent)
-                    $newColor = imagecolorallocatealpha($logoTransparent, $color['red'], $color['green'], $color['blue'], $alpha);
-                    imagesetpixel($logoTransparent, $x, $y, $newColor);
-                }
-            }
-        }
-        
-        // Copy the semi-transparent logo to the main image
-        imagecopy($image, $logoTransparent, $centerX, $centerY, 0, 0, $logoWidth, $logoHeight);
-        
-        // Clean up
-        imagedestroy($logo);
-        imagedestroy($logoTransparent);
-    } else {
-        // Fallback: Create a text watermark if logo is not available
-        $blue = imagecolorallocatealpha($image, 26, 46, 90, 115); // ~10% opacity
-        $text = "RISE ENGLISH";
-        
-        // Calculate text size for centering
-        $fontSize = 60;
-        $angle = 45; // Diagonal
-        
-        // Draw the text watermark
-        for ($i = 0; $i < $width; $i += 200) {
-            for ($j = 0; $j < $height; $j += 200) {
-                imagettftext($image, $fontSize, $angle, $i, $j + $fontSize, $blue, public_path('BebasNeue-Regular.ttf'), $text);
-            }
-        }
-    }
-    
-    // Output the image to buffer
-    ob_start();
-    imagepng($image);
-    $imageData = ob_get_clean();
-    
-    // Clean up
-    imagedestroy($image);
-    
-    // Return base64 encoded image
-    return 'data:image/png;base64,' . base64_encode($imageData);
 }
 
 /**
@@ -532,7 +420,6 @@ private function simplifyText($text)
     
     return $text;
 }
-
 /**
  * Türkçe karakterleri ASCII karakterlere dönüştürür
  *

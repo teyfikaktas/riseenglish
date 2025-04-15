@@ -141,7 +141,7 @@
     @endif
 </div>
 @endif
-{{-- @if($isLessonCompleted)
+@if($isLessonCompleted)
     @php
         $reportExists = \App\Models\PrivateLessonReport::where('session_id', $session->id)->exists();
     @endphp
@@ -163,7 +163,7 @@
             Ders Raporu Oluştur
         </a>
     @endif
-@endif --}}
+@endif
     <!-- Notlar Bölümü - Daha kompakt -->
     @if($session->notes)
     <div class="bg-gray-50 p-3 rounded-lg shadow-sm mb-4">
