@@ -70,10 +70,12 @@
                 </div>
             </div>
 
-            <!-- Çözülen Denemeler -->
+            <!-- Çözülen Denemeler / Soru Çözüm -->
             @if($report->examResults && $report->examResults->count() > 0)
                 <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Çözülen Denemeler</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        {{ isset($report->content_type) && $report->content_type == 'soru_cozum' ? 'Soru Çözüm' : 'Çözülen Denemeler' }}
+                    </h3>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">

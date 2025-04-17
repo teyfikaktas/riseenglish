@@ -18,6 +18,8 @@ class PrivateLessonReport extends Model
         'cons',
         'participation',
         'teacher_notes',
+        'content_type', // Yeni eklenen alan
+
     ];
 
     /**

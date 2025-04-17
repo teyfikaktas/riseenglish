@@ -64,9 +64,21 @@
                 </div>
             </div>
 
-            <!-- Çözülen Denemeler -->
+            <!-- Çözülen Denemeler / Soru Çözüm -->
             <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Çözülen Denemeler</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Çözülen İçerikler</h3>
+                    <div class="inline-flex rounded-md shadow-sm" role="group">
+                        <button type="button" id="btn-deneme" class="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 border border-blue-200 rounded-l-lg hover:bg-blue-200 focus:z-10 focus:ring-2 focus:ring-blue-500 focus:bg-blue-200 content-type-btn active">
+                            Deneme
+                        </button>
+                        <button type="button" id="btn-soru-cozum" class="px-4 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-200 rounded-r-lg hover:bg-blue-100 focus:z-10 focus:ring-2 focus:ring-blue-500 focus:bg-blue-200 content-type-btn">
+                            Soru Çözüm
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" name="content_type" id="content_type" value="deneme">
+                
                 <div class="bg-gray-50 p-4 rounded-md mb-4">
                     <div id="exam-results-container">
                         <div class="exam-result-row mb-4 p-4 border border-gray-200 rounded-md bg-white">
@@ -106,7 +118,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
                         </svg>
-                        Yeni Deneme Ekle
+                        <span id="add-content-text">Yeni Deneme Ekle</span>
                     </button>
                 </div>
             </div>
@@ -157,6 +169,39 @@
     const MAX_EXAM_ROWS = 5;
     
     document.addEventListener('DOMContentLoaded', function() {
+        // Content type toggle functionality
+        const btnDeneme = document.getElementById('btn-deneme');
+        const btnSoruCozum = document.getElementById('btn-soru-cozum');
+        const contentTypeInput = document.getElementById('content_type');
+        const addContentText = document.getElementById('add-content-text');
+        
+        btnDeneme.addEventListener('click', function() {
+            setContentType('deneme');
+        });
+        
+        btnSoruCozum.addEventListener('click', function() {
+            setContentType('soru_cozum');
+        });
+        
+        function setContentType(type) {
+            contentTypeInput.value = type;
+            
+            // Update buttons
+            if (type === 'deneme') {
+                btnDeneme.classList.add('bg-blue-100', 'active');
+                btnDeneme.classList.remove('bg-white');
+                btnSoruCozum.classList.remove('bg-blue-100', 'active');
+                btnSoruCozum.classList.add('bg-white');
+                addContentText.textContent = 'Yeni Deneme Ekle';
+            } else {
+                btnSoruCozum.classList.add('bg-blue-100', 'active');
+                btnSoruCozum.classList.remove('bg-white');
+                btnDeneme.classList.remove('bg-blue-100', 'active');
+                btnDeneme.classList.add('bg-white');
+                addContentText.textContent = 'Yeni Soru Çözüm Ekle';
+            }
+        }
+        
         // Add Exam Row button functionality
         const addExamBtn = document.getElementById('add-exam-btn');
         addExamBtn.addEventListener('click', function() {
@@ -165,7 +210,7 @@
             
             // Check if we've reached the maximum number of rows
             if (examRows.length >= MAX_EXAM_ROWS) {
-                alert('En fazla 5 deneme ekleyebilirsiniz.');
+                alert('En fazla 5 satır ekleyebilirsiniz.');
                 return;
             }
             
@@ -197,7 +242,7 @@
         
         // Make sure we always have at least one row
         if (examRows.length <= 1) {
-            alert('En az bir deneme satırı gereklidir.');
+            alert('En az bir satır gereklidir.');
             return;
         }
         
