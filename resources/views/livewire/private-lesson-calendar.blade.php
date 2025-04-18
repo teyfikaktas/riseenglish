@@ -88,106 +88,42 @@
         </div>
         @if($showDatePicker)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Tarih Seçin</h3>
-                    <button wire:click="$set('showDatePicker', false)" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-<!-- Ay Gezinme Düğmeleri -->
-<div class="flex justify-between items-center mb-4">
-    <button 
-    wire:click="previousPickerMonth()" 
-    class="p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg flex items-center text-indigo-700">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-    </svg>
-    <span class="ml-1">Önceki Ay</span>
-</button>
-
-<div class="text-lg font-semibold text-indigo-800">
-    {{ \Carbon\Carbon::parse($pickerMonth ?? $weekStart)->locale('tr')->translatedFormat('F Y') }}
-</div>
-
-<button 
-    wire:click="nextPickerMonth()" 
-    class="p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg flex items-center text-indigo-700">
-    <span class="mr-1">Sonraki Ay</span>
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-    </svg>
-</button>
-</div>
-                
-                <div class="grid grid-cols-7 gap-1 text-center mb-2">
-                    <div class="text-xs font-medium text-gray-500">Pzt</div>
-                    <div class="text-xs font-medium text-gray-500">Sal</div>
-                    <div class="text-xs font-medium text-gray-500">Çar</div>
-                    <div class="text-xs font-medium text-gray-500">Per</div>
-                    <div class="text-xs font-medium text-gray-500">Cum</div>
-                    <div class="text-xs font-medium text-gray-500">Cmt</div>
-                    <div class="text-xs font-medium text-gray-500">Paz</div>
-                </div>
-                
-<!-- Takvim Günleri -->
-<div 
-  class="grid grid-cols-7 gap-1"
-  {{-- Ay değişince wire:key de değişiyor, grid baştan render ediliyor --}}
-  wire:key="calendar-{{ ($pickerMonth ?? $weekStart)->format('Y-m') }}"
->
-  @php
-      $today = \Carbon\Carbon::now('Europe/Istanbul');
-      $currentMonth = \Carbon\Carbon::parse($pickerMonth ?? $weekStart)->startOfMonth();
-      $startOfCalendar = $currentMonth->copy()->startOfMonth()->startOfWeek(Carbon\Carbon::MONDAY);
-      $endOfCalendar   = $currentMonth->copy()->endOfMonth()->endOfWeek(Carbon\Carbon::SUNDAY);
-      $currentDate     = $startOfCalendar->copy();
-  @endphp
-
-  @while($currentDate->lte($endOfCalendar))
-      @php
-          $formattedDate = $currentDate->format('Y-m-d');
-          $isCurrentMonth = $currentDate->month === $currentMonth->month;
-          $isToday        = $currentDate->isSameDay($today);
-      @endphp
-
-      <button
-        {{-- Her düğmeye de unique key vermeniz ekstra güven sağlar --}}
-        wire:key="day-{{ $formattedDate }}"
-        wire:click="selectDate('{{ $formattedDate }}')"
-        class="h-10 w-10 flex items-center justify-center rounded-full text-sm
-               {{ $isCurrentMonth ? 'text-gray-900' : 'text-gray-400' }}
-               {{ $isToday ? 'bg-indigo-100 text-indigo-800 font-bold' : '' }}
-               hover:bg-indigo-100 hover:text-indigo-800 transition-colors"
-      >
-        {{ $currentDate->day }}
-      </button>
-
-      @php $currentDate->addDay(); @endphp
-  @endwhile
-</div>
-
-                
-                <div class="mt-4 flex justify-end">
-                    <button 
-                        wire:click="$set('showDatePicker', false)" 
-                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg mr-2"
-                    >
-                        İptal
-                    </button>
-                    <button 
-                        wire:click="selectDate('{{ $today->format('Y-m-d') }}')" 
-                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg"
-                    >
-                        Bugün
-                    </button>
-                </div>
+          <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full" x-data>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">Tarih Seçin</h3>
+              <button wire:click="$set('showDatePicker', false)" class="text-gray-500 hover:text-gray-700">
+                <!-- kapatma ikonu -->
+              </button>
             </div>
+        
+            <!-- Flatpickr input -->
+            <input
+              x-ref="picker"
+              wire:model="selectedDate"
+              x-init="flatpickr($refs.picker, {
+                locale: 'tr',
+                dateFormat: 'Y-m-d',
+                defaultDate: '{{ $selectedDate }}',
+                onChange(selectedDates, dateStr) {
+                  @this.call('changeDate', dateStr);
+                  @this.set('showDatePicker', false);
+                }
+              })"
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Tarih seçin"
+            />
+        
+            <div class="mt-4 flex justify-end">
+              <button
+                wire:click="selectDate('{{ now('Europe/Istanbul')->format('Y-m-d') }}')"
+                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >Bugün</button>
+            </div>
+        
+          </div>
         </div>
         @endif
+        
         <!-- Filtreler -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">

@@ -104,7 +104,8 @@ protected $listeners = [
         Carbon::setLocale('tr');
         date_default_timezone_set('Europe/Istanbul');
         setlocale(LC_TIME, 'tr_TR.utf8', 'tr_TR', 'tr', 'turkish'); // PHP yerel ayarları
-        
+        $this->selectedDate = Carbon::now('Europe/Istanbul')->format('Y-m-d');
+        $this->changeDate($this->selectedDate);
         // Varsayılan olarak bu haftayı göster
         $this->setWeek(Carbon::now('Europe/Istanbul'));
         $this->generateDynamicTimeSlots(); // Dinamik zaman dilimleri
@@ -761,6 +762,8 @@ public function selectDate($date)
     $this->pickerMonth = null; // Seçim yapıldıktan sonra pickerMonth'u sıfırla
     $this->changeDate($date);
 }
+public $selectedDate;
+
 /**
  * Dersin süreceği satır sayısını hesapla
  */
