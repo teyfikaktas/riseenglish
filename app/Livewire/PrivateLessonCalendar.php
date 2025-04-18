@@ -24,7 +24,40 @@ class PrivateLessonCalendar extends Component
     public $compactView = false; // varsayılan olarak normal görünüm
     public $nextLesson = null;
     public $timeInterval = 15; // dakika cinsinden zaman aralığı (değiştirilebilir)
-   
+   public $showDatePicker = false;
+
+// $pickerMonth değişkenini ve ilgili fonksiyonları güncelleyelim
+public $pickerMonth = null;
+
+public function previousPickerMonth()
+{
+    if ($this->pickerMonth === null) {
+        $this->pickerMonth = Carbon::parse($this->weekStart)->subMonth()->startOfMonth();
+    } else {
+        $this->pickerMonth = Carbon::parse($this->pickerMonth)->subMonth()->startOfMonth();
+    }
+    // Log ile kontrol
+    Log::info("Önceki aya geçildi: " . $this->pickerMonth->format('F Y'));
+}
+
+public function nextPickerMonth()
+{
+    if ($this->pickerMonth === null) {
+        $this->pickerMonth = Carbon::parse($this->weekStart)->addMonth()->startOfMonth();
+    } else {
+        $this->pickerMonth = Carbon::parse($this->pickerMonth)->addMonth()->startOfMonth();
+    }
+    // Log ile kontrol
+    Log::info("Sonraki aya geçildi: " . $this->pickerMonth->format('F Y'));
+}
+
+// openDatePicker metodunu da güncelleyelim
+public function openDatePicker()
+{
+    $this->pickerMonth = null; // Modal açıldığında seçiciyi sıfırla
+    $this->showDatePicker = true;
+}
+
     // Hata alınan $statuses değişkenini public olarak tanımlıyoruz
     public $statuses = [
         'pending' => 'Beklemede',
@@ -35,11 +68,14 @@ class PrivateLessonCalendar extends Component
         'completed' => 'Tamamlandı',
         'scheduled' => 'Planlandı',
     ];
-    protected $listeners = [
-        'dateChanged' => 'setWeek',
-        'filterByTeacher' => 'filterByTeacher',
-        'filterByStatus' => 'filterByStatus',
-    ];
+// PrivateLessonCalendar.php içinde protected $listeners dizisini güncelleyin
+protected $listeners = [
+    'dateChanged' => 'setWeek',
+    'filterByTeacher' => 'filterByTeacher',
+    'filterByStatus' => 'filterByStatus',
+    'previousPickerMonth' => 'previousPickerMonth',  // Yeni
+    'nextPickerMonth' => 'nextPickerMonth'  // Yeni
+];
     
     public function getDebugInfo()
     {
@@ -130,19 +166,30 @@ class PrivateLessonCalendar extends Component
             $this->nextLesson = null;
         }
     }
-
-    /**
-     * Kalan süreyi daha anlaşılır bir formatta formatlar
-     */
+/**
+ * Tarih seçiciden gelen tarih değişikliğini işle
+ */
+public function changeDate($date)
+{
+    if (!$date) return;
+    
+    // Seçilen tarihle hafta oluştur
+    $selectedDate = Carbon::parse($date, 'Europe/Istanbul');
+    $this->setWeek($selectedDate);
+}
     private function formatTimeLeft($currentTime, $futureTime)
     {
         $diff = $currentTime->diff($futureTime);
+        $totalHours = $diff->days * 24 + $diff->h;
         
         if ($diff->days > 0) {
+            // Ders başka bir günde
             return $diff->days . ' gün ' . $diff->h . ' saat';
         } elseif ($diff->h > 0) {
+            // Ders bugün ama saat farkı var
             return $diff->h . ' saat ' . $diff->i . ' dakika';
         } else {
+            // Ders bugün ve 1 saatten az kaldı
             return $diff->i . ' dakika';
         }
     }
@@ -708,7 +755,12 @@ private function findClosestTimeSlot($time)
     
     return $closestSlot;
 }
-
+public function selectDate($date)
+{
+    $this->showDatePicker = false;
+    $this->pickerMonth = null; // Seçim yapıldıktan sonra pickerMonth'u sıfırla
+    $this->changeDate($date);
+}
 /**
  * Dersin süreceği satır sayısını hesapla
  */
