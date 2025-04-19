@@ -2384,38 +2384,7 @@ public function store(Request $request)
      */
     private function checkLessonConflict($teacherId, $dayOfWeek, $startTime, $endTime, $date, $excludeSessionId = null)
     {
-        // Aynı öğretmenin, aynı gün ve saatte (±1 saat içinde) başka dersi var mı kontrol et
-        $query = PrivateLessonSession::where('teacher_id', $teacherId)
-            ->where('day_of_week', $dayOfWeek)
-            ->where('start_date', $date)
-            ->where('status', '!=', 'cancelled'); // İptal edilmiş dersleri hariç tut
-            
-        // Hariç tutulacak seans ID'si varsa ekle
-        if ($excludeSessionId) {
-            $query->where('id', '!=', $excludeSessionId);
-        }
-        
-        // Zaman çakışma kontrolü
-        // 1. Bu dersin başlangıcı mevcut bir dersin aralığında mı?
-        // 2. Bu dersin bitişi mevcut bir dersin aralığında mı?
-        // 3. Bu ders mevcut bir dersin tamamını kapsıyor mu?
-        $query->where(function($q) use ($startTime, $endTime) {
-            $q->where(function($q) use ($startTime, $endTime) {
-                // Yeni dersin başlangıcı, mevcut dersin aralığında mı?
-                $q->where('start_time', '<=', $startTime)
-                  ->where('end_time', '>', $startTime);
-            })->orWhere(function($q) use ($startTime, $endTime) {
-                // Yeni dersin bitişi, mevcut dersin aralığında mı?
-                $q->where('start_time', '<', $endTime)
-                  ->where('end_time', '>=', $endTime);
-            })->orWhere(function($q) use ($startTime, $endTime) {
-                // Yeni ders, mevcut bir dersi tamamen kapsıyor mu?
-                $q->where('start_time', '>=', $startTime)
-                  ->where('end_time', '<=', $endTime);
-            });
-        });
-        
-        return $query->exists();
+        return false;
     }
 
     /**

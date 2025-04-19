@@ -170,7 +170,14 @@
                                             </svg>
                                             Dersi Düzenle
                                         </a>
-                                        
+                                        <a href="{{ route('ogretmen.private-lessons.material.create', $lessonSessions->first()->id) }}"
+                                            class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                 <path d="M8 2a2 2 0 00-2 2v4H3a1 1 0 000 2h3v4a2 2 0 002 2h4a1 1 0 100-2H9v-4h3a1 1 0 100-2H9V4a1 1 0 00-1-1z" />
+                                             </svg>
+                                             Materyal Ekle
+                                         </a>
+                                         
                                         <!-- Dersi Aktif/Pasif yapma butonu -->
                                         <a href="#" 
                                            onclick="event.preventDefault(); toggleLessonActive('{{ $firstSession->private_lesson_id }}', '{{ $isActive ? 'Pasif' : 'Aktif' }}');" 
