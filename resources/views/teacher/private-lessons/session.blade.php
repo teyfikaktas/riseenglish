@@ -84,7 +84,6 @@
     </div>
     <!-- In teacher.private-lessons.session.blade.php -->
 
-@if(isset($isLessonCompleted) && $isLessonCompleted)
 <div class="mt-4">
     <div class="flex justify-between items-center mb-2">
         <h3 class="text-lg font-semibold">Ödevler</h3>
@@ -140,8 +139,6 @@
         </div>
     @endif
 </div>
-@endif
-@if($isLessonCompleted)
     @php
         $reportExists = \App\Models\PrivateLessonReport::where('session_id', $session->id)->exists();
     @endphp
@@ -163,7 +160,6 @@
             Ders Raporu Oluştur
         </a>
     @endif
-@endif
     <!-- Notlar Bölümü - Daha kompakt -->
     @if($session->notes)
     <div class="bg-gray-50 p-3 rounded-lg shadow-sm mb-4">

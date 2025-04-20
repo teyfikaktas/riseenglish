@@ -298,11 +298,18 @@ Route::get('/ozel-ders-teslim/{submissionId}/indir', [App\Http\Controllers\Teach
             
         Route::post('/ozel-ders/kaydet', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'store'])
             ->name('private-lessons.store');
-            
+            Route::get('/ozel-ders-grup/{id}/seans-ekle', [TeacherPrivateLessonController::class, 'showAddSession'])
+    ->name('private-lessons.showAddSession');
+Route::post('/ozel-ders-grup/{id}/seans-ekle', [TeacherPrivateLessonController::class, 'storeNewSession'])
+    ->name('private-lessons.storeNewSession');
         // Yeni eklenen detay görüntüleme route'u
         Route::get('/ozel-ders/{id}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'show'])
             ->name('private-lessons.show');
-            
+                // Seans silme (tek veya tüm gelecektekiler)
+        Route::delete(
+            '/ozel-ders-seans/{id}',
+            [TeacherPrivateLessonController::class, 'destroySession']
+        )->name('private-lessons.session.destroy');
         Route::get('/ozel-ders/{id}/duzenle', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'edit'])
             ->name('private-lessons.edit');
             

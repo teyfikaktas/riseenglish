@@ -48,7 +48,7 @@
         <div class="max-w-md w-full p-8 bg-white rounded-lg shadow-lg">
             <!-- Logo -->
             <div class="text-center mb-6">
-                <img src="{{ asset('images/logo.png') }}" alt="Rise English Logo" class="h-24 mx-auto">
+                <img id="registerLogo" src="{{ asset('images/logo.png') }}" alt="Rise English Logo" class="h-24 mx-auto transition-transform duration-500">
             </div>
             
             <h2 class="text-3xl font-bold text-center text-[#1a2e5a] mb-6">Hemen Üye Ol</h2>
@@ -60,7 +60,7 @@
             @endif
             
             <!-- Register Form -->
-            <form method="POST" action="{{ url('/kayit-ol') }}">
+            <form method="POST" action="{{ url('/kayit-ol') }}" id="registerForm">
                 @csrf
                 
                 <div class="mb-4">
@@ -124,8 +124,15 @@
                 </div>
                 
                 <div class="mb-6">
-                    <button type="submit" class="w-full bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300">
-                        Kayıt Ol
+                    <button id="registerButton" type="submit" class="w-full bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 sm:py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 text-lg sm:text-base touch-manipulation">
+                        <span id="registerButtonText">Kayıt Ol</span>
+                        <span id="registerButtonLoading" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Yükleniyor...
+                        </span>
                     </button>
                 </div>
                 
@@ -140,4 +147,66 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registerForm');
+    const registerButton = document.getElementById('registerButton');
+    const buttonText = document.getElementById('registerButtonText');
+    const buttonLoading = document.getElementById('registerButtonLoading');
+    const logo = document.getElementById('registerLogo');
+    let isSubmitting = false;
+
+    form.addEventListener('submit', function(e) {
+        // Form doldurulması zorunlu alanların kontrolü
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const password = document.getElementById('password').value;
+        const passwordConfirmation = document.getElementById('password_confirmation').value;
+        const terms = document.getElementById('terms').checked;
+        
+        // Basit bir form doğrulama
+        if (!name || !email || !phone || !password || !passwordConfirmation || !terms) {
+            return true; // Form doğrulaması tarayıcı tarafından yapılacak
+        }
+        
+        // Şifre kontrolü
+        if (password !== passwordConfirmation) {
+            return true; // Form doğrulaması tarayıcı tarafından yapılacak
+        }
+
+        // Eğer form zaten gönderiliyorsa, tekrar gönderilmesini engelle
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Form gönderim durumunu true yap
+        isSubmitting = true;
+        
+        // Butonu loading durumuna getir
+        buttonText.classList.add('hidden');
+        buttonLoading.classList.remove('hidden');
+        registerButton.disabled = true;
+        registerButton.classList.add('opacity-75');
+        
+        // Logo animasyonu başlat
+        logo.classList.add('animate-spin');
+        
+        // Form normal şekilde gönderilsin
+        return true;
+    });
+
+    // Mobil için daha iyi tıklama deneyimi
+    registerButton.addEventListener('touchstart', function() {
+        this.classList.add('scale-95');
+    });
+
+    registerButton.addEventListener('touchend', function() {
+        this.classList.remove('scale-95');
+    });
+});
+</script>
 @endsection

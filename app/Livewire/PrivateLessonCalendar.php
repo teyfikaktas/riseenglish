@@ -423,42 +423,44 @@ private function sendCompletionSMS($session)
     }
 }
 
-    /**
-     * Tek bir ders seansının detaylarını göster
-     */
-    public function showSession($id)
-    {
-        try {
-            // Veritabanından ders bilgilerini çek
-            $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
-                ->findOrFail($id);
-            
-            // Ders durumları için renkler ve etiketler
-            $statuses = [
-                'pending' => 'Beklemede',
-                'approved' => 'Onaylandı',
-                'active' => 'Aktif',
-                'rejected' => 'Reddedildi',
-                'cancelled' => 'İptal Edildi',
-                'completed' => 'Tamamlandı',
-                'scheduled' => 'Planlandı',
-            ];
-            
-            // Şu anki zamanı kontrol et (ders tamamlandı mı vs. için)
-            $currentTime = now();
-            $lessonEndTime = Carbon::parse($session->start_date . ' ' . $session->end_time);
-            $isLessonCompleted = $session->status === 'completed';
-            $isLessonPassed = $currentTime->isAfter($lessonEndTime);
-            
-            return view('teacher.private-lessons.session', compact('session', 'statuses', 'isLessonCompleted', 'isLessonPassed'));
-            
-        } catch (\Exception $e) {
-            // Hata durumunda
-            Log::error("Ders bilgileri yüklenirken hata: " . $e->getMessage());
-            return redirect()->route('ogretmen.private-lessons.index')
-                ->with('error', 'Ders detayları yüklenirken bir hata oluştu: ' . $e->getMessage());
-        }
+/**
+ * Tek bir ders seansının detaylarını göster
+ *
+ * @param int $id
+ * @return \Illuminate\View\View
+ */
+public function showSession($id)
+{
+    try {
+        // Veritabanından ders bilgilerini çek
+        $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+            ->findOrFail($id);
+        
+        // Ders durumları için renkler ve etiketler
+        $statuses = [
+            'pending' => 'Beklemede',
+            'approved' => 'Onaylandı',
+            'active' => 'Aktif',
+            'rejected' => 'Reddedildi',
+            'cancelled' => 'İptal Edildi',
+            'completed' => 'Tamamlandı',
+            'scheduled' => 'Planlandı',
+        ];
+        
+        // Değişiklikleri kaldırdık ve tüm durumlar için true değeri verdik ki
+        // koşullu görüntülemeler çalışsın
+        $isLessonCompleted = true; // Artık her zaman true döndürüyoruz
+        $isLessonPassed = true; // Artık her zaman true döndürüyoruz
+        
+        return view('teacher.private-lessons.session', compact('session', 'statuses', 'isLessonCompleted', 'isLessonPassed'));
+        
+    } catch (\Exception $e) {
+        // Hata durumunda
+        Log::error("Ders bilgileri yüklenirken hata: " . $e->getMessage());
+        return redirect()->route('ogretmen.private-lessons.index')
+            ->with('error', 'Ders detayları yüklenirken bir hata oluştu: ' . $e->getMessage());
     }
+}
 
     public function showLessonDetails($lessonId)
     {
@@ -536,20 +538,23 @@ private function sendCompletionSMS($session)
         $this->selectedLesson = null;
     }
 
-    /**
-     * Dinamik zaman dilimlerini oluştur
-     */
-    public function changeViewType($type)
+
+/**
+ * Görünüm tipini değiştir
+ */
+public function changeViewType($type)
 {
     // Görünüm tipini ayarla
     $this->viewType = $type;
     
     // Tarihleri yeniden oluştur
     if ($type === 'day') {
-        // Günlük görünüm - sadece seçili günü göster
-        $this->weekDates = [Carbon::parse($this->weekStart)];
+        // GÜNDELİK GÖRÜNÜM - BUGÜNE AİT TARİHİ KULLAN
+        $this->weekDates = [Carbon::now('Europe/Istanbul')]; // Bugünün tarihini kullan
+        $this->weekStart = Carbon::now('Europe/Istanbul')->startOfDay(); // weekStart'ı da bugüne ayarla
     } else {
         // Haftalık görünüm - varsayılan olarak tüm haftayı göster
+        $this->weekStart = Carbon::now('Europe/Istanbul')->startOfWeek();
         $this->weekDates = [];
         for ($i = 0; $i < 7; $i++) {
             $this->weekDates[] = $this->weekStart->copy()->addDays($i);

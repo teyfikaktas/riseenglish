@@ -3,43 +3,65 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-
-// Gerekli using ifadeleri (dosyanın başına ekleyin veya zaten varsa kontrol edin)
-use Illuminate\Session\TokenMismatchException;
 use Illuminate\Http\Request;
-// redirect() helper'ı için genelde ek using gerekmez, ama Redirect Facade için:
-// use Illuminate\Support\Facades\Redirect;
+use Illuminate\Session\TokenMismatchException;
 
-return Application::configure(basePath: dirname(__DIR__))
+return Application::configure(
+    basePath: dirname(__DIR__),
+)
+    /*
+    |--------------------------------------------------------------------------
+    | Routing
+    |--------------------------------------------------------------------------
+    |
+    | HTTP (web) ve console komutlarınızı burada bağlayın.
+    |
+    */
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
+
+    /*
+    |--------------------------------------------------------------------------
+    | Middleware Aliases
+    |--------------------------------------------------------------------------
+    |
+    | `routeMiddleware` alias’larınızı buraya ekleyin.
+    | Core “web”/“api” grupları otomatik olarak, vendor’dan geliyor.
+    |
+    */
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'role' => \App\Http\Middleware\EnsureUserHasRole::class,
-            'verified.phone' => \App\Http\Middleware\EnsurePhoneVerified::class, // Doğru sınıf adını kullanın
-            ]);
-        })
-    ->withExceptions(function (Exceptions $exceptions) { // <-- Burası düzenlendi
+            'role'           => \App\Http\Middleware\EnsureUserHasRole::class,
+            'verified.phone' => \App\Http\Middleware\EnsurePhoneVerified::class,
+        ]);
+    })
 
-        // TokenMismatchException (Page Expired) yakalandığında çalışacak render kuralı
+    /*
+    |--------------------------------------------------------------------------
+    | Exception Rendering
+    |--------------------------------------------------------------------------
+    |
+    | Buraya özel exception handler’larınızı koyabilirsiniz.
+    | Aşağıda CSRF TokenMismatchException için tek bir örnek var.
+    |
+    */
+    ->withExceptions(function (Exceptions $exceptions) {
+        // CSRF token eşleşmezse (419 Page Expired)
         $exceptions->render(function (TokenMismatchException $e, Request $request) {
-
-            // Eğer istek AJAX ise (API vb.), JSON yanıtı döndürmek daha uygun olabilir
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Oturum süresi doldu veya sayfa geçersiz. Lütfen sayfayı yenileyin.'
-                ], 419); // 419 Authentication Timeout (CSRF hatası için uygun)
+                    'message' => 'Oturum süreniz dolmuş. Lütfen sayfayı yenileyip tekrar deneyin.'
+                ], 419);
             }
 
-            // Normal web istekleri için doğrudan ana dizine (/) yönlendir
-            return redirect('/') // '/' adresine yönlendir
-                   ->with('warning', 'Oturumunuz zaman aşımına uğradı veya sayfa çok uzun süre bekledi. Lütfen işlemi tekrar deneyin.'); // Flash mesajı ekle
-
+            return redirect('/')
+                ->with('warning', 'Oturumunuz zaman aşımına uğradı. Sayfayı yenileyip tekrar deneyin.');
         });
 
-        // Buraya başka exception handling kuralları eklenebilir...
+        // Başka özel exception render’ları eklemek isterseniz buraya…
+    })
 
-    })->create();
+    ->create();

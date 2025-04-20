@@ -8,7 +8,7 @@
         <div class="max-w-md w-full p-8 bg-white rounded-lg shadow-lg">
             <!-- Logo -->
             <div class="text-center mb-8">
-                <img src="{{ asset('images/logo.png') }}" alt="Rise English Logo" class="h-36 mx-auto">
+                <img id="logo" src="{{ asset('images/logo.png') }}" alt="Rise English Logo" class="h-32 sm:h-40 md:h-48 mx-auto transition-transform duration-500">
             </div>
             
             <h2 class="text-3xl font-bold text-center text-[#1a2e5a] mb-6">Giriş Yap</h2>
@@ -20,7 +20,7 @@
             @endif
             
             <!-- Login Form -->
-            <form method="POST" action="{{ route('login') }}">
+            <form method="POST" action="{{ route('login') }}" id="loginForm">
                 @csrf
                 
                 <div class="mb-4">
@@ -54,12 +54,19 @@
                     <a href="{{ route('password.sms.request') }}" class="text-sm text-[#e63946] hover:text-[#d62836]">
                         SMS ile Şifremi Unuttum
                     </a>
-                @endif
+                    @endif
                 </div>
                 
                 <div class="mb-6">
-                    <button type="submit" class="w-full bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300">
-                        Giriş Yap
+                    <button id="loginButton" type="submit" class="w-full bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 sm:py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 text-lg sm:text-base touch-manipulation">
+                        <span id="buttonText">Giriş Yap</span>
+                        <span id="buttonLoading" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Yükleniyor...
+                        </span>
                     </button>
                 </div>
                 
@@ -128,4 +135,48 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    const loginButton = document.getElementById('loginButton');
+    const buttonText = document.getElementById('buttonText');
+    const buttonLoading = document.getElementById('buttonLoading');
+    const logo = document.getElementById('logo');
+    let isSubmitting = false;
+
+    form.addEventListener('submit', function(e) {
+        // Eğer form zaten gönderiliyorsa, tekrar gönderilmesini engelle
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Form gönderim durumunu true yap
+        isSubmitting = true;
+        
+        // Butonu loading durumuna getir
+        buttonText.classList.add('hidden');
+        buttonLoading.classList.remove('hidden');
+        loginButton.disabled = true;
+        loginButton.classList.add('opacity-75');
+        
+        // Logo animasyonu başlat
+        logo.classList.add('animate-spin');
+        
+        // Form normal şekilde gönderilsin
+        return true;
+    });
+
+    // Mobil için daha iyi tıklama deneyimi
+    loginButton.addEventListener('touchstart', function() {
+        this.classList.add('scale-95');
+    });
+
+    loginButton.addEventListener('touchend', function() {
+        this.classList.remove('scale-95');
+    });
+});
+</script>
 @endsection

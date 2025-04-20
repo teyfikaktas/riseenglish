@@ -607,6 +607,202 @@ private function generateChartImage($chartData, $type = 'pie', $width = 500, $he
     return 'data:image/png;base64,' . base64_encode($imageData);
 }
 /**
+     * Mevcut derse yeni seanslar ekle
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $lessonId
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function storeNewSession(Request $request, $lessonId)
+    {
+        try {
+            $teacherId = Auth::id();
+
+            // Dersi ve öğretmen yetkisini doğrula
+            $lesson = PrivateLesson::findOrFail($lessonId);
+            $sessionCheck = PrivateLessonSession::where('private_lesson_id', $lessonId)
+                ->where('teacher_id', $teacherId)
+                ->first();
+            if (! $sessionCheck) {
+                return redirect()
+                    ->route('ogretmen.private-lessons.index')
+                    ->with('error', 'Bu derse erişim yetkiniz bulunmuyor.');
+            }
+
+            // Form verilerini doğrula
+            $validated = $request->validate([
+                'day_of_week' => 'required|integer|min:0|max:6',
+                'start_date'  => 'required|date',
+                'end_date'    => 'required|date|after_or_equal:start_date',
+                'start_time'  => 'required|date_format:H:i',
+                'end_time'    => 'required|date_format:H:i|after:start_time',
+                'location'    => 'nullable|string|max:255',
+                'notes'       => 'nullable|string',
+            ]);
+
+            // Öğrenci ve varsayılan konum
+            $studentId       = $sessionCheck->student_id;
+            $defaultLocation = $sessionCheck->location;
+
+            // Tarihleri Carbon ile al
+            $start = Carbon::parse($validated['start_date']);
+            $end   = Carbon::parse($validated['end_date']);
+            $dow   = (int) $validated['day_of_week']; // 0 = Pazar, 1 = Pazartesi, …
+
+            // İlk seansın, o hafta içindeki hedef güne denk gelen tarihi
+            $current = $start->copy();
+            if ($current->dayOfWeek !== $dow) {
+                $daysToAdd = ($dow - $current->dayOfWeek + 7) % 7;
+                $current->addDays($daysToAdd);
+            }
+
+            $created = 0;
+            $skipped = [];
+
+            // Döngü: başlangıç ≤ son tarih
+            while ($current->lte($end)) {
+                $dateStr = $current->format('Y-m-d');
+
+                // İsteğe bağlı: çakışma kontrolü
+                $conflict = $this->checkLessonConflict(
+                    $teacherId,
+                    $dow,
+                    $validated['start_time'],
+                    $validated['end_time'],
+                    $dateStr,
+                    null
+                );
+
+                if ($conflict) {
+                    $skipped[] = $current->format('d.m.Y');
+                } else {
+                    PrivateLessonSession::create([
+                        'private_lesson_id' => $lessonId,
+                        'teacher_id'        => $teacherId,
+                        'student_id'        => $studentId,
+                        'day_of_week'       => $dow,
+                        'start_date'        => $dateStr,
+                        'start_time'        => $validated['start_time'],
+                        'end_time'          => $validated['end_time'],
+                        'location'          => $validated['location'] ?? $defaultLocation,
+                        'fee'               => $lesson->price,
+                        'payment_status'    => 'pending',
+                        'paid_amount'       => 0,
+                        'status'            => 'approved',
+                        'notes'             => $validated['notes'],
+                    ]);
+                    $created++;
+                }
+
+                // Haftalık ileri
+                $current->addWeek();
+            }
+
+            // Başarı mesajı
+            $message = "Başarıyla {$created} seans eklendi.";
+            if (! empty($skipped)) {
+                $message .= ' Çakışma nedeniyle atlanan tarihler: ' . implode(', ', $skipped);
+            }
+
+            return redirect()
+                ->route('ogretmen.private-lessons.showLesson', $lessonId)
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error("Yeni seans ekleme hatası: {$e->getMessage()} (Satır {$e->getLine()} Dosya {$e->getFile()})");
+            return redirect()->back()
+                ->with('error', 'Bir hata oluştu: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+    /**
+     * Tek bir seansı veya aynı gün ve saatteki tüm gelecekteki seansları siler
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $sessionId
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroySession(Request $request, $sessionId)
+    {
+        try {
+            $teacherId = Auth::id();
+
+            // Yalnızca o öğretmene ait seansı al
+            $session = PrivateLessonSession::where('id', $sessionId)
+                ->where('teacher_id', $teacherId)
+                ->firstOrFail();
+
+            $lessonId    = $session->private_lesson_id;
+            $scope       = $request->input('delete_scope', 'this_only');
+
+            if ($scope === 'all_future') {
+                // Bu ve sonraki aynı gün/saat seansları sil
+                $toDelete = PrivateLessonSession::where('private_lesson_id', $lessonId)
+                    ->where('teacher_id', $teacherId)
+                    ->where('day_of_week', $session->day_of_week)
+                    ->where('start_time', $session->start_time)
+                    ->where('start_date', '>=', $session->start_date)
+                    ->get();
+
+                $count = $toDelete->count();
+                foreach ($toDelete as $s) {
+                    $s->delete();
+                }
+
+                $message = "{$count} seans başarıyla silindi.";
+            } else {
+                // Sadece bu seansı sil
+                $session->delete();
+                $message = "Seans başarıyla silindi.";
+            }
+
+            return redirect()
+                ->route('ogretmen.private-lessons.showLesson', $lessonId)
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error("Seans silme hatası: {$e->getMessage()} (Satır {$e->getLine()})");
+            return redirect()->back()
+                ->with('error', 'Seans silinirken bir hata oluştu: ' . $e->getMessage());
+        }
+    }
+
+/**
+ * Ders ekle formunu göster
+ *
+ * @param int $lessonId
+ * @return \Illuminate\View\View
+ */
+public function showAddSession($lessonId)
+{
+    $teacherId = Auth::id();
+    
+    // Dersi kontrol et ve öğretmenin bu derse erişim yetkisini doğrula
+    $lesson = PrivateLesson::findOrFail($lessonId);
+    
+    // Bu derse ait bir seans olup olmadığını kontrol et
+    $sessionCheck = PrivateLessonSession::where('private_lesson_id', $lessonId)
+        ->where('teacher_id', $teacherId)
+        ->first();
+    
+    if (!$sessionCheck) {
+        return redirect()->route('ogretmen.private-lessons.index')
+            ->with('error', 'Bu derse erişim yetkiniz bulunmuyor.');
+    }
+    
+    // Öğrenci bilgisini seanslardan al
+    $student = $sessionCheck->student;
+    
+    // Bu derse ait en son seansın tarihini bul
+    $lastSession = PrivateLessonSession::where('private_lesson_id', $lessonId)
+        ->orderBy('start_date', 'desc')
+        ->first();
+    
+    $lastSessionDate = $lastSession ? $lastSession->start_date : null;
+    
+    return view('teacher.private-lessons.add-session', compact('lesson', 'student', 'lastSessionDate'));
+}
+/**
  * Türkçe karakterleri ASCII karakterlere dönüştürür ve metni kısaltır
  *
  * @param string $text
@@ -667,17 +863,17 @@ public function showLesson($lessonId)
  * @param int $id
  * @return \Illuminate\View\View
  */
+/**
+ * Show the form for adding homework to a lesson
+ *
+ * @param int $id
+ * @return \Illuminate\View\View
+ */
 public function showAddHomework($id)
 {
     $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student', 'homeworks'])
         ->where('teacher_id', Auth::id())
         ->findOrFail($id);
-    
-    // Check if the lesson is completed
-    if ($session->status !== 'completed') {
-        return redirect()->route('ogretmen.private-lessons.session.show', $id)
-            ->with('error', 'Ders tamamlanmadan ödev eklenemez.');
-    }
     
     return view('teacher.private-lessons.add-homework', compact('session'));
 }
@@ -692,12 +888,6 @@ public function showAddHomework($id)
 public function storeHomework(Request $request, $id)
 {
     $session = PrivateLessonSession::where('teacher_id', Auth::id())->findOrFail($id);
-    
-    // Check if the lesson is completed
-    if ($session->status !== 'completed') {
-        return redirect()->route('ogretmen.private-lessons.session.show', $id)
-            ->with('error', 'Ders tamamlanmadan ödev eklenemez.');
-    }
     
     // Validate the input
     $validated = $request->validate([
@@ -1557,9 +1747,6 @@ public function toggleLessonActive($lessonId)
             ->with('error', 'Bir hata oluştu: ' . $e->getMessage());
     }
 }
-/**
- * Dersi güncelle (tüm seansları günceller)
- */
 public function updateLesson(Request $request, $lessonId)
 {
     try {
@@ -1580,6 +1767,7 @@ public function updateLesson(Request $request, $lessonId)
             'notes' => 'nullable|string',
             'day_of_week' => 'nullable|integer|min:0|max:6',
             'start_time' => 'nullable',
+            'end_time' => 'nullable|after:start_time', // Bitiş saati doğrulaması eklendi
             'skip_past_sessions' => 'required|boolean',
             'update_all_times' => 'required|boolean'
         ]);
@@ -1592,6 +1780,7 @@ public function updateLesson(Request $request, $lessonId)
         $updateTimes = $validated['update_all_times'];
         $newDayOfWeek = $validated['day_of_week'] ?? null;
         $newStartTime = $validated['start_time'] ?? null;
+        $newEndTime = $validated['end_time'] ?? null; // Bitiş saati değişkeni eklendi
 
         // Carbon gün isimleri dizisi
         $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -1616,7 +1805,10 @@ public function updateLesson(Request $request, $lessonId)
                 if (!is_null($newDayOfWeek) && !is_null($newStartTime)) {
                     $dayName = $days[$newDayOfWeek];
                     $newDate = $oldDate->copy()->next($dayName);
-                    $endTime = Carbon::parse($newStartTime)->addHour()->format('H:i');
+                    
+                    // Bitiş saati kontrolü: ya gönderilen değer ya da başlangıçtan 1 saat sonrası
+                    $endTime = !is_null($newEndTime) ? $newEndTime : 
+                               Carbon::parse($newStartTime)->addHour()->format('H:i');
 
                     $updateData['day_of_week'] = $newDayOfWeek;
                     $updateData['start_date'] = $newDate->format('Y-m-d');
@@ -1629,14 +1821,19 @@ public function updateLesson(Request $request, $lessonId)
                     $updateData['day_of_week'] = $newDayOfWeek;
                     $updateData['start_date'] = $newDate->format('Y-m-d');
                 } elseif (!is_null($newStartTime)) {
-                    $endTime = Carbon::parse($newStartTime)->addHour()->format('H:i');
+                    // Bitiş saati kontrolü: ya gönderilen değer ya da başlangıçtan 1 saat sonrası
+                    $endTime = !is_null($newEndTime) ? $newEndTime : 
+                               Carbon::parse($newStartTime)->addHour()->format('H:i');
 
                     $updateData['start_time'] = $newStartTime;
                     $updateData['end_time'] = $endTime;
+                } elseif (!is_null($newEndTime)) {
+                    // Sadece bitiş saati değiştirilirse
+                    $updateData['end_time'] = $newEndTime;
                 }
 
                 // Çakışma kontrolü
-                if (isset($updateData['day_of_week']) || isset($updateData['start_time'])) {
+                if (isset($updateData['day_of_week']) || isset($updateData['start_time']) || isset($updateData['end_time'])) {
                     $conflictExists = $this->checkLessonConflict(
                         $teacherId,
                         $updateData['day_of_week'] ?? $session->day_of_week,
@@ -1671,7 +1868,6 @@ public function updateLesson(Request $request, $lessonId)
             ->withInput();
     }
 }
-
     /**
  * Show the form for adding materials to a lesson
  *
@@ -1925,15 +2121,6 @@ public function completeLesson($id)
         // Ders kaydını bul
         $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
             ->findOrFail($id);
-        
-        // Ders zamanını kontrol et
-        $currentTime = Carbon::now('Europe/Istanbul');
-        $lessonEndTime = Carbon::parse($session->start_date . ' ' . $session->end_time, 'Europe/Istanbul');
-        
-        // Eğer ders zamanı henüz geçmediyse tamamlanamaz (opsiyonel kontrol)
-        if ($currentTime->isBefore($lessonEndTime)) {
-            return redirect()->back()->with('error', 'Ders henüz bitmedi. Tamamlamak için ders saatinin bitmesini beklemelisiniz.');
-        }
         
         // Ders durumunu zaten tamamlanmış mı kontrol et
         if ($session->status === 'completed') {
