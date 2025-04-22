@@ -211,6 +211,12 @@ Route::delete('/ozel-ders-seans/{id}/rapor-sil', [TeacherPrivateLessonController
     ->name('private-lessons.session.deleteReport');
     Route::get('/ozel-ders-seans/{id}/pdf-rapor', [TeacherPrivateLessonController::class, 'generatePdfReport'])
     ->name('private-lessons.session.pdfReport');
+    Route::get(
+        'private-lessons/homework/{homeworkId}/file/{fileId}/download',
+        [TeacherPrivateLessonController::class, 'downloadSubmissionFile']
+    )
+    ->name('private-lessons.submission-file.download');
+    
 // Ders bazlı route'lar
 // Öğretmen rotaları içinde, özel ders rotaları arasına ekleyin
 Route::get('/ozel-ders-grup/{id}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'showLesson'])
@@ -355,7 +361,8 @@ Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function ()
     ->name('private-lessons.completed');
     Route::get('/ozel-ders/{id}', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'showLesson'])
         ->name('private-lessons.lesson');
-        
+        Route::delete('/odev-teslim-dosya/{id}/sil', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'deleteSubmissionFile'])
+        ->name('private-lessons.submission-file.delete');
     Route::get('/ozel-ders-seans/{id}', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'showSession'])
         ->name('private-lessons.session');
         
@@ -373,8 +380,9 @@ Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function ()
     Route::get('/odev/{id}', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'showHomework'])
         ->name('private-lessons.homework');
         
-    Route::get('/odev/{id}/indir', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'downloadHomework'])
-        ->name('private-lessons.homework.download');
+// Mevcut submission download route'unu şu şekilde değiştirin
+Route::get('/odev-teslim-dosya/{id}/indir', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'downloadSubmission'])
+    ->name('private-lessons.submission-file.download');
         
     Route::post('/odev/{id}/teslim-et', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'submitHomework'])
         ->name('private-lessons.homework.submit');

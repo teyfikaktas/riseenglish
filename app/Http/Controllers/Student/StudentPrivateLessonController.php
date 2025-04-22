@@ -13,9 +13,11 @@ use App\Models\PrivateLessonHomeworkSubmission;
 use App\Models\PrivateLessonMaterial;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Models\PrivateLessonHomeworkSubmissionFile;
 
 class StudentPrivateLessonController extends Controller
 {
+
     /**
      * Öğrencinin tüm özel derslerini listeler
      */
@@ -35,7 +37,45 @@ class StudentPrivateLessonController extends Controller
         
         return view('student.private-lessons.index', compact('groupedSessions'));
     }
-    
+     /**
+     * Öğrencinin teslim ettiği bir dosyayı silme
+     */
+    public function deleteSubmissionFile($id)
+    {
+        try {
+            $studentId = Auth::id();
+            
+            // Teslim dosyasını bul
+            $submissionFile = PrivateLessonHomeworkSubmissionFile::with(['submission.homework'])
+                ->findOrFail($id);
+                
+            // Bu dosyanın öğrenciye ait olduğunu kontrol et
+            if ($submissionFile->submission->student_id != $studentId) {
+                abort(403, 'Bu dosyaya erişim izniniz bulunmuyor.');
+            }
+            
+            // Dosya hala var mı kontrol et
+            if (!empty($submissionFile->file_path) && Storage::disk('local')->exists($submissionFile->file_path)) {
+                Storage::disk('local')->delete($submissionFile->file_path);
+            }
+            
+            // Dosya kaydını sil
+            $submissionFile->delete();
+            
+            // Bu teslimdeki son dosya mıydı kontrol et
+            $remainingFiles = PrivateLessonHomeworkSubmissionFile::where('submission_id', $submissionFile->submission_id)->count();
+            
+            // Eğer son dosya ise ve içerik de boşsa teslimi sil
+            if ($remainingFiles == 0 && empty($submissionFile->submission->submission_content )) {
+                $submissionFile->submission->delete();
+            }
+            
+            return back()->with('success', 'Dosya başarıyla silindi.');
+            
+        } catch (\Exception $e) {
+            return back()->with('error', 'Dosya silinirken bir hata oluştu: ' . $e->getMessage());
+        }
+    }
     /**e
      * Özel dersin detaylarını gösterir
      */
@@ -170,7 +210,7 @@ class StudentPrivateLessonController extends Controller
         return view('student.private-lessons.homeworks', compact('homeworks'));
     }
     
-    /**
+ /**
      * Ödev detayını göster
      */
     public function showHomework($id)
@@ -183,7 +223,8 @@ class StudentPrivateLessonController extends Controller
                 'session.teacher',
                 'submissions' => function($query) use ($studentId) {
                     $query->where('student_id', $studentId);
-                }
+                },
+                'submissions.files' // Dosyaları da yükle
             ])
             ->findOrFail($id);
             
@@ -197,6 +238,7 @@ class StudentPrivateLessonController extends Controller
         
         return view('student.private-lessons.homework-detail', compact('homework', 'submission'));
     }
+
     
     /**
      * Ödev dosyasını indir
@@ -235,79 +277,112 @@ class StudentPrivateLessonController extends Controller
  */
 public function submitHomework(Request $request, $id)
 {
+    \Illuminate\Support\Facades\Log::info("=== ÖDEV TESLİM BAŞLANGICI ===");
+    \Illuminate\Support\Facades\Log::info("Ödev ID: {$id}");
+    
     $studentId = Auth::id();
-    
-    // Ödev bilgilerini getir
-    $homework = PrivateLessonHomework::with(['session.teacher'])->findOrFail($id);
-    
-    // Öğrenci bu derse ait mi kontrol et
-    $session = PrivateLessonSession::where('id', $homework->session_id)
-        ->where('student_id', $studentId)
-        ->firstOrFail();
-        
-    // Son teslim tarihini kontrol et
-    $dueDate = Carbon::parse($homework->due_date);
-    $now = Carbon::now();
-    $isLate = $now->isAfter($dueDate);
-    
-    // Verileri doğrula
-    $validated = $request->validate([
-        'content' => 'nullable|string',
-        'file' => 'required|file|max:10240', // 10MB max
-    ]);
+    \Illuminate\Support\Facades\Log::info("Öğrenci ID: {$studentId}");
     
     try {
-        // Önceki teslimi bul (varsa)
-        $submission = PrivateLessonHomeworkSubmission::where('homework_id', $homework->id)
+        // Ödev ve seans doğrulamaları
+        $homework = PrivateLessonHomework::with(['session.teacher'])->findOrFail($id);
+        \Illuminate\Support\Facades\Log::info("Ödev bilgileri bulundu: " . $homework->title);
+        
+        $session = PrivateLessonSession::where('id', $homework->session_id)
             ->where('student_id', $studentId)
-            ->first();
-            
-        // Eğer önceki bir teslim varsa dosyasını sil
-        if ($submission && !empty($submission->file_path) && Storage::disk('local')->exists($submission->file_path)) {
-            Storage::disk('local')->delete($submission->file_path);
-        }
+            ->firstOrFail();
+        \Illuminate\Support\Facades\Log::info("Ders seansı bulundu: " . $session->id);
         
-        // Dosya yükle
-        $originalName = $request->file('file')->getClientOriginalName();
-        $uniqueFileName = uniqid() . '_' . time() . '.' . $request->file('file')->getClientOriginalExtension();
+        // Son teslim tarihini kontrol et
+        $dueDate = Carbon::parse($homework->due_date);
+        $now = Carbon::now();
+        $isLate = $now->isAfter($dueDate);
+        \Illuminate\Support\Facades\Log::info("Son teslim tarihi: {$dueDate}, Şu anki tarih: {$now}, Geç teslim: " . ($isLate ? 'Evet' : 'Hayır'));
         
-        $filePath = $request->file('file')->storeAs(
-            'lessons/homework_submissions', 
-            $uniqueFileName, 
-            'local'
-        );
+        // Form validasyonu
+        \Illuminate\Support\Facades\Log::info("Form verilerini doğrulama: " . json_encode($request->all()));
+        $validated = $request->validate([
+            'submission_content' => 'nullable|string',
+            'file' => 'required|file|max:10240',
+        ]);
+        \Illuminate\Support\Facades\Log::info("Form doğrulandı");
         
-        // Teslim verilerini hazırla
-        $submissionData = [
-            'homework_id' => $homework->id,
-            'student_id' => $studentId,
-            'content' => $validated['content'] ?? null,
-            'file_path' => $filePath,
-            'original_filename' => $originalName,
-            'is_late' => $isLate,
-            'submission_date' => $now,
-        ];
+        // İçerik değerini güvenle alıyoruz
+        $submissionContent = $request->input('submission_content', null);
         
-        // Yeni teslim oluştur veya mevcut olanı güncelle
-        if ($submission) {
-            $submission->update($submissionData);
-            $newSubmission = $submission;
+        // Dosya loglama
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            \Illuminate\Support\Facades\Log::info("Dosya bilgileri: " . json_encode([
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type'     => $file->getClientMimeType(),
+                'size'          => $file->getSize(),
+                'extension'     => $file->getClientOriginalExtension(),
+            ]));
         } else {
-            $newSubmission = PrivateLessonHomeworkSubmission::create($submissionData);
+            \Illuminate\Support\Facades\Log::error("Dosya bulunamadı! Request içeriği: " . json_encode($request->all()));
         }
         
-        // SMS gönderimi
-        $smsResult = $this->sendSubmissionSMS($session, $homework, $newSubmission, $isLate);
+        // Teslim kaydını oluştur veya güncelle
+        $submission = PrivateLessonHomeworkSubmission::firstOrNew([
+            'homework_id' => $homework->id,
+            'student_id'  => $studentId,
+        ]);
+        \Illuminate\Support\Facades\Log::info("Teslim kaydı: " . ($submission->exists ? "Mevcut (ID: {$submission->id})" : "Yeni oluşturuluyor"));
         
-        $successMessage = 'Ödev başarıyla teslim edildi.';
-        if (is_array($smsResult) && isset($smsResult['success']) && $smsResult['success']) {
-            $successMessage .= " SMS bilgilendirmesi gönderildi.";
+        if (! $submission->exists || $submission->submission_content !== $submissionContent) {
+            $submission->submission_content = $submissionContent;
+            $submission->is_latest        = $isLate;
+            if (! $submission->exists) {
+                $submission->created_at = $now;
+            }
+            \Illuminate\Support\Facades\Log::info("Teslim kaydı kaydediliyor");
+            $submission->save();
+            \Illuminate\Support\Facades\Log::info("Teslim kaydı kaydedildi: " . $submission->id);
         }
         
-        return redirect()->route('ogrenci.private-lessons.homework', $id)
-            ->with('success', $successMessage);
-            
+        // Dosyayı yükle
+        $file       = $request->file('file');
+        $origName   = $file->getClientOriginalName();
+        $uniqueName = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+        
+        \Illuminate\Support\Facades\Log::info("Dosya yükleniyor: {$origName} -> {$uniqueName}");
+        $filePath = $file->storeAs('lessons/homework_submissions', $uniqueName, 'local');
+        \Illuminate\Support\Facades\Log::info("Dosya yüklendi: {$filePath}");
+        
+        // Dosya kaydını ekle
+        if (! class_exists(\App\Models\PrivateLessonHomeworkSubmissionFile::class)) {
+            \Illuminate\Support\Facades\Log::error("HATA: PrivateLessonHomeworkSubmissionFile sınıfı bulunamadı!");
+            throw new \Exception("Dosya modeli bulunamadı.");
+        }
+        \Illuminate\Support\Facades\Log::info("Dosya kaydı oluşturuluyor");
+        $submissionFile = \App\Models\PrivateLessonHomeworkSubmissionFile::create([
+            'submission_id'     => $submission->id,
+            'file_path'         => $filePath,
+            'original_filename' => $origName,
+            'submission_date'   => $now,        // <<--- burayı ekleyin
+
+        ]);
+        \Illuminate\Support\Facades\Log::info("Dosya kaydı oluşturuldu: " . $submissionFile->id);
+        
+        // SMS bildirimi
+        \Illuminate\Support\Facades\Log::info("SMS bildirimi gönderiliyor");
+        $smsResult = $this->sendSubmissionSMS($session, $homework, $submission, $isLate);
+        \Illuminate\Support\Facades\Log::info("SMS bildirimi tamamlandı: " . json_encode($smsResult));
+        
+        $msg = 'Ödev dosyası başarıyla teslim edildi.' . 
+               ((isset($smsResult['success']) && $smsResult['success']) ? ' SMS bilgilendirmesi gönderildi.' : '');
+        
+        \Illuminate\Support\Facades\Log::info("=== ÖDEV TESLİM TAMAMLANDI ===");
+        return redirect()
+            ->route('ogrenci.private-lessons.homework', $id)
+            ->with('success', $msg);
+        
     } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error("Ödev teslim hatası: " . $e->getMessage());
+        \Illuminate\Support\Facades\Log::error("Stack trace: " . $e->getTraceAsString());
+        \Illuminate\Support\Facades\Log::info("=== ÖDEV TESLİM BAŞARISIZ ===");
+        
         return redirect()->back()
             ->with('error', 'Ödev teslim edilirken bir hata oluştu: ' . $e->getMessage())
             ->withInput();
@@ -515,7 +590,7 @@ public function completed(Request $request)
         
     return view('ogrenci.private-lessons.completed', compact('completedSessions'));
 }
-    /**
+  /**
      * Teslim edilen ödevi indir
      */
     public function downloadSubmission($id)
@@ -523,24 +598,29 @@ public function completed(Request $request)
         try {
             $studentId = Auth::id();
             
-            // Teslim bilgilerini getir
-            $submission = PrivateLessonHomeworkSubmission::with(['homework'])
-                ->where('student_id', $studentId)
+            // Teslim dosyasını bul
+            $submissionFile = PrivateLessonHomeworkSubmissionFile::with(['submission.homework'])
                 ->findOrFail($id);
                 
+            // Bu dosyanın öğrenciye ait olduğunu kontrol et
+            if ($submissionFile->submission->student_id != $studentId) {
+                abort(403, 'Bu dosyaya erişim izniniz bulunmuyor.');
+            }
+                
             // Dosyanın var olduğunu kontrol et
-            if (empty($submission->file_path) || !Storage::disk('local')->exists($submission->file_path)) {
+            if (empty($submissionFile->file_path) || !Storage::disk('local')->exists($submissionFile->file_path)) {
                 return abort(404, 'Dosya bulunamadı veya silinmiş.');
             }
             
             // Dosya adını oluştur
-            $downloadName = 'Teslim-' . $submission->homework->title . '.' . pathinfo($submission->file_path, PATHINFO_EXTENSION);
+            $downloadName = 'Teslim-' . $submissionFile->submission->homework->title . '.' . pathinfo($submissionFile->file_path, PATHINFO_EXTENSION);
             
             // Dosyayı indir
-            return Storage::disk('local')->download($submission->file_path, $downloadName);
+            return Storage::disk('local')->download($submissionFile->file_path, $downloadName);
             
         } catch (\Exception $e) {
             return back()->with('error', 'Dosya indirilirken bir hata oluştu: ' . $e->getMessage());
         }
     }
+
 }

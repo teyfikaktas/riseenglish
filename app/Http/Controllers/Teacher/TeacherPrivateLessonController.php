@@ -14,6 +14,7 @@ use App\Models\Subject;
 use App\Models\PrivateLessonExamResult;
 use App\Models\PrivateLessonReport;
 use Illuminate\Support\Facades\DB; // Bu satırı ekleyin
+use App\Models\PrivateLessonHomeworkSubmissionFile; // en üstte
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -37,8 +38,19 @@ class TeacherPrivateLessonController extends Controller
 
         return view('teacher.private-lessons.index', compact('sessions'));
     }
-
-
+    public function downloadSubmissionFile($homeworkId, $fileId)
+    {
+        $file = PrivateLessonHomeworkSubmissionFile::with('submission.homework')
+            ->findOrFail($fileId);
+    
+        if ($file->submission->homework->id !== (int) $homeworkId) {
+            abort(403);
+        }
+    
+        return Storage::disk('local')
+                      ->download($file->file_path, $file->original_filename);
+    }
+    
 /**
  * Generate PDF report for a lesson
  *
@@ -1403,23 +1415,15 @@ public function deleteHomework($homeworkId)
     }
 }
 
-/**
- * View homework submissions
- *
- * @param int $homeworkId
- * @return \Illuminate\View\View
- */
 public function viewHomeworkSubmissions($homeworkId)
 {
-    $homework = PrivateLessonHomework::with(['session', 'submissions.student'])
-        ->findOrFail($homeworkId);
-    
-    // Check if the homework belongs to a session taught by this teacher
-    $session = PrivateLessonSession::where('id', $homework->session_id)
-        ->where('teacher_id', Auth::id())
-        ->firstOrFail();
-    
-    return view('teacher.private-lessons.homework-submissions', compact('homework', 'session'));
+    $homework = PrivateLessonHomework::with([
+        'session',
+        'submissions.student',
+        'submissions.files'   // her teslimin dosyalarını getiriyoruz
+    ])->findOrFail($homeworkId);
+
+    return view('teacher.private-lessons.homework-submissions', compact('homework'));
 }
 
 /**

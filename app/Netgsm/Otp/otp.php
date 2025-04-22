@@ -89,7 +89,7 @@ class otp
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlData);
 		$result = curl_exec($ch);
        
-		
+
         
         $sonuc=array(
             20=>'Mesaj metni ya da mesaj boyunu kontrol ediniz.',

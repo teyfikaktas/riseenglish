@@ -35,6 +35,9 @@
             $statusClass = 'bg-yellow-100 border-yellow-500 text-yellow-800';
             $statusText = 'Teslim Edilmedi';
         }
+
+        // Eğer submission varsa dosya sayısını hesapla
+        $fileCount = $submitted ? $submission->files->count() : 0;
     @endphp
 
     <!-- Durum Kartı -->
@@ -43,7 +46,8 @@
             <div>
                 <h2 class="text-lg font-bold">{{ $statusText }}</h2>
                 @if($submitted)
-                    <p>Bu ödevi {{ \Carbon\Carbon::parse($submission->submission_date)->format('d.m.Y H:i') }} tarihinde teslim ettiniz.</p>
+                    <p>Bu ödeve {{ \Carbon\Carbon::parse($submission->submission_date)->format('d.m.Y H:i') }} tarihinde başladınız.</p>
+                    <p>Toplam {{ $fileCount }} dosya yüklediniz.</p>
                 @elseif($isOverdue)
                     <p>Bu ödevin son teslim tarihi geçmiştir. Öğretmeninizle iletişime geçiniz.</p>
                 @else
@@ -134,41 +138,53 @@
                     <!-- Teslim Bilgileri -->
                     <div class="space-y-6">
                         <div>
-                            <p class="text-sm text-gray-600 mb-1">Teslim Tarihi</p>
+                            <p class="text-sm text-gray-600 mb-1">İlk Teslim Tarihi</p>
                             <p class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($submission->submission_date)->format('d.m.Y H:i') }}</p>
-                            @if($submission->is_late)
+                            @if($submission->is_latest)
                                 <p class="text-xs text-red-600 mt-1">Geç teslim edildi</p>
                             @endif
                         </div>
                         
-                        @if($submission->content)
+                        @if($submission->submission_content)
                         <div>
                             <p class="text-sm text-gray-600 mb-1">Açıklamanız</p>
                             <div class="p-3 bg-gray-50 rounded-lg">
-                                <p class="text-gray-800">{{ $submission->content }}</p>
+                                <p class="text-gray-800">{{ $submission->submission_content }}</p>
                             </div>
                         </div>
                         @endif
                         
-                        @if($submission->file_path)
+                        @if($submission->files && $submission->files->count() > 0)
                         <div>
-                            <p class="text-sm text-gray-600 mb-1">Yüklenen Dosya</p>
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div class="flex items-center">
-                                    <div class="bg-green-100 p-2 rounded-full mr-3">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
+                            <p class="text-sm text-gray-600 mb-1">Yüklenen Dosyalar</p>
+                            <div class="space-y-2">
+                                @foreach($submission->files as $file)
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        <div class="bg-green-100 p-2 rounded-full mr-3">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900">{{ $file->original_filename }}</p>
+                                            <p class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($file->submission_date)->format('d.m.Y H:i') }}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="font-medium text-gray-900">{{ $submission->original_filename ?? 'Ödev Tesliminiz' }}</p>
+                                    <div class="flex items-center">
+                                        <a href="{{ route('ogrenci.private-lessons.submission-file.download', $file->id) }}" class="text-green-600 hover:text-green-800 mr-3">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                        </a>
+                                        <button onclick="confirmDelete({{ $file->id }})" class="text-red-600 hover:text-red-800">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
-                                <a href="{{ route('ogrenci.private-lessons.submission.download', $submission->id) }}" class="text-green-600 hover:text-green-800">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                </a>
+                                @endforeach
                             </div>
                         </div>
                         @endif
@@ -182,23 +198,33 @@
                         </div>
                         @endif
                         
-                        @if(!$isOverdue && $now < $dueDate->addDays(7))
+                        <!-- Yeni Dosya Ekleme Butonu - her zaman gösterilir -->
+                        @if(!$isOverdue || ($isOverdue && $now < $dueDate->addDays(7)))
                         <div class="mt-6 text-center">
-                            <a href="#" onclick="toggleEditForm()" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                                Teslimimi Güncelle
-                            </a>
+                            <button onclick="toggleFileForm()" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                Yeni Dosya Ekle
+                            </button>
                         </div>
                         @endif
                     </div>
                     
-                    <!-- Gizli Düzenleme Formu -->
-                    <div id="editForm" class="hidden mt-6 border-t pt-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Teslimimi Güncelle</h3>
+                    <!-- Yeni Dosya Ekleme Formu -->
+                    <div id="fileForm" class="hidden mt-6 border-t pt-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Yeni Dosya Ekle</h3>
+                        @if ($errors->any())
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                            <ul class="list-disc pl-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                         <form action="{{ route('ogrenci.private-lessons.homework.submit', $homework->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-4">
                                 <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Açıklama (İsteğe Bağlı)</label>
-                                <textarea id="content" name="content" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Ödeviniz hakkında açıklama ekleyebilirsiniz">{{ $submission->content }}</textarea>
+                                <textarea id="content" name="content" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Ödeviniz hakkında açıklama ekleyebilirsiniz">{{ $submission->submission_content }}</textarea>
                             </div>
                             
                             <div class="mb-4">
@@ -208,11 +234,11 @@
                             </div>
                             
                             <div class="flex justify-end space-x-3">
-                                <button type="button" onclick="toggleEditForm()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <button type="button" onclick="toggleFileForm()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     İptal
                                 </button>
                                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    Güncelle
+                                    Dosya Ekle
                                 </button>
                             </div>
                         </form>
@@ -259,13 +285,26 @@
 </div>
 
 @if($submitted)
+<form id="deleteForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
 <script>
-    function toggleEditForm() {
-        const editForm = document.getElementById('editForm');
-        if (editForm.classList.contains('hidden')) {
-            editForm.classList.remove('hidden');
+    function toggleFileForm() {
+        const fileForm = document.getElementById('fileForm');
+        if (fileForm.classList.contains('hidden')) {
+            fileForm.classList.remove('hidden');
         } else {
-            editForm.classList.add('hidden');
+            fileForm.classList.add('hidden');
+        }
+    }
+    
+    function confirmDelete(fileId) {
+        if (confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) {
+            const form = document.getElementById('deleteForm');
+            form.action = '/ogrenci/private-lessons/submission-file/' + fileId + '/delete';
+            form.submit();
         }
     }
 </script>
