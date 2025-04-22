@@ -151,8 +151,18 @@
                                             <input type="hidden" name="delete_scope" value="all_future">
                                             <button
                                             type="submit"
-                                            class="bg-[#f97316] hover:bg-[#ea580c] text-white px-3 py-1 rounded text-xs flex items-center"
-                                            onclick="return confirm('Bu ve sonraki aynı gün ve saatteki tüm seansları silmek istediğinize emin misiniz?');"
+                                            class="
+                                            bg-orange-600 hover:bg-orange-700            /* Daha koyu, okunaklı orange tonda */
+                                            text-white                                   /* Beyaz yazı */
+                                            font-semibold                                /* Kalın yazı */
+                                            px-4 py-2                                     /* Daha geniş padding */
+                                            rounded-md                                   /* Hafif daha büyük köşe radius */
+                                            shadow-lg                                    /* Derin gölge */}
+                                            focus:outline-none focus:ring-2              /* Odaklandığında outline yerine ring */
+                                            focus:ring-orange-300                        /* Hafif açık turuncu halkayla vurgulama */
+                                            transition-colors transition-shadow duration-150 ease-in-out
+                                            flex items-center space-x-1                  /* İkon + yazı varsa arasına boşluk */
+                                          "                                            onclick="return confirm('Bu ve sonraki aynı gün ve saatteki tüm seansları silmek istediğinize emin misiniz?');"
                                           >
                                                 <i class="fas fa-calendar-times mr-1"></i> Bu ve Sonraki Seansları Sil
                                             </button>
