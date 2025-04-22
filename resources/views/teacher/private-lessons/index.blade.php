@@ -4,15 +4,60 @@
     <div class="container mx-auto px-4 py-8">
         <!-- Ana Başlık -->
         <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">{{ request('show_all') ? 'Tüm Özel Derslerim' : 'Aktif Özel Derslerim' }}</h1>
-            <div class="flex space-x-4">
-                <a href="{{ request('show_all') ? route('ogretmen.private-lessons.index') : route('ogretmen.private-lessons.index', ['show_all' => 1]) }}" 
-                   class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition">
-                    {{ request('show_all') ? 'Sadece Aktifleri Göster' : 'İptal Edilenleri de Göster' }}
-                </a>
+            <h1 class="text-2xl font-bold text-gray-800">
+              {{ request('show_all') ? 'Tüm Özel Derslerim' : 'Aktif Özel Derslerim' }}
+            </h1>
+          
+            <div class="flex space-x-3">
+              <!-- Toggle Aktif/Pasif -->
+              <a
+                href="{{ request('show_all')
+                          ? route('ogretmen.private-lessons.index')
+                          : route('ogretmen.private-lessons.index', ['show_all' => 1]) }}"
+                class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg shadow
+                       hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                @if(request('show_all'))
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
+                       viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- eye-off icon -->
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10
+                             0-1.04.159-2.042.459-3.005M3 3l18 18"/>
+                  </svg>
+                  Sadece Aktifleri Göster
+                @else
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
+                       viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- eye icon -->
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943
+                             9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  İptal Edilenleri de Göster
+                @endif
+              </a>
+          
+              <!-- Verdiğim Ödevler -->
+              <a
+                href="{{ route('ogretmen.private-lessons.homeworks') }}"
+                class="inline-flex items-center px-4 py-2 bg-white border border-indigo-600
+                       text-indigo-600 rounded-lg shadow hover:bg-indigo-50 focus:outline-none
+                       focus:ring-2 focus:ring-indigo-500 transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5l7 7-7 7" />
+                </svg>
+                Verdiğim Ödevler
+              </a>
             </div>
-        </div>
-
+          </div>
+          
+          
         @livewire('private-lesson-calendar')
 
         <!-- Özel Derslerim -->

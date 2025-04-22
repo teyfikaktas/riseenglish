@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Storage;
 
 class TeacherPrivateLessonController extends Controller
 {
+
     /**
      * Öğretmenin aktif/planlanmış özel ders seanslarını gösterir
      */
@@ -38,6 +39,27 @@ class TeacherPrivateLessonController extends Controller
 
         return view('teacher.private-lessons.index', compact('sessions'));
     }
+    /**
+ * Öğretmenin kendi verdiği tüm ödevleri listeler
+ */
+public function allHomeworks()
+{
+    $teacherId = Auth::id();
+
+    // Öğretmenin seanslarına bağlı tüm ödevleri alıyoruz
+    $homeworks = PrivateLessonHomework::with([
+            'session.privateLesson',
+            'session.student',
+            'submissions'
+        ])
+        ->whereHas('session', function($q) use ($teacherId) {
+            $q->where('teacher_id', $teacherId);
+        })
+        ->orderBy('due_date', 'asc')
+        ->get();
+
+    return view('teacher.private-lessons.homeworks', compact('homeworks'));
+}
     public function downloadSubmissionFile($homeworkId, $fileId)
     {
         $file = PrivateLessonHomeworkSubmissionFile::with('submission.homework')
@@ -50,7 +72,31 @@ class TeacherPrivateLessonController extends Controller
         return Storage::disk('local')
                       ->download($file->file_path, $file->original_filename);
     }
-    
+        /**
+     * Dersi tamamlamayı geri alır (status = 'approved' olarak set eder)
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function undoCompleteLesson(int $id)
+    {
+        // Sadece kendi dersini değiştirebilsin
+        $session = PrivateLessonSession::where('id', $id)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+
+        if ($session->status !== 'completed') {
+            return redirect()->back()->with('info', 'Bu ders zaten tamamlanmamış durumda.');
+        }
+
+        // Eskiden hangi durumdaydı diye loglamak istersen not ekleyebilirsin.
+        // Burada varsayılan olarak 'approved' durumuna çeviriyoruz
+        $session->status = 'approved';
+        $session->save();
+
+        return redirect()->back()->with('success', 'Ders tamamlanma durumu geri alındı.');
+    }
+
 /**
  * Generate PDF report for a lesson
  *

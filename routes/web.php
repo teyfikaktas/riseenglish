@@ -216,7 +216,11 @@ Route::delete('/ozel-ders-seans/{id}/rapor-sil', [TeacherPrivateLessonController
         [TeacherPrivateLessonController::class, 'downloadSubmissionFile']
     )
     ->name('private-lessons.submission-file.download');
-    
+    // Öğretmen private-lessons grubunun içine
+Route::post('private-lessons/{id}/undo-complete', [TeacherPrivateLessonController::class, 'undoCompleteLesson'])
+->name('private-lessons.undo-complete');
+Route::get('/odevlerim', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'allHomeworks'])
+     ->name('private-lessons.homeworks');
 // Ders bazlı route'lar
 // Öğretmen rotaları içinde, özel ders rotaları arasına ekleyin
 Route::get('/ozel-ders-grup/{id}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'showLesson'])
