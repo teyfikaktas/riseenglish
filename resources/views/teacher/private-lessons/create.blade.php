@@ -249,108 +249,118 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Ders Günleri Ekleme İşlevi
-        const addLessonDayBtn = document.getElementById('add-lesson-day');
-        const lessonDaysContainer = document.getElementById('lesson-days-container');
-        
-        // Başlangıç saati değiştiğinde bitiş saatini tavsiye olarak ayarla
-        function setupTimeInputListeners() {
-            document.querySelectorAll('.start-time-input').forEach(input => {
-                if (!input.hasAttribute('data-has-listener')) {
-                    input.setAttribute('data-has-listener', 'true');
-                    input.addEventListener('change', function() {
-                        const endTimeInput = this.closest('.lesson-day-row').querySelector('.end-time-input');
-                        if (this.value && !endTimeInput.value) {
-                            // Başlangıç saatini ayrıştır
-                            const [hours, minutes] = this.value.split(':').map(Number);
-                            
-                            // Bir saat sonrasını hesapla (sadece önerme amaçlı)
-                            let endHours = hours + 1;
-                            if (endHours >= 24) {
-                                endHours = 23;
-                                endTimeInput.value = `${String(endHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                            } else {
-                                endTimeInput.value = `${String(endHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                            }
+    // Ders Günleri Ekleme İşlevi
+    const addLessonDayBtn = document.getElementById('add-lesson-day');
+    const lessonDaysContainer = document.getElementById('lesson-days-container');
+    
+    // Başlangıç saati değiştiğinde bitiş saatini 45 dakika sonraya ayarla
+    function setupTimeInputListeners() {
+        document.querySelectorAll('.start-time-input').forEach(input => {
+            if (!input.hasAttribute('data-has-listener')) {
+                input.setAttribute('data-has-listener', 'true');
+                input.addEventListener('change', function() {
+                    const endTimeInput = this.closest('.lesson-day-row').querySelector('.end-time-input');
+                    if (this.value && !endTimeInput.value) {
+                        // Başlangıç saatini ayrıştır
+                        const [hours, minutes] = this.value.split(':').map(Number);
+                        
+                        // 45 dakika sonrasını hesapla
+                        let endHours = hours;
+                        let endMinutes = minutes + 45;
+                        
+                        // Dakikalar 60'ı aşarsa saat arttır
+                        if (endMinutes >= 60) {
+                            endHours += 1;
+                            endMinutes -= 60;
                         }
-                    });
-                }
-            });
-        }
+                        
+                        // Saat 24'ü aşarsa kontrol et
+                        if (endHours >= 24) {
+                            endHours = 23;
+                            endMinutes = 59;
+                        }
+                        
+                        // Bitiş saatini ayarla
+                        endTimeInput.value = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+                    }
+                });
+            }
+        });
+    }
+    
+    // İlk satır için dinleyiciyi ekle
+    setupTimeInputListeners();
+    
+    // Yeni ders günü ekle
+    addLessonDayBtn.addEventListener('click', function() {
+        const newRow = document.createElement('div');
+        newRow.className = 'lesson-day-row bg-white p-3 rounded border border-gray-200 mb-2';
+        newRow.innerHTML = `
+            <div class="grid grid-cols-3 gap-4 items-center">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Gün <span class="text-red-500">*</span>
+                    </label>
+                    <select name="days[]" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                        <option value="1">Pazartesi</option>
+                        <option value="2">Salı</option>
+                        <option value="3">Çarşamba</option>
+                        <option value="4">Perşembe</option>
+                        <option value="5">Cuma</option>
+                        <option value="6">Cumartesi</option>
+                        <option value="0">Pazar</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Başlangıç Saati <span class="text-red-500">*</span>
+                    </label>
+                    <input type="time" name="start_times[]" class="start-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Bitiş Saati <span class="text-red-500">*</span>
+                    </label>
+                    <input type="time" name="end_times[]" class="end-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+            </div>
+            <div class="mt-2 text-right">
+                <button type="button" class="remove-row text-sm text-red-600 hover:text-red-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    Kaldır
+                </button>
+            </div>
+        `;
         
-        // İlk satır için dinleyiciyi ekle
+        lessonDaysContainer.appendChild(newRow);
+        
+        // Yeni eklenen satır için dinleyiciyi ekle
         setupTimeInputListeners();
         
-        // Yeni ders günü ekle
-        addLessonDayBtn.addEventListener('click', function() {
-            const newRow = document.createElement('div');
-            newRow.className = 'lesson-day-row bg-white p-3 rounded border border-gray-200 mb-2';
-            newRow.innerHTML = `
-                <div class="grid grid-cols-3 gap-4 items-center">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Gün <span class="text-red-500">*</span>
-                        </label>
-                        <select name="days[]" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
-                            <option value="1">Pazartesi</option>
-                            <option value="2">Salı</option>
-                            <option value="3">Çarşamba</option>
-                            <option value="4">Perşembe</option>
-                            <option value="5">Cuma</option>
-                            <option value="6">Cumartesi</option>
-                            <option value="0">Pazar</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Başlangıç Saati <span class="text-red-500">*</span>
-                        </label>
-                        <input type="time" name="start_times[]" class="start-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Bitiş Saati <span class="text-red-500">*</span>
-                        </label>
-                        <input type="time" name="end_times[]" class="end-time-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
-                    </div>
-                </div>
-                <div class="mt-2 text-right">
-                    <button type="button" class="remove-row text-sm text-red-600 hover:text-red-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                        </svg>
-                        Kaldır
-                    </button>
-                </div>
-            `;
-            
-            lessonDaysContainer.appendChild(newRow);
-            
-            // Yeni eklenen satır için dinleyiciyi ekle
-            setupTimeInputListeners();
-            
-            // Satır silme düğmesi için dinleyici ekle
-            newRow.querySelector('.remove-row').addEventListener('click', function() {
-                newRow.remove();
-            });
+        // Satır silme düğmesi için dinleyici ekle
+        newRow.querySelector('.remove-row').addEventListener('click', function() {
+            newRow.remove();
         });
-        
-        // Tarih kontrolü
-        const startDateInput = document.getElementById('start_date');
-        const endDateInput = document.getElementById('end_date');
-        
-        function validateDates() {
-            if (startDateInput.value && endDateInput.value) {
-                if (new Date(endDateInput.value) < new Date(startDateInput.value)) {
-                    endDateInput.setCustomValidity('Bitiş tarihi başlangıç tarihinden önce olamaz');
-                } else {
-                    endDateInput.setCustomValidity('');
-                }
+    });
+    
+    // Tarih kontrolü
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    
+    function validateDates() {
+        if (startDateInput.value && endDateInput.value) {
+            if (new Date(endDateInput.value) < new Date(startDateInput.value)) {
+                endDateInput.setCustomValidity('Bitiş tarihi başlangıç tarihinden önce olamaz');
+            } else {
+                endDateInput.setCustomValidity('');
             }
         }
-        
-        startDateInput.addEventListener('change', validateDates);
-        endDateInput.addEventListener('change', validateDates);
-    });
+    }
+    
+    startDateInput.addEventListener('change', validateDates);
+    endDateInput.addEventListener('change', validateDates);
+});
 </script>
 @endsection

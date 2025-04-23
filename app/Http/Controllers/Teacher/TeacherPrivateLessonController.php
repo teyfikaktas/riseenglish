@@ -2495,6 +2495,8 @@ public function store(Request $request)
             'days.*' => 'required|integer|min:0|max:6',
             'start_times' => 'required|array|min:1',
             'start_times.*' => 'required',
+            'end_times' => 'required|array|min:1', // Bitiş saatleri için doğrulama
+            'end_times.*' => 'required',
             'location' => 'nullable|string|max:255',
             'status' => 'required|in:approved,cancelled',
             'notes' => 'nullable|string'
@@ -2525,11 +2527,33 @@ public function store(Request $request)
         for ($i = 0; $i < count($validated['days']); $i++) {
             $dayOfWeek = (int)$validated['days'][$i];
             $startTime = $validated['start_times'][$i];
+            $endTime = $validated['end_times'][$i];
 
-            // Bitiş saatini hesapla
-            $startTimeParts = explode(':', $startTime);
-            $endHour = (int)$startTimeParts[0] + 1;
-            $endTime = ($endHour >= 24 ? 23 : $endHour) . ':' . $startTimeParts[1];
+            // Bitiş saati gönderilmediyse 45 dakika sonrasını otomatik hesapla
+            if (empty($endTime)) {
+                // Başlangıç saatini ayrıştır
+                $startTimeParts = explode(':', $startTime);
+                $startHour = (int)$startTimeParts[0];
+                $startMinute = (int)$startTimeParts[1];
+                
+                // 45 dakika sonrasını hesapla
+                $endMinute = $startMinute + 45;
+                $endHour = $startHour;
+                
+                // Dakikalar 60'ı aşarsa saat arttır
+                if ($endMinute >= 60) {
+                    $endHour += 1;
+                    $endMinute -= 60;
+                }
+                
+                // Saat 24'ü aşarsa kontrol et
+                if ($endHour >= 24) {
+                    $endHour = 23;
+                    $endMinute = 59;
+                }
+                
+                $endTime = sprintf("%02d:%02d", $endHour, $endMinute);
+            }
 
             // İlk seans tarihini hesapla
             $firstSessionDate = clone $startDate;
@@ -2576,8 +2600,8 @@ public function store(Request $request)
                     'end_time' => $endTime,
                     'location' => $validated['location'] ?? null,
                     'fee' => $validated['fee'],
-                    'payment_status' => 'pending', // Düzeltildi
-                    'paid_amount' => 0, // Düzeltildi
+                    'payment_status' => 'pending',
+                    'paid_amount' => 0,
                     'status' => $validated['status'],
                     'is_recurring' => true,
                     'notes' => $validated['notes'] ?? null
@@ -2615,8 +2639,7 @@ public function store(Request $request)
             ->with('error', 'Hata: ' . $e->getMessage())
             ->withInput();
     }
-}
-    /**
+} /**
      * Ders çakışması kontrolü yapar
      */
     private function checkLessonConflict($teacherId, $dayOfWeek, $startTime, $endTime, $date, $excludeSessionId = null)
@@ -2667,30 +2690,27 @@ public function store(Request $request)
         return view('teacher.private-lessons.show', compact('session'));
     }
 
-    /**
-     * Özel ders düzenleme formunu gösterir
-     */
-    public function edit($id)
-    {
-        $teacherId = Auth::id();
-        
-        // Belirli bir dersi getir, ancak sadece mevcut öğretmene ait olanları
-        $session = PrivateLessonSession::with(['privateLesson', 'student'])
-            ->where('teacher_id', $teacherId)
-            ->findOrFail($id);
-        
-        // Öğrenci listesini çekelim
-        $students = User::role('ogrenci')->get();
-        
-        // Ders geçmiş tarihli mi kontrol et
-        $isPastSession = strtotime($session->start_date . ' ' . $session->start_time) < time();
-        
-        return view('teacher.private-lessons.edit', compact('session', 'students', 'isPastSession'));
-    }
-
 /**
- * Özel dersi günceller
+ * Özel ders düzenleme formunu gösterir
  */
+public function edit($id)
+{
+    $teacherId = Auth::id();
+    
+    // Belirli bir dersi getir, ancak sadece mevcut öğretmene ait olanları
+    $session = PrivateLessonSession::with(['privateLesson', 'student'])
+        ->where('teacher_id', $teacherId)
+        ->findOrFail($id);
+    
+    // Öğrenci listesini çekelim
+    $students = User::role('ogrenci')->get();
+    
+    // Ders geçmiş tarihli olup olmadığını kontrol et (bilgi amaçlı)
+    $isPastSession = strtotime($session->start_date . ' ' . $session->start_time) < time();
+    
+    return view('teacher.private-lessons.edit', compact('session', 'students', 'isPastSession'));
+}
+
 /**
  * Özel dersi günceller
  */
@@ -2702,10 +2722,10 @@ public function update(Request $request, $id)
         // Belirli bir dersi getir, ancak sadece mevcut öğretmene ait olanları
         $session = PrivateLessonSession::where('teacher_id', $teacherId)->findOrFail($id);
         
-        // Ders geçmiş tarihli mi kontrol et
+        // Ders geçmiş tarihli mi kontrol et (bilgi amaçlı)
         $isPastSession = strtotime($session->start_date . ' ' . $session->start_time) < time();
         
-        // Validasyon kurallarını belirle
+        // Tüm validasyon kurallarını her durum için uygula
         $rules = [
             'student_id' => 'required|exists:users,id',
             'fee' => 'required|numeric|min:0',
@@ -2714,69 +2734,56 @@ public function update(Request $request, $id)
             'status' => 'required|in:approved,cancelled',
             'notes' => 'nullable|string',
             'update_all_sessions' => 'sometimes|boolean',
-            'conflict_confirmed' => 'sometimes|boolean'
+            'conflict_confirmed' => 'sometimes|boolean',
+            'day_of_week' => 'required|integer|min:0|max:6',
+            'start_date' => 'required|date',
+            'start_time' => 'required',
+            'end_time' => 'required|after:start_time'
         ];
-        
-        // Eğer geçmiş tarihli ders değilse tarih ve zaman alanlarını da doğrula
-        if (!$isPastSession) {
-            $rules['day_of_week'] = 'required|integer|min:0|max:6';
-            $rules['start_date'] = 'required|date';
-            $rules['start_time'] = 'required';
-        }
         
         $validated = $request->validate($rules);
         
-        // Geçmiş tarihli ders ise sadece belirli alanları güncelle
-        if ($isPastSession) {
-            $sessionUpdateData = [
-                'student_id' => $validated['student_id'],
-                'fee' => $validated['fee'],
-                'payment_status' => $validated['payment_status'],
-                'paid_amount' => $validated['payment_status'] == 'paid' ? $validated['fee'] : 0,
-                'location' => $validated['location'] ?? null,
-                'status' => $validated['status'],
-                'notes' => $validated['notes'] ?? null
-            ];
-        } else {
-            // Bitiş saatini hesapla (başlangıçtan 1 saat sonra)
-            $startTimeParts = explode(':', $validated['start_time']);
-            $endHour = (int)$startTimeParts[0] + 1;
-            $endTime = ($endHour >= 24 ? 23 : $endHour) . ':' . $startTimeParts[1];
+        // Bitiş saati belirtilmemişse, başlangıç saatine 45 dakika ekle
+        if (!isset($validated['end_time']) || empty($validated['end_time'])) {
+            $startTime = Carbon::parse($validated['start_time']);
+            $endTime = (clone $startTime)->addMinutes(45);
+            $validated['end_time'] = $endTime->format('H:i');
+        }
+        
+        // Tüm alanları güncelleyebilir (geçmiş ders olsa bile)
+        $sessionUpdateData = [
+            'student_id' => $validated['student_id'],
+            'day_of_week' => $validated['day_of_week'],
+            'start_date' => $validated['start_date'],
+            'start_time' => $validated['start_time'],
+            'end_time' => $validated['end_time'],
+            'fee' => $validated['fee'],
+            'payment_status' => $validated['payment_status'],
+            'paid_amount' => $validated['payment_status'] == 'paid' ? $validated['fee'] : 0,
+            'location' => $validated['location'] ?? null,
+            'status' => $validated['status'],
+            'notes' => $validated['notes'] ?? null
+        ];
+        
+        // Çakışma kontrolü - sadece conflict_confirmed yoksa yap
+        if (!$request->has('conflict_confirmed')) {
+            // Ders çakışması kontrolü
+            $conflictExists = $this->checkLessonConflict(
+                $teacherId,
+                $validated['day_of_week'],
+                $validated['start_time'],
+                $validated['end_time'],
+                $validated['start_date'],
+                $id
+            );
             
-            // Çakışma kontrolü - sadece conflict_confirmed yoksa yap
-            if (!$request->has('conflict_confirmed')) {
-                // Ders çakışması kontrolü
-                $conflictExists = $this->checkLessonConflict(
-                    $teacherId,
-                    $validated['day_of_week'],
-                    $validated['start_time'],
-                    $endTime,
-                    $validated['start_date'],
-                    $id
-                );
-                
-                // Çakışma varsa, formu hata mesajı ile geri döndür
-                if ($conflictExists) {
-                    return redirect()->back()
-                        ->with('warning', 'Seçilen gün ve saatte başka bir dersiniz bulunmaktadır. Yine de devam etmek istiyorsanız "Güncelle" butonuna tekrar basın.')
-                        ->with('conflict_detected', true)
-                        ->withInput();
-                }
+            // Çakışma varsa, formu hata mesajı ile geri döndür
+            if ($conflictExists) {
+                return redirect()->back()
+                    ->with('warning', 'Seçilen gün ve saatte başka bir dersiniz bulunmaktadır. Yine de devam etmek istiyorsanız "Güncelle" butonuna tekrar basın.')
+                    ->with('conflict_detected', true)
+                    ->withInput();
             }
-            
-            $sessionUpdateData = [
-                'student_id' => $validated['student_id'],
-                'day_of_week' => $validated['day_of_week'],
-                'start_date' => $validated['start_date'],
-                'start_time' => $validated['start_time'],
-                'end_time' => $endTime,
-                'fee' => $validated['fee'],
-                'payment_status' => $validated['payment_status'],
-                'paid_amount' => $validated['payment_status'] == 'paid' ? $validated['fee'] : 0,
-                'location' => $validated['location'] ?? null,
-                'status' => $validated['status'],
-                'notes' => $validated['notes'] ?? null
-            ];
         }
         
         // PrivateLesson bilgilerini güncelle (fiyatı)
@@ -2786,7 +2793,7 @@ public function update(Request $request, $id)
         ]);
         
         // Eğer tüm gelecek seansları güncelle seçeneği aktifse
-        if (isset($validated['update_all_sessions']) && $validated['update_all_sessions'] == 1 && !$isPastSession) {
+        if (isset($validated['update_all_sessions']) && $validated['update_all_sessions'] == 1) {
             // Sadece gelecek seansları güncelle
             $today = Carbon::now()->startOfDay();
             
@@ -2797,7 +2804,7 @@ public function update(Request $request, $id)
                 ->get();
             
             foreach ($futureSessions as $futureSession) {
-                // Geçmiş tarihli ders değilse ve bu session ise zaten güncellenecek
+                // Bu session ise zaten güncellenecek
                 if ($futureSession->id == $session->id) {
                     $futureSession->update($sessionUpdateData);
                     continue;
@@ -2825,13 +2832,8 @@ public function update(Request $request, $id)
                 
                 // Saat değişikliği
                 if ($validated['start_time'] != $session->start_time) {
-                    // Bitiş saatini hesapla
-                    $startTimeParts = explode(':', $validated['start_time']);
-                    $endHour = (int)$startTimeParts[0] + 1;
-                    $endTime = ($endHour >= 24 ? 23 : $endHour) . ':' . $startTimeParts[1];
-                    
                     $futureUpdateData['start_time'] = $validated['start_time'];
-                    $futureUpdateData['end_time'] = $endTime;
+                    $futureUpdateData['end_time'] = $validated['end_time']; // 45 dakika sonrasını ayarlar
                 }
                 
                 // Bu session eklendikten sonra her bir gelecek seans için çakışma kontrolü yap

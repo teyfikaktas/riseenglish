@@ -18,7 +18,7 @@
         <div class="bg-blue-50 rounded-lg shadow-md border border-blue-200 mb-6">
             <div class="px-6 py-4">
                 <h1 class="text-lg font-bold text-blue-800">Bilgi</h1>
-                <p class="text-blue-600 text-sm mt-1">Bu ders geçmiş tarihli olduğu için sadece durum ve ödeme bilgilerini güncelleyebilirsiniz. Tarih ve saat değişiklikleri yapılamaz.</p>
+                <p class="text-blue-600 text-sm mt-1">Bu ders geçmiş tarihli olmasına rağmen tarih ve saat bilgilerini de düzenleyebilirsiniz.</p>
             </div>
         </div>
         @endif
@@ -175,14 +175,11 @@
                     </div>
                 </div>
                 
-                <!-- Ders Zamanlaması (Geçmiş dersler için düzenlenemez) -->
+                <!-- Ders Zamanlaması -->
                 <div class="border-b pb-6">
                     <h2 class="font-semibold text-gray-800 mb-4 flex items-center">
                         <span class="bg-blue-100 text-blue-700 rounded-full w-6 h-6 inline-flex items-center justify-center mr-2">3</span>
                         Ders Zamanlaması
-                        @if($isPastSession)
-                        <span class="ml-2 text-xs text-red-600 font-normal">(Geçmiş ders - değiştirilemez)</span>
-                        @endif
                     </h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -191,7 +188,7 @@
                             <label for="day_of_week" class="block text-sm font-medium text-gray-700 mb-1">
                                 Haftanın Günü <span class="text-red-500">*</span>
                             </label>
-                            <select id="day_of_week" name="day_of_week" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required {{ $isPastSession ? 'disabled' : '' }}>
+                            <select id="day_of_week" name="day_of_week" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                                 <option value="1" {{ $session->day_of_week == 1 ? 'selected' : '' }}>Pazartesi</option>
                                 <option value="2" {{ $session->day_of_week == 2 ? 'selected' : '' }}>Salı</option>
                                 <option value="3" {{ $session->day_of_week == 3 ? 'selected' : '' }}>Çarşamba</option>
@@ -210,7 +207,7 @@
                             <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
                                 Ders Tarihi <span class="text-red-500">*</span>
                             </label>
-                            <input type="date" id="start_date" name="start_date" value="{{ date('Y-m-d', strtotime($session->start_date)) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required {{ $isPastSession ? 'disabled' : '' }}>
+                            <input type="date" id="start_date" name="start_date" value="{{ date('Y-m-d', strtotime($session->start_date)) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                             @error('start_date')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -221,7 +218,7 @@
                             <label for="start_time" class="block text-sm font-medium text-gray-700 mb-1">
                                 Başlangıç Saati <span class="text-red-500">*</span>
                             </label>
-                            <input type="time" id="start_time" name="start_time" value="{{ $session->start_time }}" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required {{ $isPastSession ? 'disabled' : '' }}>
+                            <input type="time" id="start_time" name="start_time" value="{{ $session->start_time }}" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                             @error('start_time')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -232,7 +229,7 @@
                             <label for="end_time" class="block text-sm font-medium text-gray-700 mb-1">
                                 Bitiş Saati <span class="text-red-500">*</span>
                             </label>
-                            <input type="time" id="end_time" name="end_time" value="{{ $session->end_time }}" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required {{ $isPastSession ? 'disabled' : '' }}>
+                            <input type="time" id="end_time" name="end_time" value="{{ $session->end_time }}" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                             @error('end_time')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -299,9 +296,6 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Geçmiş ders kontrolü için hidden alan ekle
-        const isPastSession = {{ $isPastSession ? 'true' : 'false' }};
-        
         // Tekrarlı dersler için butonlara tıklama olayları
         const editSingleButton = document.getElementById('edit-single');
         const editAllButton = document.getElementById('edit-all');
@@ -338,64 +332,40 @@
             });
         }
         
-        // Başlangıç saati değiştiğinde bitiş saatini otomatik ayarla
+        // Başlangıç saati değiştiğinde bitiş saatini 45 dakika sonraya otomatik ayarla
         const startTimeInput = document.getElementById('start_time');
         const endTimeInput = document.getElementById('end_time');
         
-        if (startTimeInput && endTimeInput && !isPastSession) {
+        if (startTimeInput && endTimeInput) {
             startTimeInput.addEventListener('change', function() {
                 if (this.value && (!endTimeInput.value || confirm('Bitiş saatini başlangıç saatine göre güncellemek ister misiniz?'))) {
                     // Başlangıç saatini ayrıştır
                     const [hours, minutes] = this.value.split(':').map(Number);
                     
-                    // Bir saat sonrasını hesapla
-                    let endHours = hours + 1;
+                    // 45 dakika sonrasını hesapla
+                    let endHours = hours;
+                    let endMinutes = minutes + 45;
+                    
+                    // Dakikalar 60'ı aşarsa saat arttır
+                    if (endMinutes >= 60) {
+                        endHours += 1;
+                        endMinutes -= 60;
+                    }
+                    
+                    // Saat 24'ü aşarsa kontrol et
                     if (endHours >= 24) {
                         endHours = 23;
-                        endTimeInput.value = `${String(endHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                    } else {
-                        endTimeInput.value = `${String(endHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                        endMinutes = 59;
                     }
+                    
+                    // Bitiş saatini ayarla
+                    endTimeInput.value = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
                 }
-            });
-        }
-        
-        // Geçmiş derse tarih/saat değişikliği yapılabilir mi kontrol
-        const dayOfWeekSelect = document.getElementById('day_of_week');
-        const startDateInput = document.getElementById('start_date');
-        const editForm = document.getElementById('edit-form');
-        
-        if (editForm && isPastSession) {
-            editForm.addEventListener('submit', function(e) {
-                // Geçmiş derse tarih/saat değişikliği yapılıyor mu kontrol et
-                const originalDate = "{{ date('Y-m-d', strtotime($session->start_date)) }}";
-                const originalTime = "{{ $session->start_time }}";
-                const originalEndTime = "{{ $session->end_time }}";
-                const originalDayOfWeek = "{{ $session->day_of_week }}";
-                
-                if (startDateInput.value !== originalDate || 
-                    startTimeInput.value !== originalTime || 
-                    endTimeInput.value !== originalEndTime ||
-                    dayOfWeekSelect.value !== originalDayOfWeek) {
-                    
-                    e.preventDefault();
-                    alert('Geçmiş tarihli derslerin tarih ve saat bilgileri değiştirilemez.');
-                    
-                    // Değerleri orijinallerine geri döndür
-                    startDateInput.value = originalDate;
-                    startTimeInput.value = originalTime;
-                    endTimeInput.value = originalEndTime;
-                    dayOfWeekSelect.value = originalDayOfWeek;
-                    
-                    return false;
-                }
-                
-                return true;
             });
         }
         
         // Bitiş saati başlangıç saatinden önce olmasın
-        if (endTimeInput && !isPastSession) {
+        if (endTimeInput) {
             endTimeInput.addEventListener('change', function() {
                 if (startTimeInput.value && this.value) {
                     const startTime = startTimeInput.value;
@@ -404,13 +374,24 @@
                     if (endTime <= startTime) {
                         alert('Bitiş saati, başlangıç saatinden sonra olmalıdır.');
                         
-                        // Başlangıç saatinden 1 saat sonrasını hesapla
+                        // Başlangıç saatinden 45 dakika sonrasını hesapla
                         const [hours, minutes] = startTime.split(':').map(Number);
-                        let endHours = hours + 1;
+                        let endHours = hours;
+                        let endMinutes = minutes + 45;
+                        
+                        // Dakikalar 60'ı aşarsa saat arttır
+                        if (endMinutes >= 60) {
+                            endHours += 1;
+                            endMinutes -= 60;
+                        }
+                        
+                        // Saat 24'ü aşarsa kontrol et
                         if (endHours >= 24) {
                             endHours = 23;
+                            endMinutes = 59;
                         }
-                        this.value = `${String(endHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                        
+                        this.value = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
                     }
                 }
             });

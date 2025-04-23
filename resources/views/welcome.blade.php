@@ -206,16 +206,13 @@
 <div class="bg-white py-16">
     <div class="container mx-auto px-6">
       <div class="flex flex-col md:flex-row items-center gap-12">
-        <!-- Logo area -->
-        <div class="w-full md:w-1/3 flex justify-center">
-          <div class="relative">
-            <!-- Logo image with larger sizes -->
-            <img src="{{ asset('images/logo.png') }}" alt="Rise English Logo" class="h-32 sm:h-40 md:h-48">
-          </div>
+        <!-- Teacher image section (takes up the entire left side) -->
+        <div class="w-full md:w-2/5 flex justify-center mb-8 md:mb-0">
+          <img src="{{ asset('images/teacherwelcome.jpg') }}" alt="English Teacher" class="rounded-lg shadow-lg w-full h-auto object-cover">
         </div>
         
         <!-- Founder's message area -->
-        <div class="w-full md:w-2/3">
+        <div class="w-full md:w-3/5">
           <h2 class="text-3xl font-bold text-[#1a2e5a] mb-6">Welcome to Rise English!</h2>
           <div class="mb-8 text-gray-700">
             <p class="mb-4">As the founder of Rise English, I am proud to present a platform designed not just to teach English, but to inspire confidence, growth, and real communication skills. Our mission is simple: to help every learner rise to their full potential through quality, personalized, and motivating English education.</p>
