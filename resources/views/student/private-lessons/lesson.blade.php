@@ -148,7 +148,23 @@
                                 <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $session->location ?? 'Belirtilmemiş' }}</div>
+                                <div class="text-sm text-gray-900">
+                                    @php
+                                        $location = $session->location ?? 'Belirtilmemiş';
+                                        $isLink = filter_var($location, FILTER_VALIDATE_URL);
+                                    @endphp
+                                    
+                                    @if($isLink)
+                                        <a href="{{ $location }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline flex items-center">
+                                            <span>Toplantı Linki</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                        </a>
+                                    @else
+                                        {{ $location }}
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColor }}">

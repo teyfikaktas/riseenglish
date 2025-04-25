@@ -25,7 +25,10 @@ class PrivateLessonCalendar extends Component
     public $nextLesson = null;
     public $timeInterval = 15; // dakika cinsinden zaman aralığı (değiştirilebilir)
    public $showDatePicker = false;
-
+   public $showDeleteModal = false;
+   public $selectedDeleteSessionId = null;
+   public $selectedDeleteSession = null;
+   public $deleteScope = 'this_only'; // Varsayılan silme kapsamı
 // $pickerMonth değişkenini ve ilgili fonksiyonları güncelleyelim
 public $pickerMonth = null;
 
@@ -74,7 +77,9 @@ protected $listeners = [
     'filterByTeacher' => 'filterByTeacher',
     'filterByStatus' => 'filterByStatus',
     'previousPickerMonth' => 'previousPickerMonth',  // Yeni
-    'nextPickerMonth' => 'nextPickerMonth'  // Yeni
+    'nextPickerMonth' => 'nextPickerMonth',  // Yeni
+    'openDeleteModal' => 'openDeleteModal', // Yeni
+    'closeDeleteModal' => 'closeDeleteModal', // Yeni
 ];
     
     public function getDebugInfo()
@@ -111,7 +116,142 @@ protected $listeners = [
         $this->generateDynamicTimeSlots(); // Dinamik zaman dilimleri
         $this->loadOccurrences();
     }
-
+/**
+     * Silme modalını aç
+     */
+    public function openDeleteModal($sessionId)
+    {
+        try {
+            // Log başlangıç bilgisi
+            Log::info("openDeleteModal fonksiyonu başlatıldı. Ders ID: " . $sessionId);
+            
+            // Session ID'yi kaydet
+            $this->selectedDeleteSessionId = $sessionId;
+            
+            // Session bilgilerini getir
+            $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+                ->findOrFail($sessionId);
+            
+            // Modal için veriyi formatla
+            $this->selectedDeleteSession = [
+                'id' => $session->id,
+                'lesson_date' => $session->start_date,
+                'start_time' => $session->start_time,
+                'end_time' => $session->end_time,
+                'title' => $session->privateLesson ? $session->privateLesson->name : 'Ders',
+                'teacher' => $session->teacher ? $session->teacher->name : 'Öğretmen Atanmamış',
+                'student' => $session->student ? $session->student->name : 'Öğrenci Atanmamış',
+                'private_lesson_id' => $session->private_lesson_id,
+            ];
+            
+            // Modalı göster
+            $this->showDeleteModal = true;
+            
+            Log::info("Silme modalı açıldı. Ders bilgileri: " . json_encode($this->selectedDeleteSession));
+            
+        } catch (\Exception $e) {
+            // Hata durumunda
+            Log::error("Silme modalı açılırken hata: " . $e->getMessage());
+            $this->dispatch('lessonError', 'Ders bilgileri yüklenirken hata oluştu.');
+            
+            // Hata sonrası temizlik
+            $this->selectedDeleteSessionId = null;
+            $this->selectedDeleteSession = null;
+            $this->showDeleteModal = false;
+        }
+    }
+    
+    /**
+     * Silme modalını kapat
+     */
+    public function closeDeleteModal()
+    {
+        $this->showDeleteModal = false;
+        $this->selectedDeleteSessionId = null;
+        $this->selectedDeleteSession = null;
+        $this->deleteScope = 'this_only'; // Reset to default
+    }
+    
+    /**
+     * Dersi sil
+     */
+    public function deleteLesson()
+    {
+        try {
+            $sessionId = $this->selectedDeleteSessionId;
+            
+            // Geçerli kullanıcının öğretmen ID'sini al
+            $teacherId = Auth::id();
+            
+            // Dersi ve öğretmen yetkisini doğrula
+            $session = PrivateLessonSession::where('id', $sessionId)
+                ->where('teacher_id', $teacherId)
+                ->firstOrFail();
+            
+            $lessonId = $session->private_lesson_id;
+            $scope = $this->deleteScope;
+            
+            // Silme işlemi seçilen kapsama göre
+            if ($scope === 'all_future') {
+                // Bu ve gelecekteki tüm dersleri sil
+                $today = Carbon::now('Europe/Istanbul')->startOfDay();
+                
+                $deletedCount = PrivateLessonSession::where('private_lesson_id', $lessonId)
+                    ->where('teacher_id', $teacherId)
+                    ->where(function($query) use ($session, $today) {
+                        $query->where('start_date', '>', $today->format('Y-m-d'))
+                              ->orWhere(function($q) use ($session) {
+                                  $q->where('id', $session->id);
+                              });
+                    })
+                    ->delete();
+                
+                $message = "{$deletedCount} ders başarıyla silindi.";
+            } 
+            elseif ($scope === 'all') {
+                // Bu derse ait tüm dersleri sil
+                $deletedCount = PrivateLessonSession::where('private_lesson_id', $lessonId)
+                    ->where('teacher_id', $teacherId)
+                    ->delete();
+                
+                // PrivateLesson kaydını da sil
+                PrivateLesson::where('id', $lessonId)->delete();
+                
+                $message = "Bu derse ait tüm {$deletedCount} seans başarıyla silindi.";
+            }
+            else {
+                // Sadece bu dersi sil
+                $session->delete();
+                
+                // Bu silinen ders, bu ders serisinin son seansı mıydı kontrol et
+                $remainingSessions = PrivateLessonSession::where('private_lesson_id', $lessonId)->exists();
+                
+                // Eğer kalan ders yoksa ana dersi de sil
+                if (!$remainingSessions) {
+                    PrivateLesson::where('id', $lessonId)->delete();
+                }
+                
+                $message = "Ders başarıyla silindi.";
+            }
+            
+            // Silme işleminden sonra modalı kapat
+            $this->closeDeleteModal();
+            
+            // Takvim verilerini yeniden yükle
+            $this->loadOccurrences();
+            
+            // Başarı mesajı göster
+            $this->dispatch('lessonCompleted', $message);
+            
+        } catch (\Exception $e) {
+            // Hata durumunda
+            Log::error("Ders silme işleminde hata: " . $e->getMessage());
+            $this->dispatch('lessonError', 'Ders silinirken bir hata oluştu: ' . $e->getMessage());
+            
+            // Modalı kapat
+            $this->closeDeleteModal();
+        }
+    }
     /**
      * Öğretmenin gelecek en yakın dersini bul
      */
