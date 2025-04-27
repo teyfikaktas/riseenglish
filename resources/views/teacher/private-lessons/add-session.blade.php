@@ -337,22 +337,32 @@
         
         // Form gönderilmeden önce kontrol et
         document.querySelector('form').addEventListener('submit', function(e) {
-            if (isMultiSessionCheckbox.checked && !document.getElementById('end_date').value) {
-                e.preventDefault();
-                alert('Lütfen son seans tarihini belirtin.');
-                return false;
-            }
-            
-            // Form gönderiminde repeat_until alanına bitiş tarihini ata
-            if (isMultiSessionCheckbox.checked) {
-                const endDateValue = document.getElementById('end_date').value;
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = 'repeat_until';
-                hiddenInput.value = endDateValue;
-                this.appendChild(hiddenInput);
-            }
-        });
+    const isMultiSession = document.getElementById('is_multi_session').checked;
+    
+    if (isMultiSession && !document.getElementById('end_date').value) {
+        e.preventDefault();
+        alert('Lütfen son seans tarihini belirtin.');
+        return false;
+    }
+    
+    // Form gönderiminde repeat_until alanına bitiş tarihini ata
+    if (isMultiSession) {
+        const endDateValue = document.getElementById('end_date').value;
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'repeat_until';
+        hiddenInput.value = endDateValue;
+        this.appendChild(hiddenInput);
+    } else {
+        // Tek seans için başlangıç tarihi aynı zamanda bitiş tarihi olarak gönderilsin
+        const startDateValue = document.getElementById('start_date').value;
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'repeat_until';
+        hiddenInput.value = startDateValue;
+        this.appendChild(hiddenInput);
+    }
+});
     });
 </script>
 @endsection

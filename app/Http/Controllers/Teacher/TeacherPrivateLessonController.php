@@ -675,7 +675,7 @@ private function generateChartImage($chartData, $type = 'pie', $width = 500, $he
     {
         try {
             $teacherId = Auth::id();
-
+    
             // Dersi ve öğretmen yetkisini doğrula
             $lesson = PrivateLesson::findOrFail($lessonId);
             $sessionCheck = PrivateLessonSession::where('private_lesson_id', $lessonId)
@@ -686,41 +686,52 @@ private function generateChartImage($chartData, $type = 'pie', $width = 500, $he
                     ->route('ogretmen.private-lessons.index')
                     ->with('error', 'Bu derse erişim yetkiniz bulunmuyor.');
             }
-
-            // Form verilerini doğrula
-            $validated = $request->validate([
+    
+            // Form verilerini doğrula - validation kurallarını oluştur
+            $rules = [
                 'day_of_week' => 'required|integer|min:0|max:6',
                 'start_date'  => 'required|date',
-                'end_date'    => 'required|date|after_or_equal:start_date',
                 'start_time'  => 'required|date_format:H:i',
                 'end_time'    => 'required|date_format:H:i|after:start_time',
                 'location'    => 'nullable|string|max:255',
                 'notes'       => 'nullable|string',
-            ]);
-
+            ];
+    
+            // Eğer birden fazla seans seçeneği işaretlenmişse, end_date validasyonunu ekle
+            if ($request->has('is_multi_session')) {
+                $rules['end_date'] = 'required|date|after_or_equal:start_date';
+            }
+    
+            $validated = $request->validate($rules);
+    
+            // Eğer is_multi_session belirtilmemişse başlangıç tarihi aynı zamanda bitiş tarihi
+            if (!$request->has('is_multi_session')) {
+                $validated['end_date'] = $validated['start_date'];
+            }
+    
             // Öğrenci ve varsayılan konum
             $studentId       = $sessionCheck->student_id;
             $defaultLocation = $sessionCheck->location;
-
+    
             // Tarihleri Carbon ile al
             $start = Carbon::parse($validated['start_date']);
             $end   = Carbon::parse($validated['end_date']);
             $dow   = (int) $validated['day_of_week']; // 0 = Pazar, 1 = Pazartesi, …
-
+    
             // İlk seansın, o hafta içindeki hedef güne denk gelen tarihi
             $current = $start->copy();
             if ($current->dayOfWeek !== $dow) {
                 $daysToAdd = ($dow - $current->dayOfWeek + 7) % 7;
                 $current->addDays($daysToAdd);
             }
-
+    
             $created = 0;
             $skipped = [];
-
+    
             // Döngü: başlangıç ≤ son tarih
             while ($current->lte($end)) {
                 $dateStr = $current->format('Y-m-d');
-
+    
                 // İsteğe bağlı: çakışma kontrolü
                 $conflict = $this->checkLessonConflict(
                     $teacherId,
@@ -730,7 +741,7 @@ private function generateChartImage($chartData, $type = 'pie', $width = 500, $he
                     $dateStr,
                     null
                 );
-
+    
                 if ($conflict) {
                     $skipped[] = $current->format('d.m.Y');
                 } else {
@@ -751,21 +762,21 @@ private function generateChartImage($chartData, $type = 'pie', $width = 500, $he
                     ]);
                     $created++;
                 }
-
+    
                 // Haftalık ileri
                 $current->addWeek();
             }
-
+    
             // Başarı mesajı
             $message = "Başarıyla {$created} seans eklendi.";
             if (! empty($skipped)) {
                 $message .= ' Çakışma nedeniyle atlanan tarihler: ' . implode(', ', $skipped);
             }
-
+    
             return redirect()
                 ->route('ogretmen.private-lessons.showLesson', $lessonId)
                 ->with('success', $message);
-
+    
         } catch (\Exception $e) {
             Log::error("Yeni seans ekleme hatası: {$e->getMessage()} (Satır {$e->getLine()} Dosya {$e->getFile()})");
             return redirect()->back()

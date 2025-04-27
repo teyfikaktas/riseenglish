@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rise English - Ders Raporu</title>
     <style>
-    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
     
 /* Motto stili */
 .motto-container {
@@ -149,12 +148,8 @@ body {
     transition: background-color 0.3s;
 }
 
-.cover-details-table tr:hover {
-    background-color: rgba(26, 46, 90, 0.05);
-}
 
 .cover-details-table td:first-child {
-    font-weight: 600;
     width: 30%;
     color: #1a2e5a;
     display: flex;
@@ -164,7 +159,6 @@ body {
 }
 
 .cover-details-table td:nth-child(2) {
-    font-weight: 500;
     color: #333;
     font-size: 16px;
 }
@@ -495,6 +489,9 @@ body {
     margin: 0 auto 35px auto;
     width: 70%;
 }
+.cover-page {
+    font-family: 'DejaVu Sans', sans-serif;
+}
 
 .student-stamp .stamp-line {
     background-color: #e63946;
@@ -606,12 +603,12 @@ body {
             <td>{{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}</td>
         </tr>
         <tr>
-            <td>Ögrenci</td>
-            <td>{{ $session->student->name }}</td>
+            <td>Öğrenci</td>
+	<td>{{ mb_convert_encoding($session->student->name, 'UTF-8', 'auto') }}</td>
         </tr>
         <tr>
-            <td>Ögretmen</td>
-            <td>{{ $session->teacher->name }}</td>
+            <td>Öğretmen</td>
+	<td>{{ mb_convert_encoding($session->teacher->name, 'UTF-8', 'auto') }}</td>
         </tr>
     </table>
 </div>

@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             TestCoursesSeeder::class,
             UpdateUserPhonesSeeder::class,
             IdiomsTableSeeder::class,
+            TopicsSeeder::class,
         ]);
     }
 }

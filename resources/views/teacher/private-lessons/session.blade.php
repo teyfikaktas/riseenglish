@@ -11,7 +11,80 @@
             Takvime Dön
         </a>
     </div>
-    
+    <!-- İşlenen Konular Bölümü -->
+<div class="mt-5 border-t border-gray-100 pt-4">
+    <div class="flex justify-between items-center mb-2">
+        <h3 class="text-lg font-semibold">İşlenen Konular</h3>
+        <a href="{{ route('ogretmen.private-lessons.session.topics', $session->id) }}"
+           class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm">
+            Konuları Düzenle
+        </a>
+    </div>
+
+    @php
+        $sessionTopics = \App\Models\SessionTopic::with('topic.category')
+            ->where('session_id', $session->id)
+            ->get();
+            
+        // Group by topic and count occurrences
+        $topicCounts = [];
+        $topicsByCategory = [];
+        
+        foreach ($sessionTopics as $sessionTopic) {
+            $topicId = $sessionTopic->topic_id;
+            $categoryId = $sessionTopic->topic->category->id;
+            $categoryName = $sessionTopic->topic->category->name;
+            
+            if (!isset($topicCounts[$topicId])) {
+                $topicCounts[$topicId] = 0;
+                
+                if (!isset($topicsByCategory[$categoryId])) {
+                    $topicsByCategory[$categoryId] = [
+                        'name' => $categoryName,
+                        'topics' => []
+                    ];
+                }
+                
+                $topicsByCategory[$categoryId]['topics'][] = $sessionTopic->topic;
+            }
+            
+            $topicCounts[$topicId]++;
+        }
+    @endphp
+
+    @if(count($sessionTopics) > 0)
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @foreach($topicsByCategory as $categoryId => $category)
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <h4 class="font-medium text-gray-700 border-b border-gray-200 pb-2 mb-2">{{ $category['name'] }}</h4>
+                    <ul class="space-y-2">
+                        @foreach($category['topics'] as $topic)
+                            <li class="flex items-start">
+                                <div class="flex-shrink-0 mt-1">
+                                    <div class="flex">
+                                        @for($i = 0; $i < $topicCounts[$topic->id]; $i++)
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        @endfor
+                                    </div>
+                                </div>
+                                <div class="ml-2">
+                                    <p class="text-sm font-medium text-gray-800">{{ $topic->name }}</p>
+                                    <p class="text-xs text-gray-600">{{ $topic->description }}</p>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </div>
+    @else
+        <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 p-3 rounded">
+            Bu derste henüz işlenen konu kaydedilmemiş.
+        </div>
+    @endif
+</div>
     <!-- Başlık Bilgisi -->
     <div class="border-b border-gray-100 pb-3 mb-4">
         <h4 class="text-xl font-bold text-gray-800">{{ $session->privateLesson ? $session->privateLesson->name : 'Ders' }}</h4>
@@ -83,7 +156,34 @@
         </p>
     </div>
     <!-- In teacher.private-lessons.session.blade.php -->
-
+    @if(count($sessionTopics) > 0)
+    <!-- Topic Notes Section -->
+    <div class="mt-4 border-t border-gray-100 pt-3">
+        <h4 class="font-medium text-gray-700 mb-2">Konu Notları</h4>
+        
+        <div class="space-y-2">
+            @php
+                $topicNotes = $sessionTopics->filter(function($item) {
+                    return !empty($item->notes);
+                });
+            @endphp
+            
+            @if($topicNotes->count() > 0)
+                @foreach($topicNotes as $topicNote)
+                    <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+                        <div class="flex justify-between">
+                            <h5 class="font-medium text-yellow-800">{{ $topicNote->topic->name }}</h5>
+                            <span class="text-xs text-yellow-600">{{ $topicNote->created_at->format('d.m.Y H:i') }}</span>
+                        </div>
+                        <p class="text-sm text-yellow-700 mt-1">{{ $topicNote->notes }}</p>
+                    </div>
+                @endforeach
+            @else
+                <p class="text-sm text-gray-500 italic">Bu derste işlenen konulara ait not bulunmamaktadır.</p>
+            @endif
+        </div>
+    </div>
+@endif
     <div class="mt-4">
         <div class="flex justify-between items-center mb-2">
             <h3 class="text-lg font-semibold">Ödevler</h3>

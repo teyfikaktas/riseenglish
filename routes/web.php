@@ -19,9 +19,31 @@ use App\Http\Controllers\Admin\CourseFrequencyController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\FrontendCourseController;
 use App\Models\Course;
-
+Route::get('/generate-sitemap', [App\Http\Controllers\SitemapController::class, 'generate'])
+    ->middleware(['auth', 'role:yonetici']) // Sadece yöneticilerin erişebilmesi için
+    ->name('generate-sitemap');
 Route::post('/resources/download', [ResourceDownloadController::class, 'download'])->name('resources.download');
-
+Route::get('robots.txt', function () {
+    $content = "User-agent: *\n";
+    $content .= "Disallow: /admin/\n";
+    $content .= "Disallow: /oturum-ac\n";
+    $content .= "Disallow: /kayit-ol\n";
+    $content .= "Disallow: /profil\n";
+    $content .= "Disallow: /ogretmen/\n";
+    $content .= "Disallow: /ogrenci/\n";
+    $content .= "Disallow: /kurs-kayit/\n";
+    $content .= "Disallow: /telefon-dogrulama/\n";
+    $content .= "Disallow: /reset-password\n";
+    $content .= "Disallow: /forgot-password\n";
+    $content .= "Allow: /\n";
+    $content .= "Allow: /egitimler\n";
+    $content .= "Allow: /iletisim\n";
+    $content .= "Allow: /ucretsiz-kaynaklar\n";
+    $content .= "Sitemap: " . url('sitemap.xml');
+    
+    return response($content, 200)
+        ->header('Content-Type', 'text/plain');
+});
 
 Route::get('/iletisim', [\App\Http\Controllers\ContactController::class, 'index'])->name('contact');
 Route::post('/iletisim/gonder', [\App\Http\Controllers\ContactController::class, 'send'])->name('contact.send');
@@ -221,6 +243,15 @@ Route::post('private-lessons/{id}/undo-complete', [TeacherPrivateLessonControlle
 ->name('private-lessons.undo-complete');
 Route::get('/odevlerim', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'allHomeworks'])
      ->name('private-lessons.homeworks');
+
+     Route::get('private-lessons/session/{id}/topics', [App\Http\Controllers\Teacher\SessionTopicsController::class, 'manage'])
+     ->name('private-lessons.session.topics');
+ Route::post('private-lessons/session/{id}/topics/add', [App\Http\Controllers\Teacher\SessionTopicsController::class, 'addTopic'])
+     ->name('private-lessons.session.topics.add');
+ Route::delete('private-lessons/session/{id}/topics/remove', [App\Http\Controllers\Teacher\SessionTopicsController::class, 'removeTopic'])
+     ->name('private-lessons.session.topics.remove');
+ Route::get('private-lessons/session/{id}/topics/view', [App\Http\Controllers\Teacher\SessionTopicsController::class, 'view'])
+     ->name('private-lessons.session.topics.view');
 // Ders bazlı route'lar
 // Öğretmen rotaları içinde, özel ders rotaları arasına ekleyin
 Route::get('/ozel-ders-grup/{id}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'showLesson'])
