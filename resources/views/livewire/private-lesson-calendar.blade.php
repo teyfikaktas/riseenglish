@@ -519,77 +519,114 @@
         </div>
     </div>
     @endif
-    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm @if(!$showDeleteModal) hidden @endif">
-        <div class="bg-white rounded-2xl max-w-lg w-full mx-4 shadow-2xl transform transition-all duration-300 animate-fadeIn">
-           <!-- Modal Header -->
-           <div class="flex justify-between items-center border-b p-6">
-               <h3 class="text-xl font-bold text-red-600">Dersi Sil</h3>
-               <button wire:click="closeDeleteModal" class="text-gray-500 hover:text-gray-700 transition-colors focus:outline-none">
-                   <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                   </svg>
-               </button>
-           </div>
-           
-           <!-- Modal Content -->
-           <div class="p-6">
-               <div class="space-y-6">
-                   <!-- Uyarı Mesajı -->
-                   <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                       <p class="text-red-600 font-medium mb-2">⚠️ Bu işlem geri alınamaz!</p>
-                       <p class="text-gray-700">Silinen dersler ve ilgili tüm bilgiler kalıcı olarak silinecektir.</p>
-                   </div>
-                   
-                   @if($selectedDeleteSession)
-                   <!-- Ders Bilgileri -->
-                   <div class="border-b border-gray-100 pb-4">
-                       <h4 class="text-lg font-bold text-gray-800">{{ $selectedDeleteSession['title'] }}</h4>
-                       <p class="text-md text-gray-600 mt-1">{{ $selectedDeleteSession['student'] }}</p>
-                       <p class="text-sm text-gray-500 mt-1">
-                          {{ \Carbon\Carbon::parse($selectedDeleteSession['lesson_date'])->format('d.m.Y') }}, 
-                          {{ \Carbon\Carbon::parse($selectedDeleteSession['start_time'])->format('H:i') }} - 
-                          {{ \Carbon\Carbon::parse($selectedDeleteSession['end_time'])->format('H:i') }}
-                       </p>
-                   </div>
-                   
-                   <!-- Silme Seçenekleri -->
-                   <div class="space-y-3">
-                       <p class="text-gray-700 font-medium">Silme kapsamını seçin:</p>
-                       
-                       <div class="flex items-center space-x-2">
-                           <input type="radio" id="this_only" wire:model="deleteScope" value="this_only" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500">
-                           <label for="this_only" class="text-gray-700">Sadece bu dersi sil</label>
-                       </div>
-                       
-                       <div class="flex items-center space-x-2">
-                           <input type="radio" id="all_future" wire:model="deleteScope" value="all_future" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500">
-                           <label for="all_future" class="text-gray-700">Bu ve gelecekteki tüm dersleri sil</label>
-                       </div>
-                       
-                       <div class="flex items-center space-x-2">
-                           <input type="radio" id="all" wire:model="deleteScope" value="all" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500">
-                           <label for="all" class="text-gray-700">Bu derse ait tüm dersleri sil</label>
-                       </div>
-                   </div>
-                   @endif
-                   
-                   <!-- Onay Butonları -->
-                   <div class="flex justify-end space-x-4 mt-6 pt-4 border-t border-gray-100">
-                       <button 
-                           wire:click="closeDeleteModal" 
-                           class="px-5 py-2.5 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50">
-                           İptal
-                       </button>
-                       <button 
-                           wire:click="deleteLesson"
-                           class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-                           Dersi Sil
-                       </button>
-                   </div>
-               </div>
-           </div>
+<!-- Silme Modalı -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm {{ $showDeleteModal ? '' : 'hidden' }}">
+    <div class="bg-white rounded-2xl max-w-lg w-full mx-4 shadow-2xl transform transition-all duration-300">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center border-b p-6">
+            <h3 class="text-xl font-bold text-red-600">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Dersi Sil
+                </div>
+            </h3>
+            <button wire:click="closeDeleteModal" class="text-gray-500 hover:text-gray-700 transition-colors focus:outline-none">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Modal Content -->
+        <div class="p-6">
+            <div class="space-y-6">
+                <!-- Uyarı Mesajı -->
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p class="text-red-600 font-medium mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Bu işlem geri alınamaz!
+                    </p>
+                    <p class="text-gray-700">Silinen dersler ve ilgili tüm bilgiler kalıcı olarak silinecektir.</p>
+                </div>
+                
+                @if($selectedDeleteSession)
+                <!-- Ders Bilgileri -->
+                <div class="border-b border-gray-100 pb-4">
+                    <h4 class="text-lg font-bold text-gray-800">{{ $selectedDeleteSession['title'] }}</h4>
+                    <p class="text-md text-gray-600 mt-1">{{ $selectedDeleteSession['student'] }}</p>
+                    <p class="text-sm text-gray-500 mt-1 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {{ \Carbon\Carbon::parse($selectedDeleteSession['lesson_date'])->format('d.m.Y') }}, 
+                        {{ \Carbon\Carbon::parse($selectedDeleteSession['start_time'])->format('H:i') }} - 
+                        {{ \Carbon\Carbon::parse($selectedDeleteSession['end_time'])->format('H:i') }}
+                    </p>
+                </div>
+                
+                <!-- Silme Seçenekleri -->
+                <div class="space-y-3">
+                    <p class="text-gray-700 font-medium">Silme kapsamını seçin:</p>
+                    
+                    <!-- ÖNEMLİ: name özelliğini aynı yaptık ve wire:model.defer kullandık -->
+                    <div class="flex items-start space-x-2 bg-gray-50 p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:bg-gray-100" 
+                         onclick="document.getElementById('this_only').checked = true;">
+                        <input type="radio" id="this_only" name="deleteScope" wire:model="deleteScope" value="this_only" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 mt-0.5">
+                        <div class="flex-1">
+                            <label for="this_only" class="text-gray-800 font-medium block mb-1 cursor-pointer">Sadece bu dersi sil</label>
+                            <p class="text-gray-600 text-sm">Bu seçenek yalnızca şu an seçili olan dersi silecektir.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-2 bg-gray-50 p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:bg-gray-100"
+                         onclick="document.getElementById('all_future').checked = true;">
+                        <input type="radio" id="all_future" name="deleteScope" wire:model="deleteScope" value="all_future" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 mt-0.5">
+                        <div class="flex-1">
+                            <label for="all_future" class="text-gray-800 font-medium block mb-1 cursor-pointer">Bu ve gelecekteki tüm dersleri sil</label>
+                            <p class="text-gray-600 text-sm">Bu seçenek şu an seçili olan ders ve bu tarihten sonraki tüm dersleri silecektir.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-2 bg-gray-50 p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:bg-gray-100"
+                         onclick="document.getElementById('all').checked = true;">
+                        <input type="radio" id="all" name="deleteScope" wire:model="deleteScope" value="all" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 mt-0.5">
+                        <div class="flex-1">
+                            <label for="all" class="text-gray-800 font-medium block mb-1 cursor-pointer">Bu derse ait tüm dersleri sil</label>
+                            <p class="text-gray-600 text-sm">Bu seçenek bu ders serisine ait tüm dersleri (geçmiş ve gelecek) tamamen silecektir.</p>
+                        </div>
+                    </div>
+                </div>
+                @endif
+                
+                <!-- Onay Butonları -->
+                <div class="flex justify-end space-x-4 mt-6 pt-4 border-t border-gray-100">
+                    <button 
+                        wire:click="closeDeleteModal" 
+                        class="px-5 py-2.5 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50">
+                        İptal
+                    </button>
+                    <button 
+                        wire:click="deleteLesson"
+                        wire:loading.attr="disabled"
+                        class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 flex items-center">
+                        <span wire:loading.remove wire:target="deleteLesson">Dersi Sil</span>
+                        <span wire:loading wire:target="deleteLesson" class="flex items-center">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Siliniyor...
+                        </span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
+</div>
     <!-- Bildirim Sistemi -->
     <div id="notification-container" class="fixed top-4 right-4 z-50"></div>
 

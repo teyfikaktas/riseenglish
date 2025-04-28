@@ -1440,7 +1440,7 @@ public function viewHomeworks($id)
 }
 
 /**
- * Delete homework
+ * Delete homework and all associated submissions and files
  *
  * @param int $homeworkId
  * @return \Illuminate\Http\RedirectResponse
@@ -1448,14 +1448,33 @@ public function viewHomeworks($id)
 public function deleteHomework($homeworkId)
 {
     try {
-        $homework = PrivateLessonHomework::findOrFail($homeworkId);
+        // Find the homework with its submissions and files
+        $homework = PrivateLessonHomework::with(['submissions.files'])
+            ->findOrFail($homeworkId);
         
         // Check if the homework belongs to a session taught by this teacher
         $session = PrivateLessonSession::where('id', $homework->session_id)
             ->where('teacher_id', Auth::id())
             ->firstOrFail();
         
-        // Delete file if exists
+        // Start a database transaction
+        DB::beginTransaction();
+        
+        // Delete all submission files from storage and database
+        foreach ($homework->submissions as $submission) {
+            foreach ($submission->files as $file) {
+                // Delete the physical file if it exists
+                if (!empty($file->file_path) && Storage::disk('local')->exists($file->file_path)) {
+                    Storage::disk('local')->delete($file->file_path);
+                }
+                // Delete the file record
+                $file->delete();
+            }
+            // Delete the submission record
+            $submission->delete();
+        }
+        
+        // Delete homework file if exists
         if (!empty($homework->file_path) && Storage::disk('local')->exists($homework->file_path)) {
             Storage::disk('local')->delete($homework->file_path);
         }
@@ -1463,10 +1482,21 @@ public function deleteHomework($homeworkId)
         // Delete the homework
         $homework->delete();
         
-        return redirect()->route('ogretmen.private-lessons.session.show', $session->id)
-            ->with('success', 'Ödev başarıyla silindi.');
+        // Commit the transaction
+        DB::commit();
+        
+        // Create activity log
+        $logMessage = "Ödev silindi: '{$homework->title}' - Öğrenci: {$session->student->name}";
+        Log::info($logMessage, ['user_id' => Auth::id(), 'homework_id' => $homeworkId]);
+        
+        return redirect()->back()
+            ->with('success', 'Ödev ve tüm bağlantılı teslimler başarıyla silindi.');
             
     } catch (\Exception $e) {
+        // Rollback in case of error
+        DB::rollBack();
+        
+        Log::error('Ödev silme hatası: ' . $e->getMessage());
         return redirect()->back()
             ->with('error', 'Ödev silinirken bir hata oluştu: ' . $e->getMessage());
     }
