@@ -59,6 +59,13 @@ class User extends Authenticatable
         return $this->hasMany(Attendance::class, 'user_id');
     }
 
+/**
+ * Kullanıcının zincir ilerlemesi
+ */
+public function chainProgress()
+{
+    return $this->hasOne(ChainProgress::class);
+}
     // Kullanıcının değerlendirme sonuçları
     public function assessmentResults()
     {

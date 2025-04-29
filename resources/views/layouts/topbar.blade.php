@@ -63,6 +63,7 @@
                         <span class="inline">Ücretsiz İçerikler</span>
                     </span>
                 </a>
+                
                  <a href="{{ url('/egitimler') }}" class="py-2 px-2 xl:px-3 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-200 {{ request()->is('egitimler') || request()->is('egitimler/*') ? 'bg-red-50 border-red-200 text-red-600 font-semibold' : 'text-gray-700' }}">
                     <span class="flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>
@@ -85,6 +86,21 @@
                 </a>
                 @endif
                 @if(auth()->check() && auth()->user()->hasRole('ogrenci'))
+<a href="{{ route('zinciri-kirma') }}" class="py-2 px-2 xl:px-3 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-200 {{ request()->is('zinciri-kirma') || request()->is('zinciri-kirma/*') ? 'bg-red-50 border-red-200 text-red-600 font-semibold' : 'text-gray-700' }}">
+    <span class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+        <span class="inline">Zinciri Kırma</span>
+        @if(auth()->check() && ($progress = auth()->user()->chainProgress))
+            <div class="bg-[#e63946] text-white text-xs font-bold ml-2 px-2 py-0.5 rounded-full">
+                {{ $progress->current_streak }} gün
+            </div>
+        @endif
+    </span>
+</a>
+@endif
+                @if(auth()->check() && auth()->user()->hasRole('ogrenci'))
                 <a href="{{ route('ogrenci.private-lessons.index') }}"
                    class="py-2 px-2 xl:px-3 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-200 {{ request()->is('ogrenci/ozel-derslerim') || request()->is('ogrenci/ozel-derslerim/*') ? 'bg-red-50 border-red-200 text-red-600 font-semibold' : 'text-gray-700' }}">
                     <span class="flex items-center">
@@ -92,6 +108,7 @@
                         <span class="inline">Derslerim</span>
                     </span>
                 </a>
+                
                 @endif
             </div>
 

@@ -44,6 +44,13 @@ Route::get('robots.txt', function () {
     return response($content, 200)
         ->header('Content-Type', 'text/plain');
 });
+Route::get('/zinciri-kirma', [App\Http\Controllers\ChainBreakerController::class, 'index'])->name('zinciri-kirma');
+
+// Gün tamamlama API endpoint'i
+Route::post('/zinciri-kirma/tamamla', [App\Http\Controllers\ChainBreakerController::class, 'markDayComplete'])->name('zinciri-kirma.tamamla');
+
+// Zinciri sıfırlama API endpoint'i
+Route::post('/zinciri-kirma/sifirla', [App\Http\Controllers\ChainBreakerController::class, 'resetChain'])->name('zinciri-kirma.sifirla');
 
 Route::get('/iletisim', [\App\Http\Controllers\ContactController::class, 'index'])->name('contact');
 Route::post('/iletisim/gonder', [\App\Http\Controllers\ContactController::class, 'send'])->name('contact.send');
