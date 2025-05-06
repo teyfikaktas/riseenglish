@@ -13,6 +13,7 @@ use Carbon\Carbon;
 
 class PrivateLessonController extends Controller
 {
+    
     /**
      * Display a listing of private lessons.
      *
@@ -56,7 +57,97 @@ class PrivateLessonController extends Controller
     {
         return view('admin.private-lessons.create');
     }
-
+  /**
+     * Show the delete confirmation page for the lesson.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function confirmDelete($id)
+    {
+        try {
+            // Ders seansını bul
+            $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+                ->where('id', $id)
+                ->where('teacher_id', Auth::id()) // Sadece öğretmenin kendi derslerini silmesine izin ver
+                ->firstOrFail();
+            
+            return view('ogretmen.private-lessons.delete', compact('session'));
+            
+        } catch (\Exception $e) {
+            Log::error("Ders silme sayfası yüklenirken hata: " . $e->getMessage());
+            return redirect()->route('ogretmen.private-lessons.index')
+                ->with('error', 'Ders bilgileri yüklenirken bir hata oluştu: ' . $e->getMessage());
+        }
+    }
+     /**
+     * Delete the specified lesson.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(Request $request, $id)
+    {
+        try {
+            // Ders seansını bul
+            $session = PrivateLessonSession::where('id', $id)
+                ->where('teacher_id', Auth::id()) // Sadece öğretmenin kendi derslerini silmesine izin ver
+                ->firstOrFail();
+            
+            // Geçmiş derslerin silinmesini engelle
+            $lessonDate = Carbon::parse($session->start_date);
+            $currentDate = Carbon::now('Europe/Istanbul')->startOfDay();
+            
+            if ($lessonDate->lt($currentDate)) {
+                return redirect()->route('ogretmen.private-lessons.index')
+                    ->with('error', 'Geçmiş tarihli dersler silinemez.');
+            }
+            
+            $lessonId = $session->private_lesson_id;
+            $deleteScope = $request->input('delete_scope', 'this_only');
+            
+            // Silme işlemi seçilen kapsama göre
+            if ($deleteScope === 'all_future') {
+                // Bu ve gelecekteki aynı saat ve dakikadaki dersleri sil
+                $startTime = $session->start_time;
+                $endTime = $session->end_time;
+                
+                $deletedCount = PrivateLessonSession::where('private_lesson_id', $lessonId)
+                    ->where('teacher_id', Auth::id())
+                    ->where('start_time', $startTime)
+                    ->where('end_time', $endTime)
+                    ->where(function($query) use ($session, $currentDate) {
+                        $query->where('start_date', '>=', $session->start_date);
+                    })
+                    ->delete();
+                
+                $message = "{$deletedCount} ders başarıyla silindi.";
+            } 
+            else {
+                // Sadece bu dersi sil
+                $session->delete();
+                
+                // Bu silinen ders, bu ders serisinin son seansı mıydı kontrol et
+                $remainingSessions = PrivateLessonSession::where('private_lesson_id', $lessonId)->exists();
+                
+                // Eğer kalan ders yoksa ana dersi de sil
+                if (!$remainingSessions) {
+                    PrivateLesson::where('id', $lessonId)->delete();
+                }
+                
+                $message = "Ders başarıyla silindi.";
+            }
+            
+            return redirect()->route('ogretmen.private-lessons.index')
+                ->with('success', $message);
+            
+        } catch (\Exception $e) {
+            Log::error("Ders silme işleminde hata: " . $e->getMessage());
+            return redirect()->route('ogretmen.private-lessons.index')
+                ->with('error', 'Ders silinirken bir hata oluştu: ' . $e->getMessage());
+        }
+    }
     /**
      * Store a newly created private lesson in storage.
      *

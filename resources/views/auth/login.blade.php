@@ -32,10 +32,23 @@
                     @enderror
                 </div>
                 
-                <div class="mb-6">
+                <div class="mb-6 relative">
                     <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Şifre</label>
-                    <input id="password" type="password" name="password" required 
-                        class="appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('password') border-red-500 @enderror">
+                    <div class="relative">
+                        <input id="password" type="password" name="password" required 
+                            class="appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('password') border-red-500 @enderror">
+                        <!-- CAPSLOCK Uyarısı - Yeni tasarım -->
+                        <div id="capsLockWarning" class="hidden absolute transform -translate-y-full left-0 top-0 mb-1 px-3 py-2 bg-[#1a2e5a] text-white text-sm font-medium rounded-md shadow-lg opacity-90 transition-all duration-300 z-10">
+                            <div class="flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                <span>CAPSLOCK açık</span>
+                            </div>
+                            <!-- Üçgen işaret (tooltip görünümü için) -->
+                            <div class="absolute h-2 w-2 bg-[#1a2e5a] transform rotate-45 left-4 -bottom-1"></div>
+                        </div>
+                    </div>
                     @error('password')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
@@ -144,7 +157,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const buttonText = document.getElementById('buttonText');
     const buttonLoading = document.getElementById('buttonLoading');
     const logo = document.getElementById('logo');
+    const passwordInput = document.getElementById('password');
+    const capsLockWarning = document.getElementById('capsLockWarning');
     let isSubmitting = false;
+
+    // CAPSLOCK kontrolü için geliştirilmiş event listener'lar
+    function checkCapsLock(e) {
+        if (e.getModifierState('CapsLock')) {
+            capsLockWarning.classList.remove('hidden');
+            // Animasyon efekti
+            setTimeout(() => {
+                capsLockWarning.classList.add('opacity-100');
+            }, 10);
+        } else {
+            capsLockWarning.classList.add('hidden');
+            capsLockWarning.classList.remove('opacity-100');
+        }
+    }
+
+    // Her tuş vuruşunda CAPSLOCK durumunu kontrol et
+    passwordInput.addEventListener('keyup', checkCapsLock);
+    
+    // İlk kez şifre alanına tıklandığında da kontrol et
+    passwordInput.addEventListener('focus', checkCapsLock);
+    
+    // Şifre alanından çıkıldığında uyarıyı gizle
+    passwordInput.addEventListener('blur', function() {
+        capsLockWarning.classList.add('hidden');
+        capsLockWarning.classList.remove('opacity-100');
+    });
+    
+    // Pencere odağı değiştiğinde de kontrol et (başka uygulamadan geri dönüş)
+    window.addEventListener('focus', function() {
+        if (document.activeElement === passwordInput) {
+            checkCapsLock(new KeyboardEvent('keyup'));
+        }
+    });
 
     form.addEventListener('submit', function(e) {
         // Eğer form zaten gönderiliyorsa, tekrar gönderilmesini engelle

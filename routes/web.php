@@ -225,6 +225,15 @@ Route::middleware(['auth', 'role:ogretmen', 'verified.phone'])->group(function (
         Route::get('/panel', [App\Http\Controllers\Teacher\TeacherController::class, 'index'])
             ->name('panel');
             Route::get('/check-lesson-conflict', [TeacherPrivateLessonController::class, 'checkLessonConflictApi'])->name('check.lesson.conflict');
+            // Seans silme sayfası route'u
+Route::get('/ozel-ders-seans/{id}/sil', [TeacherPrivateLessonController::class, 'confirmDeleteSession'])
+->name('private-lessons.session.delete');
+
+// Mevcut seans silme route'u (bu zaten vardı, ama içeriğini güncelleyeceksiniz)
+Route::delete('/ozel-ders-seans/{id}', [TeacherPrivateLessonController::class, 'destroySession'])
+->name('private-lessons.session.destroy');
+// Takvim görünümü için route
+
 // Ders Raporu Routes - Bu route'ları özel ders yönetimi route'larının arasına ekleyin
 Route::get('/ozel-ders-seans/{id}/rapor-olustur', [TeacherPrivateLessonController::class, 'showCreateReport'])
     ->name('private-lessons.session.createReport');
@@ -245,6 +254,13 @@ Route::delete('/ozel-ders-seans/{id}/rapor-sil', [TeacherPrivateLessonController
         [TeacherPrivateLessonController::class, 'downloadSubmissionFile']
     )
     ->name('private-lessons.submission-file.download');
+    // Seans silme sayfası route'u - Özel ders yönetimi route'ları arasına ekleyin
+Route::get('/ozel-ders-seans/{id}/sil', [TeacherPrivateLessonController::class, 'confirmDeleteSession'])
+->name('private-lessons.session.delete');
+
+// Mevcut seans silme route'u
+Route::delete('/ozel-ders-seans/{id}', [TeacherPrivateLessonController::class, 'destroySession'])
+->name('private-lessons.session.destroy');
     // Öğretmen private-lessons grubunun içine
 Route::post('private-lessons/{id}/undo-complete', [TeacherPrivateLessonController::class, 'undoCompleteLesson'])
 ->name('private-lessons.undo-complete');

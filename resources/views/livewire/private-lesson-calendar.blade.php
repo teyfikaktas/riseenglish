@@ -261,41 +261,41 @@
                                                     @endphp
                                                     
                                                     <div class="mb-2 p-2 rounded-lg text-sm shadow-md {{ $colors['bg'] }} {{ $colors['text'] }} transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1 hover:brightness-105 group"
-                                                         @if($rowspan > 1) style="height: calc({{ $rowspan }} * {{ $compactView ? '2rem' : '3.5rem' }} - 0.5rem);" @endif>
-<!-- Botón de eliminar siempre visible -->
-<div class="flex justify-end">
-    <button 
-        wire:click.stop="openDeleteModal({{ $occurrence['id'] }})"
-        class="text-white hover:text-red-200 focus:outline-none p-1 -mt-1 -mr-1 transition-colors duration-200">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-    </button>
+     @if($rowspan > 1) style="height: calc({{ $rowspan }} * {{ $compactView ? '2rem' : '3.5rem' }} - 0.5rem);" @endif>
+    <!-- Sil butonu -->
+    <div class="flex justify-end">
+        <a href="{{ route('ogretmen.private-lessons.session.delete', $occurrence['id']) }}"
+            class="text-white hover:text-red-200 focus:outline-none p-1 -mt-1 -mr-1 transition-colors duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        </a>
+    </div>
+    
+    <!-- Ders içeriği -->
+    <div 
+        onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
+        class="cursor-pointer h-full flex flex-col justify-between">
+        <div>
+            <div class="font-medium {{ $compactView ? 'text-xs' : '' }} text-white">{{ $occurrence['title'] }}</div>
+            <div class="flex justify-between items-center mt-1 {{ $compactView ? 'text-xs opacity-90' : 'text-xs opacity-95' }} text-white">
+                <div>{{ $occurrence['student'] }}</div>
+                <div>{{ $startTime }} - {{ $endTime }}</div>
+            </div>
+        </div>
+        
+        <div class="mt-auto">
+            <div class="text-xs text-white/90">
+                {{ $occurrence['location'] }}
+            </div>
+        </div>
+    </div>
 </div>
-                                                         <!-- Ders içeriği -->
-                                                        <div 
-                                                            onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
-                                                            class="cursor-pointer h-full flex flex-col justify-between">
-                                                            <div>
-                                                                <div class="font-medium {{ $compactView ? 'text-xs' : '' }} text-white">{{ $occurrence['title'] }}</div>
-                                                                <div class="flex justify-between items-center mt-1 {{ $compactView ? 'text-xs opacity-90' : 'text-xs opacity-95' }} text-white">
-                                                                    <div>{{ $occurrence['student'] }}</div>
-                                                                    <div>{{ $startTime }} - {{ $endTime }}</div>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div class="mt-auto">
-                                                                <div class="text-xs text-white/90">
-                                                                    {{ $occurrence['location'] }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <button 
-                                                        onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
-                                                        class="mt-2 w-full px-3 py-1 bg-white text-gray-800 rounded-md text-xs font-medium hover:bg-gray-100 transition-all duration-200">
-                                                        Detayına Git
-                                                    </button>
+<button 
+    onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
+    class="mt-2 w-full px-3 py-1 bg-white text-gray-800 rounded-md text-xs font-medium hover:bg-gray-100 transition-all duration-200">
+    Detayına Git
+</button>
                                                 @endforeach
                                             @else
                                                 <div class="flex items-center justify-center w-full h-full">

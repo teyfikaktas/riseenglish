@@ -825,9 +825,8 @@ private function generateChartImage($chartData, $type = 'pie', $width = 500, $he
                 $message = "Seans başarıyla silindi.";
             }
 
-            return redirect()
-                ->route('ogretmen.private-lessons.showLesson', $lessonId)
-                ->with('success', $message);
+            return redirect()->route('ogretmen.private-lessons.index')
+            ->with('success', $message);
 
         } catch (\Exception $e) {
             Log::error("Seans silme hatası: {$e->getMessage()} (Satır {$e->getLine()})");
@@ -1439,6 +1438,29 @@ public function viewHomeworks($id)
     return view('teacher.private-lessons.homeworks', compact('session'));
 }
 
+/**
+ * Show the delete confirmation page for a session
+ *
+ * @param int $id
+ * @return \Illuminate\View\View
+ */
+public function confirmDeleteSession($id)
+{
+    try {
+        // Ders seansını bul
+        $session = PrivateLessonSession::with(['privateLesson', 'teacher', 'student'])
+            ->where('id', $id)
+            ->where('teacher_id', Auth::id()) // Sadece öğretmenin kendi derslerini silmesine izin ver
+            ->firstOrFail();
+        
+        return view('teacher.private-lessons.delete-session', compact('session'));
+        
+    } catch (\Exception $e) {
+        Log::error("Ders silme sayfası yüklenirken hata: " . $e->getMessage());
+        return redirect()->route('ogretmen.private-lessons.index')
+        ->with('error', 'Ders bilgileri yüklenirken bir hata oluştu: ' . $e->getMessage());
+    }
+}
 /**
  * Delete homework and all associated submissions and files
  *

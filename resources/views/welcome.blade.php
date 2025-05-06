@@ -50,8 +50,6 @@
       <!-- Sol taraf (metin) -->
       <div class="w-full md:w-1/2 text-center md:text-left mb-12 md:mb-0">
         @if(auth()->check() && auth()->user()->hasRole('ogrenci'))
-          <!-- GİRİŞ YAPMIŞ ÖĞRENCİ İÇİN KİŞİSELLEŞTİRİLMİŞ MESAJ -->
-          <!-- Üst kısımda büyük ve çarpıcı 'Kurslarınız' yazısı -->
           <div class="mb-4 transform -translate-y-4">
             <span class="bg-[#e63946] text-white text-xl px-4 py-2 rounded-lg shadow-lg inline-block transform -rotate-2 hover:rotate-0 transition-transform duration-300 font-bold">
               <i class="fas fa-graduation-cap mr-2"></i>KURSLARINIZ
