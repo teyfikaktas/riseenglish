@@ -199,11 +199,13 @@
                         @endif
                         
                         <!-- Yeni Dosya Ekleme Butonu - her zaman gösterilir -->
+                        @if(!$isOverdue || ($isOverdue && $now < $dueDate->addDays(7)))
                         <div class="mt-6 text-center">
                             <button onclick="toggleFileForm()" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                                 Yeni Dosya Ekle
                             </button>
                         </div>
+                        @endif
                     </div>
                     
                     <!-- Yeni Dosya Ekleme Formu -->
@@ -217,16 +219,16 @@
                                 @endforeach
                             </ul>
                         </div>
-                        @endif
-                        <form action="{{ route('ogrenci.private-lessons.homework.submit-file', $homework->id) }}" method="POST" enctype="multipart/form-data">
+                    @endif
+                        <form action="{{ route('ogrenci.private-lessons.homework.submit', $homework->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-4">
-                                <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">Dosya Açıklaması (İsteğe Bağlı)</label>
-                                <textarea id="comment" name="comment" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Dosyanız hakkında açıklama ekleyebilirsiniz"></textarea>
+                                <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Açıklama (İsteğe Bağlı)</label>
+                                <textarea id="content" name="content" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Ödeviniz hakkında açıklama ekleyebilirsiniz">{{ $submission->submission_content }}</textarea>
                             </div>
                             
                             <div class="mb-4">
-                                <label for="file" class="block text-sm font-medium text-gray-700 mb-1">Dosya Seçin</label>
+                                <label for="file" class="block text-sm font-medium text-gray-700 mb-1">Ödev Dosyası</label>
                                 <input type="file" id="file" name="file" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                                 <p class="text-xs text-gray-500 mt-1">Maksimum dosya boyutu: 10MB</p>
                             </div>
@@ -255,19 +257,6 @@
                             <input type="file" id="file" name="file" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                             <p class="text-xs text-gray-500 mt-1">Maksimum dosya boyutu: 10MB</p>
                         </div>
-
-                        <!-- Ekstra Dosya Yükleme Alanları -->
-                        <div id="extraFiles"></div>
-                        
-                        <!-- Yeni Dosya Ekleme Butonu -->
-                        <div class="mb-6">
-                            <button type="button" onclick="addFileInput()" class="px-4 py-2 border border-blue-300 text-blue-600 rounded-md bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                Yeni Dosya Ekle
-                            </button>
-                        </div>
                         
                         <div class="flex justify-end">
                             <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -295,14 +284,13 @@
     </div>
 </div>
 
-<!-- Silme İşlemi için Form ve Script -->
+@if($submitted)
 <form id="deleteForm" method="POST" style="display: none;">
     @csrf
     @method('DELETE')
 </form>
 
 <script>
-    // Dosya formunu göster/gizle
     function toggleFileForm() {
         const fileForm = document.getElementById('fileForm');
         if (fileForm.classList.contains('hidden')) {
@@ -312,7 +300,6 @@
         }
     }
     
-    // Dosya silme onayı
     function confirmDelete(fileId) {
         if (confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) {
             const form = document.getElementById('deleteForm');
@@ -320,53 +307,6 @@
             form.submit();
         }
     }
-    
-    // Yeni dosya alanı ekle
-    let fileCounter = 0;
-    function addFileInput() {
-        fileCounter++;
-        const extraFiles = document.getElementById('extraFiles');
-        
-        const fileGroup = document.createElement('div');
-        fileGroup.className = 'mb-6 p-4 border border-gray-200 rounded-lg relative';
-        fileGroup.id = 'file-group-' + fileCounter;
-        
-        // Silme butonu
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'absolute top-2 right-2 text-red-500 hover:text-red-700';
-        removeBtn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        `;
-        removeBtn.onclick = function() {
-            document.getElementById('file-group-' + fileCounter).remove();
-        };
-        
-        // Açıklama alanı
-        const commentDiv = document.createElement('div');
-        commentDiv.className = 'mb-4';
-        commentDiv.innerHTML = `
-            <label for="extra_comment_${fileCounter}" class="block text-sm font-medium text-gray-700 mb-1">Dosya Açıklaması (İsteğe Bağlı)</label>
-            <textarea id="extra_comment_${fileCounter}" name="extra_comments[]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Bu dosya hakkında açıklama"></textarea>
-        `;
-        
-        // Dosya alanı
-        const fileDiv = document.createElement('div');
-        fileDiv.innerHTML = `
-            <label for="extra_file_${fileCounter}" class="block text-sm font-medium text-gray-700 mb-1">Dosya Seçin</label>
-            <input type="file" id="extra_file_${fileCounter}" name="extra_files[]" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
-            <p class="text-xs text-gray-500 mt-1">Maksimum dosya boyutu: 10MB</p>
-        `;
-        
-        // Elementleri bir araya getir
-        fileGroup.appendChild(removeBtn);
-        fileGroup.appendChild(commentDiv);
-        fileGroup.appendChild(fileDiv);
-        
-        // Container'a ekle
-        extraFiles.appendChild(fileGroup);
-    }
 </script>
+@endif
 @endsection
