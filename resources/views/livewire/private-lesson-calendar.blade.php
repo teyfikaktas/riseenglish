@@ -260,41 +260,102 @@
                                                         $rowspan = isset($occurrence['rowspan']) && $occurrence['rowspan'] > 1 ? $occurrence['rowspan'] : 1;
                                                     @endphp
                                                     
-                                                    <div class="mb-2 p-2 rounded-lg text-sm shadow-md {{ $colors['bg'] }} {{ $colors['text'] }} transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1 hover:brightness-105 group"
-     @if($rowspan > 1) style="height: calc({{ $rowspan }} * {{ $compactView ? '2rem' : '3.5rem' }} - 0.5rem);" @endif>
-    <!-- Sil butonu -->
-    <div class="flex justify-end">
-        <a href="{{ route('ogretmen.private-lessons.session.delete', $occurrence['id']) }}"
-            class="text-white hover:text-red-200 focus:outline-none p-1 -mt-1 -mr-1 transition-colors duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-        </a>
-    </div>
-    
-    <!-- Ders içeriği -->
-    <div 
-        onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
-        class="cursor-pointer h-full flex flex-col justify-between">
-        <div>
-            <div class="font-medium {{ $compactView ? 'text-xs' : '' }} text-white">{{ $occurrence['title'] }}</div>
-            <div class="flex justify-between items-center mt-1 {{ $compactView ? 'text-xs opacity-90' : 'text-xs opacity-95' }} text-white">
-                <div>{{ $occurrence['student'] }}</div>
-                <div>{{ $startTime }} - {{ $endTime }}</div>
-            </div>
-        </div>
-        
-        <div class="mt-auto">
-            <div class="text-xs text-white/90">
-                {{ $occurrence['location'] }}
-            </div>
-        </div>
-    </div>
+                                                   <!-- resources/views/livewire/private-lesson-calendar.blade.php -->
+<!-- Ders kartı bölümü - RisEnglish kurumsal renkleriyle -->
+
+<div class="mb-2 p-2 rounded-lg text-sm shadow-md border-l-4 {{ $colors['border'] }} bg-white transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1 group"
+@if($rowspan > 1) style="height: calc({{ $rowspan }} * {{ $compactView ? '2rem' : '3.5rem' }} - 0.5rem);" @endif>
+
+<!-- Ders içeriği -->
+<div 
+   onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
+   class="cursor-pointer flex flex-col justify-between mb-2">
+   <div>
+       <!-- Ders başlığı ve durum göstergesi yan yana -->
+       <div class="flex justify-between items-center">
+           <div class="font-bold {{ $compactView ? 'text-sm' : 'text-base' }} text-gray-800">{{ $occurrence['title'] }}</div>
+           <!-- Durum göstergesi (minik badge) -->
+           @php
+               $statusText = [
+                   'scheduled' => 'Planlandı',
+                   'completed' => 'Tamamlandı',
+                   'cancelled' => 'İptal',
+                   'pending' => 'Beklemede',
+                   'active' => 'Aktif',
+                   'rejected' => 'Reddedildi',
+                   'approved' => 'Onaylandı',
+               ][$occurrence['status']] ?? 'Belirsiz';
+           @endphp
+           <span class="text-xs px-1.5 py-0.5 rounded-full {{ $colors['bg'] }} {{ $colors['text'] }}">{{ $statusText }}</span>
+       </div>
+       
+       <!-- Öğrenci bilgisi ve saat -->
+       <div class="flex justify-between items-center mt-1 {{ $compactView ? 'text-xs' : 'text-sm' }} text-gray-600">
+           <div class="flex items-center">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+               </svg>
+               {{ $occurrence['student'] }}
+           </div>
+           <div class="flex items-center">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+               </svg>
+               {{ $startTime }} - {{ $endTime }}
+           </div>
+       </div>
+   </div>
+   
+   <!-- Konum bilgisi -->
+   <div class="mt-1">
+       <div class="text-xs text-gray-500 flex items-center">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+           </svg>
+           {{ $occurrence['location'] }}
+       </div>
+   </div>
 </div>
+
+<!-- Aksiyon butonları -->
+<div class="grid grid-cols-2 gap-1 mt-2">
+   <!-- Ders tamamlama butonu - Henüz tamamlanmamış dersler için göster -->
+   @if($occurrence['status'] !== 'completed')
+       <button wire:click="completeLesson({{ $occurrence['id'] }})" 
+               class="flex items-center justify-center px-2 py-1.5 bg-blue-800 hover:bg-blue-900 text-white rounded-md text-xs font-medium transition-colors duration-200 border border-blue-900">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+           </svg>
+           Tamamla
+       </button>
+   @else
+       <!-- Eğer ders tamamlandıysa, rapor oluştur butonu göster -->
+       <a href="{{ route('ogretmen.private-lessons.session.createReport', $occurrence['id']) }}"
+          class="flex items-center justify-center px-2 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-md text-xs font-medium transition-colors duration-200 border border-indigo-800">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+           </svg>
+           Rapor
+       </a>
+   @endif
+   
+   <!-- Silme butonu -->
+   <a href="{{ route('ogretmen.private-lessons.session.delete', $occurrence['id']) }}"
+      class="flex items-center justify-center px-2 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-xs font-medium transition-colors duration-200 border border-red-700">
+       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+       </svg>
+       Sil
+   </a>
+</div>
+</div>
+
+<!-- Detay sayfasına git butonu -->
 <button 
-    onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
-    class="mt-2 w-full px-3 py-1 bg-white text-gray-800 rounded-md text-xs font-medium hover:bg-gray-100 transition-all duration-200">
-    Detayına Git
+onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
+class="mt-2 w-full px-3 py-1.5 bg-gray-100 text-gray-800 rounded-md text-xs font-medium hover:bg-gray-200 transition-all duration-200 border border-gray-200">
+Detayına Git
 </button>
                                                 @endforeach
                                             @else

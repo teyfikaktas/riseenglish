@@ -299,13 +299,21 @@ public function submitHomework(Request $request, $id)
         $isLate = $now->isAfter($dueDate);
         \Illuminate\Support\Facades\Log::info("Son teslim tarihi: {$dueDate}, Şu anki tarih: {$now}, Geç teslim: " . ($isLate ? 'Evet' : 'Hayır'));
         
-        // Form validasyonu
+        // Form validasyonu - dosya artık isteğe bağlı
         \Illuminate\Support\Facades\Log::info("Form verilerini doğrulama: " . json_encode($request->all()));
         $validated = $request->validate([
             'submission_content' => 'nullable|string',
-            'file' => 'required|file|max:10240',
+            'file' => 'nullable|file|max:10240', // required -> nullable olarak değiştirildi
         ]);
         \Illuminate\Support\Facades\Log::info("Form doğrulandı");
+        
+        // En az birinin dolu olması gerekli
+        if (empty($request->submission_content) && !$request->hasFile('file')) {
+            \Illuminate\Support\Facades\Log::error("Hata: İçerik veya dosya gerekli");
+            return redirect()->back()
+                ->with('error', 'Lütfen bir açıklama yazın veya dosya yükleyin.')
+                ->withInput();
+        }
         
         // İçerik değerini güvenle alıyoruz
         $submissionContent = $request->input('submission_content', null);
@@ -320,7 +328,7 @@ public function submitHomework(Request $request, $id)
                 'extension'     => $file->getClientOriginalExtension(),
             ]));
         } else {
-            \Illuminate\Support\Facades\Log::error("Dosya bulunamadı! Request içeriği: " . json_encode($request->all()));
+            \Illuminate\Support\Facades\Log::info("Dosya yüklenmedi, sadece içerik gönderildi");
         }
         
         // Teslim kaydını oluştur veya güncelle
@@ -332,45 +340,86 @@ public function submitHomework(Request $request, $id)
         
         if (! $submission->exists || $submission->submission_content !== $submissionContent) {
             $submission->submission_content = $submissionContent;
-            $submission->is_latest        = $isLate;
+            $submission->is_latest = $isLate;
             if (! $submission->exists) {
                 $submission->created_at = $now;
+                $submission->submission_date = $now; // Teslim tarihini ayarla
             }
             \Illuminate\Support\Facades\Log::info("Teslim kaydı kaydediliyor");
             $submission->save();
             \Illuminate\Support\Facades\Log::info("Teslim kaydı kaydedildi: " . $submission->id);
         }
         
-        // Dosyayı yükle
-        $file       = $request->file('file');
-        $origName   = $file->getClientOriginalName();
-        $uniqueName = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
-        
-        \Illuminate\Support\Facades\Log::info("Dosya yükleniyor: {$origName} -> {$uniqueName}");
-        $filePath = $file->storeAs('lessons/homework_submissions', $uniqueName, 'local');
-        \Illuminate\Support\Facades\Log::info("Dosya yüklendi: {$filePath}");
-        
-        // Dosya kaydını ekle
-        if (! class_exists(\App\Models\PrivateLessonHomeworkSubmissionFile::class)) {
-            \Illuminate\Support\Facades\Log::error("HATA: PrivateLessonHomeworkSubmissionFile sınıfı bulunamadı!");
-            throw new \Exception("Dosya modeli bulunamadı.");
+        // Eğer dosya varsa yükle
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $origName = $file->getClientOriginalName();
+            $uniqueName = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+            
+            \Illuminate\Support\Facades\Log::info("Dosya yükleniyor: {$origName} -> {$uniqueName}");
+            $filePath = $file->storeAs('lessons/homework_submissions', $uniqueName, 'local');
+            \Illuminate\Support\Facades\Log::info("Dosya yüklendi: {$filePath}");
+            
+            // Dosya kaydını ekle
+            if (! class_exists(\App\Models\PrivateLessonHomeworkSubmissionFile::class)) {
+                \Illuminate\Support\Facades\Log::error("HATA: PrivateLessonHomeworkSubmissionFile sınıfı bulunamadı!");
+                throw new \Exception("Dosya modeli bulunamadı.");
+            }
+            \Illuminate\Support\Facades\Log::info("Dosya kaydı oluşturuluyor");
+            $submissionFile = \App\Models\PrivateLessonHomeworkSubmissionFile::create([
+                'submission_id'     => $submission->id,
+                'file_path'         => $filePath,
+                'original_filename' => $origName,
+                'submission_date'   => $now,
+            ]);
+            \Illuminate\Support\Facades\Log::info("Dosya kaydı oluşturuldu: " . $submissionFile->id);
+        } else {
+            // Dosya gönderilmediği durum için boş bir dosya oluşturma - isteğe bağlı
+            \Illuminate\Support\Facades\Log::info("Dosya gönderilmedi, metin belgesi oluşturuluyor");
+            
+            // Öğrenci adını al
+            $studentName = Auth::user()->name ?? 'Öğrenci';
+            
+            // Tarih formatı
+            $dateStr = $now->format('d.m.Y H:i:s');
+            
+            // Boş dosya içeriği
+            $fileContent = "# Dosya Gönderilmedi\n\n";
+            $fileContent .= "Bu ödev tesliminde öğrenci tarafından herhangi bir dosya yüklenmemiştir.\n";
+            $fileContent .= "Öğrenci sadece açıklama kısmını doldurarak ödevini teslim etmiştir.\n\n";
+            $fileContent .= "Tarih: {$dateStr}\n";
+            $fileContent .= "Öğrenci: {$studentName}\n\n";
+            $fileContent .= "---\n\n";
+            $fileContent .= "Not: Bu metin, dosya yükleme isteğe bağlı olduğunda ve öğrenci dosya yüklenmemeyi tercih ettiğinde sistem tarafından otomatik olarak oluşturulmuştur.";
+            
+            // Dosyayı oluştur
+            $fileName = "no_file_" . uniqid() . "_" . time() . ".txt";
+            $filePath = "lessons/homework_submissions/" . $fileName;
+            
+            try {
+                Storage::disk('local')->put($filePath, $fileContent);
+                \Illuminate\Support\Facades\Log::info("Otomatik metin dosyası oluşturuldu: {$filePath}");
+                
+                // Dosya kaydını ekle
+                $submissionFile = \App\Models\PrivateLessonHomeworkSubmissionFile::create([
+                    'submission_id'     => $submission->id,
+                    'file_path'         => $filePath,
+                    'original_filename' => "Dosya Gönderilmedi.txt",
+                    'submission_date'   => $now,
+                ]);
+                \Illuminate\Support\Facades\Log::info("Otomatik metin dosyası kaydı oluşturuldu: " . $submissionFile->id);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Otomatik metin dosyası oluşturma hatası: " . $e->getMessage());
+                // Dosya oluşturma hatası kritik değil, devam edebiliriz
+            }
         }
-        \Illuminate\Support\Facades\Log::info("Dosya kaydı oluşturuluyor");
-        $submissionFile = \App\Models\PrivateLessonHomeworkSubmissionFile::create([
-            'submission_id'     => $submission->id,
-            'file_path'         => $filePath,
-            'original_filename' => $origName,
-            'submission_date'   => $now,        // <<--- burayı ekleyin
-
-        ]);
-        \Illuminate\Support\Facades\Log::info("Dosya kaydı oluşturuldu: " . $submissionFile->id);
         
         // SMS bildirimi
         \Illuminate\Support\Facades\Log::info("SMS bildirimi gönderiliyor");
         $smsResult = $this->sendSubmissionSMS($session, $homework, $submission, $isLate);
         \Illuminate\Support\Facades\Log::info("SMS bildirimi tamamlandı: " . json_encode($smsResult));
         
-        $msg = 'Ödev dosyası başarıyla teslim edildi.' . 
+        $msg = 'Ödev başarıyla teslim edildi.' . 
                ((isset($smsResult['success']) && $smsResult['success']) ? ' SMS bilgilendirmesi gönderildi.' : '');
         
         \Illuminate\Support\Facades\Log::info("=== ÖDEV TESLİM TAMAMLANDI ===");

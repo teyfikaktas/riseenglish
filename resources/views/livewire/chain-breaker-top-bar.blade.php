@@ -1,18 +1,18 @@
 @auth
 @if(auth()->user()->hasRole('ogrenci') && isset($daysCompleted))
-<div class="bg-gradient-to-r from-[#1a2e5a] to-[#2c4375] shadow-md py-2">
+<div class="bg-gradient-to-r from-[#1a2e5a] to-[#2c4375] shadow-md py-4">
     <div class="container mx-auto px-4">
         <!-- Desktop View -->
         <div class="hidden md:flex items-center justify-between">
-            <!-- Sol Kısım - Madalya Gösterimi -->
+            <!-- Sol Kısım - Madalya Gösterimi - Daha büyük madalya -->
             <div class="flex items-center">
-                <div class="bg-white rounded-lg shadow-md px-3 py-2 flex items-center">
-                    <div class="h-10 w-10 rounded-full flex items-center justify-center">
-                        <img src="{{ asset($levelImagePath) }}" alt="{{ $currentLevel }} Seviye" class="h-10 w-10 object-contain drop-shadow-md">
+                <div class="bg-gradient-to-r from-white to-gray-100 rounded-lg shadow-lg px-2 py-2 flex items-center border-2 border-yellow-300 w-72">
+                    <div class="h-16 w-16 rounded-full flex items-center justify-center bg-white shadow-inner p-1">
+                        <img src="{{ asset($levelImagePath) }}" alt="{{ $currentLevel }} Seviye" class="h-20 w-20 object-contain drop-shadow-lg">
                     </div>
-                    <div class="ml-3">
-                        <span class="text-gray-900 font-bold block text-sm">{{ $currentLevel }} Seviye</span>
-                        <span class="text-gray-600 text-xs">{{ $motivationalText }}</span>
+                    <div class="ml-4">
+                        <span class="text-gray-900 font-bold block text-base">{{ $currentLevel }} Seviye</span>
+                        <span class="text-gray-700 text-sm">{{ $motivationalText }}</span>
                     </div>
                 </div>
             </div>
@@ -50,23 +50,23 @@
             </div>
         </div>
 
-        <!-- Mobile View - Stack vertically on smaller screens -->
+        <!-- Mobile View - Stack vertically on smaller screens - Daha büyük madalya -->
         <div class="md:hidden flex flex-col space-y-2">
             <!-- Üst Satır - Seviye ve Gün Bilgisi -->
             <div class="flex justify-between">
-                <!-- Seviye Bilgisi -->
-                <div class="bg-white rounded-lg shadow-md px-2 py-1 flex items-center flex-grow mr-2">
-                    <div class="h-8 w-8 rounded-full flex items-center justify-center">
-                        <img src="{{ asset($levelImagePath) }}" alt="{{ $currentLevel }} Seviye" class="h-8 w-8 object-contain drop-shadow-md">
+                <!-- Seviye Bilgisi - Daha büyük madalya -->
+                <div class="bg-gradient-to-r from-white to-gray-100 rounded-lg shadow-md px-3 py-2 flex items-center flex-grow mr-2 border border-yellow-300">
+                    <div class="h-12 w-12 rounded-full flex items-center justify-center bg-white shadow p-1">
+                        <img src="{{ asset($levelImagePath) }}" alt="{{ $currentLevel }} Seviye" class="h-10 w-10 object-contain drop-shadow-md">
                     </div>
-                    <div class="ml-2">
-                        <span class="text-gray-900 font-bold block text-xs">{{ $currentLevel }} Seviye</span>
-                        <span class="text-gray-600 text-xs hidden sm:inline">{{ $motivationalText }}</span>
+                    <div class="ml-3 flex-grow">
+                        <span class="text-gray-900 font-bold block text-sm">{{ $currentLevel }} Seviye</span>
+                        <span class="text-gray-700 text-xs sm:inline">{{ $motivationalText }}</span>
                     </div>
                 </div>
                 
                 <!-- Gün Bilgisi -->
-                <div class="bg-white rounded-lg shadow-md px-2 py-1 flex items-center">
+                <div class="bg-white rounded-lg shadow-md px-2 py-1 flex items-center min-w-[70px]">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#e63946]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>

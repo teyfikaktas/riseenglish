@@ -132,15 +132,15 @@
         <!-- İngilizce İdiom -->
         <div class="bg-white rounded-lg p-4 mb-4 shadow-md border-l-4 border-[#e63946]">
             <div class="text-xl font-bold text-[#1a2e5a] mb-1">"{{ $dailyIdiom->english_phrase }}"</div>
-            <div class="text-sm text-gray-500 italic">{{ $dailyIdiom->turkish_translation }}</div>
+            <div class="text-md text-gray-500 italic">{{ $dailyIdiom->turkish_translation }}</div>
         </div>
         
         <!-- Örnek Cümleler -->
         <div class="bg-white rounded-lg p-4 shadow-md border-l-4 border-[#1a2e5a]">
             <div class="text-lg font-bold text-[#1a2e5a]">Örnek Cümleler:</div>
-            <div class="text-sm text-gray-600 mt-2">- {{ $dailyIdiom->example_sentence_1 }}</div>
+            <div class="text-md text-gray-600 mt-2">- {{ $dailyIdiom->example_sentence_1 }}</div>
             @if($dailyIdiom->example_sentence_2)
-                <div class="text-sm text-gray-600">- {{ $dailyIdiom->example_sentence_2 }}</div>
+                <div class="text-md text-gray-600">- {{ $dailyIdiom->example_sentence_2 }}</div>
             @endif
         </div>
         

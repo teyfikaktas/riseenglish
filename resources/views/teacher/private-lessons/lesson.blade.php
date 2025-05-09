@@ -70,7 +70,6 @@
     </div>
     
     @php
-        // [PHP kodu aynı kalıyor]
         // Tüm session ID'lerini alıyoruz
         $sessionIds = $sessions->pluck('id')->toArray();
         
