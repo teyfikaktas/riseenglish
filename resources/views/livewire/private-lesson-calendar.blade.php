@@ -238,7 +238,7 @@
                                     @endphp
                                     
                                     @if(!$skipCell)
-                                        <td class="relative p-1 border-r {{ $date->isToday() ? 'bg-indigo-50/30' : '' }} {{ $isCurrentHour ? 'bg-yellow-50' : '' }}">
+                                        <td class="relative p-2 border-r {{ $date->isToday() ? 'bg-indigo-50/30' : '' }} {{ $isCurrentHour ? 'bg-yellow-50' : '' }}">
                                             @if($hasEvents)
                                                 @foreach($calendarData[$dateFormatted][$timeSlot] as $occurrence)
                                                     @php
@@ -260,67 +260,103 @@
                                                         $rowspan = isset($occurrence['rowspan']) && $occurrence['rowspan'] > 1 ? $occurrence['rowspan'] : 1;
                                                     @endphp
                                                     
-                                                    <!-- Küçültülmüş ders kartı -->
-                                                    <div class="mb-1 p-1 rounded text-xs shadow-sm border-l-2 {{ $colors['border'] }} bg-white transition-all duration-200 hover:shadow-md group"
-                                                         @if($rowspan > 1) style="height: calc({{ $rowspan }} * {{ $compactView ? '2rem' : '3.5rem' }} - 0.25rem);" @endif>
-                                                        
-                                                        <!-- Ders içeriği - daha kompakt -->
-                                                        <div onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
-                                                             class="cursor-pointer">
-                                                            
-                                                            <!-- Başlık ve durum - tek satırda -->
-                                                            <div class="flex justify-between items-center mb-0.5">
-                                                                <div class="font-semibold text-gray-800 truncate flex-1 pr-1">{{ $occurrence['title'] }}</div>
-                                                                <!-- Mini durum badge -->
-                                                                <span class="px-1 py-0.5 rounded text-xs {{ $colors['bg'] }} {{ $colors['text'] }} whitespace-nowrap">
-                                                                    @php
-                                                                        $miniStatus = [
-                                                                            'scheduled' => 'P',
-                                                                            'completed' => 'T',
-                                                                            'cancelled' => 'İ',
-                                                                            'pending' => 'B',
-                                                                            'active' => 'A',
-                                                                            'rejected' => 'R',
-                                                                            'approved' => 'O',
-                                                                        ][$occurrence['status']] ?? '?';
-                                                                    @endphp
-                                                                    {{ $miniStatus }}
-                                                                </span>
-                                                            </div>
-                                                            
-                                                            <!-- Öğrenci ve saat - tek satırda -->
-                                                            <div class="flex justify-between items-center text-xs text-gray-600">
-                                                                <div class="truncate flex-1 pr-1">{{ $occurrence['student'] }}</div>
-                                                                <div class="text-xs">{{ $startTime }}-{{ $endTime }}</div>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <!-- Aksiyon butonları - sadece hover'da görünsün -->
-                                                        <div class="hidden group-hover:flex flex-row gap-0.5 mt-1">
-                                                            @if($occurrence['status'] !== 'completed')
-                                                                <button wire:click="completeLesson({{ $occurrence['id'] }})" 
-                                                                        class="flex-1 px-1 py-0.5 bg-blue-800 hover:bg-blue-900 text-white rounded text-xs">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                                    </svg>
-                                                                </button>
-                                                            @else
-                                                                <a href="{{ route('ogretmen.private-lessons.session.createReport', $occurrence['id']) }}"
-                                                                   class="flex-1 px-1 py-0.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded text-xs text-center">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                                    </svg>
-                                                                </a>
-                                                            @endif
-                                                            
-                                                            <a href="{{ route('ogretmen.private-lessons.session.delete', $occurrence['id']) }}"
-                                                               class="flex-1 px-1 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs text-center">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                </svg>
-                                                            </a>
-                                                        </div>
-                                                    </div>
+                                                   <!-- resources/views/livewire/private-lesson-calendar.blade.php -->
+<!-- Ders kartı bölümü - RisEnglish kurumsal renkleriyle -->
+
+<div class="mb-2 p-2 rounded-lg text-sm shadow-md border-l-4 {{ $colors['border'] }} bg-white transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1 group"
+@if($rowspan > 1) style="height: calc({{ $rowspan }} * {{ $compactView ? '2rem' : '3.5rem' }} - 0.5rem);" @endif>
+
+<!-- Ders içeriği -->
+<div 
+   onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
+   class="cursor-pointer flex flex-col justify-between mb-2">
+   <div>
+       <!-- Ders başlığı ve durum göstergesi yan yana -->
+       <div class="flex justify-between items-center">
+           <div class="font-bold {{ $compactView ? 'text-sm' : 'text-base' }} text-gray-800">{{ $occurrence['title'] }}</div>
+           <!-- Durum göstergesi (minik badge) -->
+           @php
+               $statusText = [
+                   'scheduled' => 'Planlandı',
+                   'completed' => 'Tamamlandı',
+                   'cancelled' => 'İptal',
+                   'pending' => 'Beklemede',
+                   'active' => 'Aktif',
+                   'rejected' => 'Reddedildi',
+                   'approved' => 'Onaylandı',
+               ][$occurrence['status']] ?? 'Belirsiz';
+           @endphp
+           <span class="text-xs px-1.5 py-0.5 rounded-full {{ $colors['bg'] }} {{ $colors['text'] }}">{{ $statusText }}</span>
+       </div>
+       
+       <!-- Öğrenci bilgisi ve saat -->
+       <div class="flex justify-between items-center mt-1 {{ $compactView ? 'text-xs' : 'text-sm' }} text-gray-600">
+           <div class="flex items-center">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+               </svg>
+               {{ $occurrence['student'] }}
+           </div>
+           <div class="flex items-center">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+               </svg>
+               {{ $startTime }} - {{ $endTime }}
+           </div>
+       </div>
+   </div>
+   
+   <!-- Konum bilgisi -->
+   <div class="mt-1">
+       <div class="text-xs text-gray-500 flex items-center">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+           </svg>
+           {{ $occurrence['location'] }}
+       </div>
+   </div>
+</div>
+
+<!-- Aksiyon butonları -->
+<div class="grid grid-cols-2 gap-1 mt-2">
+   <!-- Ders tamamlama butonu - Henüz tamamlanmamış dersler için göster -->
+   @if($occurrence['status'] !== 'completed')
+       <button wire:click="completeLesson({{ $occurrence['id'] }})" 
+               class="flex items-center justify-center px-2 py-1.5 bg-blue-800 hover:bg-blue-900 text-white rounded-md text-xs font-medium transition-colors duration-200 border border-blue-900">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+           </svg>
+           Tamamla
+       </button>
+   @else
+       <!-- Eğer ders tamamlandıysa, rapor oluştur butonu göster -->
+       <a href="{{ route('ogretmen.private-lessons.session.createReport', $occurrence['id']) }}"
+          class="flex items-center justify-center px-2 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-md text-xs font-medium transition-colors duration-200 border border-indigo-800">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+           </svg>
+           Rapor
+       </a>
+   @endif
+   
+   <!-- Silme butonu -->
+   <a href="{{ route('ogretmen.private-lessons.session.delete', $occurrence['id']) }}"
+      class="flex items-center justify-center px-2 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-xs font-medium transition-colors duration-200 border border-red-700">
+       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+       </svg>
+       Sil
+   </a>
+</div>
+</div>
+
+<!-- Detay sayfasına git butonu -->
+<button 
+onclick="window.location.href='{{ route('ogretmen.private-lessons.session.show', $occurrence['id']) }}'"
+class="mt-2 w-full px-3 py-1.5 bg-gray-100 text-gray-800 rounded-md text-xs font-medium hover:bg-gray-200 transition-all duration-200 border border-gray-200">
+Detayına Git
+</button>
                                                 @endforeach
                                             @else
                                                 <div class="flex items-center justify-center w-full h-full">
@@ -338,34 +374,34 @@
                 </table>
             </div>
         </div>
- 
+
         <!-- Renk Açıklamaları -->
         <div class="mt-8 bg-gray-50 p-5 rounded-xl shadow-sm border border-gray-100">
             <h3 class="text-sm font-semibold text-gray-700 mb-4">Ders Durumları</h3>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                <span class="flex items-center">
                    <span class="w-4 h-4 bg-blue-600 rounded-full mr-2"></span>
-                   <span class="text-sm text-gray-700">Planlandı (P)</span>
+                   <span class="text-sm text-gray-700">Planlandı</span>
                </span>
                <span class="flex items-center">
                    <span class="w-4 h-4 bg-green-600 rounded-full mr-2"></span>
-                   <span class="text-sm text-gray-700">Tamamlandı (T)</span>
+                   <span class="text-sm text-gray-700">Tamamlandı</span>
                </span>
                <span class="flex items-center">
                    <span class="w-4 h-4 bg-gray-500 rounded-full mr-2"></span>
-                   <span class="text-sm text-gray-700">İptal Edildi (İ)</span>
+                   <span class="text-sm text-gray-700">İptal Edildi</span>
                </span>
                <span class="flex items-center">
                    <span class="w-4 h-4 bg-amber-500 rounded-full mr-2"></span>
-                   <span class="text-sm text-gray-700">Beklemede (B)</span>
+                   <span class="text-sm text-gray-700">Beklemede</span>
                </span>
                <span class="flex items-center">
                    <span class="w-4 h-4 bg-emerald-600 rounded-full mr-2"></span>
-                   <span class="text-sm text-gray-700">Aktif (A)</span>
+                   <span class="text-sm text-gray-700">Aktif</span>
                </span>
                <span class="flex items-center">
                    <span class="w-4 h-4 bg-red-600 rounded-full mr-2"></span>
-                   <span class="text-sm text-gray-700">Reddedildi (R)</span>
+                   <span class="text-sm text-gray-700">Reddedildi</span>
                </span>
             </div>
         </div>
@@ -544,77 +580,185 @@
         </div>
     </div>
     @endif
-    
+<!-- Silme Modalı -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm {{ $showDeleteModal ? '' : 'hidden' }}">
+    <div class="bg-white rounded-2xl max-w-lg w-full mx-4 shadow-2xl transform transition-all duration-300">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center border-b p-6">
+            <h3 class="text-xl font-bold text-red-600">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Dersi Sil
+                </div>
+            </h3>
+            <button wire:click="closeDeleteModal" class="text-gray-500 hover:text-gray-700 transition-colors focus:outline-none">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Modal Content -->
+        <div class="p-6">
+            <div class="space-y-6">
+                <!-- Uyarı Mesajı -->
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p class="text-red-600 font-medium mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Bu işlem geri alınamaz!
+                    </p>
+                    <p class="text-gray-700">Silinen dersler ve ilgili tüm bilgiler kalıcı olarak silinecektir.</p>
+                </div>
+                
+                @if($selectedDeleteSession)
+                <!-- Ders Bilgileri -->
+                <div class="border-b border-gray-100 pb-4">
+                    <h4 class="text-lg font-bold text-gray-800">{{ $selectedDeleteSession['title'] }}</h4>
+                    <p class="text-md text-gray-600 mt-1">{{ $selectedDeleteSession['student'] }}</p>
+                    <p class="text-sm text-gray-500 mt-1 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {{ \Carbon\Carbon::parse($selectedDeleteSession['lesson_date'])->format('d.m.Y') }}, 
+                        {{ \Carbon\Carbon::parse($selectedDeleteSession['start_time'])->format('H:i') }} - 
+                        {{ \Carbon\Carbon::parse($selectedDeleteSession['end_time'])->format('H:i') }}
+                    </p>
+                </div>
+                
+                <!-- Silme Seçenekleri -->
+                <div class="space-y-3">
+                    <p class="text-gray-700 font-medium">Silme kapsamını seçin:</p>
+                    
+                    <!-- ÖNEMLİ: name özelliğini aynı yaptık ve wire:model.defer kullandık -->
+                    <div class="flex items-start space-x-2 bg-gray-50 p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:bg-gray-100" 
+                         onclick="document.getElementById('this_only').checked = true;">
+                        <input type="radio" id="this_only" name="deleteScope" wire:model="deleteScope" value="this_only" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 mt-0.5">
+                        <div class="flex-1">
+                            <label for="this_only" class="text-gray-800 font-medium block mb-1 cursor-pointer">Sadece bu dersi sil</label>
+                            <p class="text-gray-600 text-sm">Bu seçenek yalnızca şu an seçili olan dersi silecektir.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-2 bg-gray-50 p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:bg-gray-100"
+                         onclick="document.getElementById('all_future').checked = true;">
+                        <input type="radio" id="all_future" name="deleteScope" wire:model="deleteScope" value="all_future" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 mt-0.5">
+                        <div class="flex-1">
+                            <label for="all_future" class="text-gray-800 font-medium block mb-1 cursor-pointer">Bu ve gelecekteki tüm dersleri sil</label>
+                            <p class="text-gray-600 text-sm">Bu seçenek şu an seçili olan ders ve bu tarihten sonraki tüm dersleri silecektir.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-2 bg-gray-50 p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:bg-gray-100"
+                         onclick="document.getElementById('all').checked = true;">
+                        <input type="radio" id="all" name="deleteScope" wire:model="deleteScope" value="all" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 mt-0.5">
+                        <div class="flex-1">
+                            <label for="all" class="text-gray-800 font-medium block mb-1 cursor-pointer">Bu derse ait tüm dersleri sil</label>
+                            <p class="text-gray-600 text-sm">Bu seçenek bu ders serisine ait tüm dersleri (geçmiş ve gelecek) tamamen silecektir.</p>
+                        </div>
+                    </div>
+                </div>
+                @endif
+                
+                <!-- Onay Butonları -->
+                <div class="flex justify-end space-x-4 mt-6 pt-4 border-t border-gray-100">
+                    <button 
+                        wire:click="closeDeleteModal" 
+                        class="px-5 py-2.5 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50">
+                        İptal
+                    </button>
+                    <button 
+                        wire:click="deleteLesson"
+                        wire:loading.attr="disabled"
+                        class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 flex items-center">
+                        <span wire:loading.remove wire:target="deleteLesson">Dersi Sil</span>
+                        <span wire:loading wire:target="deleteLesson" class="flex items-center">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Siliniyor...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- Bildirim Sistemi -->
     <div id="notification-container" class="fixed top-4 right-4 z-50"></div>
- 
- </div>
- 
- <script>
- document.addEventListener('livewire:load', function () {
+
+</div>
+
+<script>
+document.addEventListener('livewire:load', function () {
     // Flatpickr tarih seçici
     initFlatpickr();
- 
+
     // Livewire sayfası yeniden render edildiğinde Flatpickr'ı yeniden başlat
     Livewire.hook('message.processed', () => {
         initFlatpickr();
     });
- 
-    function initFlatpickr() {
-        console.log('initFlatpickr çağrıldı');
-        const datePickerElement = document.getElementById('flatpickr-date');
-        
-        if (datePickerElement) {
-            console.log('flatpickr-date elementi bulundu');
-            try {
-                const flatpickrInst = flatpickr("#flatpickr-date", {
-                    locale: "tr",
-                    dateFormat: "Y-m-d",
-                    defaultDate: "{{ $weekStart->format('Y-m-d') }}",
-                    onChange: function(selectedDates, dateStr) {
-                        console.log('Tarih seçildi:', dateStr);
-                        // Seçilen tarihi Livewire'a gönder
-                        @this.call('changeDate', dateStr);
-                    }
-                });
-                
-                console.log('Flatpickr başarıyla initialize edildi');
-                
-                // Flatpickr'ı manuel olarak tetiklemek için buton
-                const triggerButton = document.getElementById('flatpickr-trigger');
-                if (triggerButton) {
-                    console.log('flatpickr-trigger butonu bulundu');
-                    triggerButton.addEventListener('click', function() {
-                        console.log('Trigger butona tıklandı');
-                        flatpickrInst.open();
-                    });
-                } else {
-                    console.error('flatpickr-trigger butonu bulunamadı!');
+
+ // Konsola debug mesajları ekleyerek sorunu tespit edelim
+function initFlatpickr() {
+    console.log('initFlatpickr çağrıldı');
+    const datePickerElement = document.getElementById('flatpickr-date');
+    
+    if (datePickerElement) {
+        console.log('flatpickr-date elementi bulundu');
+        try {
+            const flatpickrInst = flatpickr("#flatpickr-date", {
+                locale: "tr",
+                dateFormat: "Y-m-d",
+                defaultDate: "{{ $weekStart->format('Y-m-d') }}",
+                onChange: function(selectedDates, dateStr) {
+                    console.log('Tarih seçildi:', dateStr);
+                    // Seçilen tarihi Livewire'a gönder
+                    @this.call('changeDate', dateStr);
                 }
-            } catch(e) {
-                console.error('Flatpickr initialize edilirken hata:', e);
+            });
+            
+            console.log('Flatpickr başarıyla initialize edildi');
+            
+            // Flatpickr'ı manuel olarak tetiklemek için buton
+            const triggerButton = document.getElementById('flatpickr-trigger');
+            if (triggerButton) {
+                console.log('flatpickr-trigger butonu bulundu');
+                triggerButton.addEventListener('click', function() {
+                    console.log('Trigger butona tıklandı');
+                    flatpickrInst.open();
+                });
+            } else {
+                console.error('flatpickr-trigger butonu bulunamadı!');
             }
-        } else {
-            console.error('flatpickr-date elementi bulunamadı!');
+        } catch(e) {
+            console.error('Flatpickr initialize edilirken hata:', e);
         }
+    } else {
+        console.error('flatpickr-date elementi bulunamadı!');
     }
- 
+}
+
     // Ders tamamlandı bildirimi
     Livewire.on('lessonCompleted', function (message) {
        showNotification(message || 'Ders başarıyla tamamlandı!', 'success');
     });
- 
+
     // Hata bildirimi
     Livewire.on('lessonError', function (message) {
        showNotification(message || 'İşlem sırasında bir hata oluştu.', 'error');
     });
- 
+
     // Genel bildirim sistemi
     function showNotification(message, type = 'success') {
         const container = document.getElementById('notification-container');
         const notification = document.createElement('div');
         notification.className = 'flex items-center p-4 mb-3 rounded-lg shadow-lg transform transition-all duration-300 opacity-0 translate-x-full max-w-md';
- 
+
         if (type === 'success') {
             notification.classList.add('bg-green-600', 'text-white');
             notification.innerHTML = `
@@ -654,24 +798,24 @@
                 </div>
             `;
         }
- 
+
         container.appendChild(notification);
- 
+
         setTimeout(() => {
             notification.classList.remove('opacity-0', 'translate-x-full');
             notification.classList.add('opacity-100', 'translate-x-0');
         }, 10);
- 
+
         const timeout = setTimeout(() => {
             notification.classList.add('opacity-0', 'translate-x-full');
             setTimeout(() => {
                 notification.remove();
             }, 300);
         }, 5000);
- 
+
         notification.querySelector('button').addEventListener('click', () => {
             clearTimeout(timeout);
         });
     }
- });
- </script>
+});
+</script>
