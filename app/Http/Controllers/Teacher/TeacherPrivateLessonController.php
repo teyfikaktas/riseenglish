@@ -39,6 +39,10 @@ class TeacherPrivateLessonController extends Controller
 
         return view('teacher.private-lessons.index', compact('sessions'));
     }
+    public function calendar()
+    {
+        return view('teacher.private-lessons.calendar');
+    }
     /**
  * Öğretmenin kendi verdiği tüm ödevleri listeler
  */

@@ -232,8 +232,9 @@ Route::get('/ozel-ders-seans/{id}/sil', [TeacherPrivateLessonController::class, 
 // Mevcut seans silme route'u (bu zaten vardı, ama içeriğini güncelleyeceksiniz)
 Route::delete('/ozel-ders-seans/{id}', [TeacherPrivateLessonController::class, 'destroySession'])
 ->name('private-lessons.session.destroy');
-// Takvim görünümü için route
-
+// Takvim görünümü için route  
+Route::get('/ozel-ders/takvim', [TeacherPrivateLessonController::class, 'calendar'])
+    ->name('private-lessons.calendar');
 // Ders Raporu Routes - Bu route'ları özel ders yönetimi route'larının arasına ekleyin
 Route::get('/ozel-ders-seans/{id}/rapor-olustur', [TeacherPrivateLessonController::class, 'showCreateReport'])
     ->name('private-lessons.session.createReport');

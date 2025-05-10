@@ -3,23 +3,37 @@
 @section('content')
     <div class="container mx-auto px-4 py-8">
         <!-- Ana Başlık -->
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">
               {{ request('show_all') ? 'Tüm Özel Derslerim' : 'Aktif Özel Derslerim' }}
             </h1>
           
-            <div class="flex space-x-3">
+            <!-- Mobilde alt alta, desktop'ta yan yana -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-3">
+              <!-- Takvime Git Butonu -->
+              <a
+                href="{{ route('ogretmen.private-lessons.calendar') }}"
+                class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg shadow
+                       hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition text-sm sm:text-base"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span class="truncate">Takvimi Görüntüle</span>
+              </a>
+              
               <!-- Öğrenciler Butonu -->
               <button
                 onclick="scrollToStudents()"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow
-                       hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow
+                       hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                         d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
-                Öğrencilerim
+                <span class="truncate">Öğrencilerim</span>
               </button>
               
               <!-- Toggle Aktif/Pasif -->
@@ -27,20 +41,20 @@
                 href="{{ request('show_all')
                           ? route('ogretmen.private-lessons.index')
                           : route('ogretmen.private-lessons.index', ['show_all' => 1]) }}"
-                class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg shadow
-                       hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg shadow
+                       hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
               >
                 @if(request('show_all'))
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" fill="none"
                        viewBox="0 0 24 24" stroke="currentColor">
                     <!-- eye-off icon -->
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10
                              0-1.04.159-2.042.459-3.005M3 3l18 18"/>
                   </svg>
-                  Sadece Aktifleri Göster
+                  <span class="truncate">Sadece Aktifleri Göster</span>
                 @else
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" fill="none"
                        viewBox="0 0 24 24" stroke="currentColor">
                     <!-- eye icon -->
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -49,33 +63,30 @@
                           d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943
                              9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/>
                   </svg>
-                  İptal Edilenleri de Göster
+                  <span class="truncate">İptal Edilenleri de Göster</span>
                 @endif
               </a>
           
               <!-- Verdiğim Ödevler -->
               <a
                 href="{{ route('ogretmen.private-lessons.homeworks') }}"
-                class="inline-flex items-center px-4 py-2 bg-white border border-indigo-600
+                class="inline-flex items-center justify-center px-4 py-2 bg-white border border-indigo-600
                        text-indigo-600 rounded-lg shadow hover:bg-indigo-50 focus:outline-none
-                       focus:ring-2 focus:ring-indigo-500 transition"
+                       focus:ring-2 focus:ring-indigo-500 transition text-sm sm:text-base"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" fill="none"
                      viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5l7 7-7 7" />
                 </svg>
-                Verdiğim Ödevler
+                <span class="truncate">Verdiğim Ödevler</span>
               </a>
             </div>
-          </div>
-          
-          
-        @livewire('private-lesson-calendar')
+        </div>
 
         <!-- Özel Derslerim -->
-        <div id="lessons-section" class="container mx-auto px-4 py-8">
-            <h1 class="text-2xl font-bold text-gray-800 mb-6">Özel Derslerim</h1>
+        <div id="lessons-section" class="py-4">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Özel Derslerim</h1>
             
             @livewire('private-lessons-list')
         </div>
@@ -85,7 +96,7 @@
     <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col items-end"></div>
     
     <!-- Modal for lesson deactivation confirmation -->
-    <div id="toggleModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div id="toggleModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-lg max-w-md w-full p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-4" id="modalTitle"></h3>
             <p class="text-gray-600 mb-6" id="modalMessage"></p>
@@ -189,7 +200,6 @@
             setTimeout(() => notification.remove(), 5000);
         }
     
-        // Bu fonksiyon MUTLAKA EN ALTTA VE GLOBAL OLMALI
         window.checkModalAndRedirect = function(lessonId) {
             setTimeout(() => {
                 const modal = document.querySelector('.fixed.inset-0.bg-black');
