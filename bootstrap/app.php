@@ -6,10 +6,11 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Http\Middleware\TrustProxies as Middleware;
-use Illuminate\Http\Request;
+
 return Application::configure(
     basePath: dirname(__DIR__),
 )
+
     /*
     |--------------------------------------------------------------------------
     | Routing
@@ -26,32 +27,32 @@ return Application::configure(
 
     /*
     |--------------------------------------------------------------------------
-    | Middleware Aliases
+    | Middleware Aliases & Trusted Proxies
     |--------------------------------------------------------------------------
     |
-    | `routeMiddleware` alias’larınızı buraya ekleyin.
-    | Core “web”/“api” grupları otomatik olarak, vendor’dan geliyor.
+    | Middleware alias’ları ve Cloudflare gibi proxy'lere güven ayarları burada.
     |
     */
     ->withMiddleware(function (Middleware $middleware) {
+        // Route middleware'lar
         $middleware->alias([
             'role'           => \App\Http\Middleware\EnsureUserHasRole::class,
             'verified.phone' => \App\Http\Middleware\EnsurePhoneVerified::class,
         ]);
-    })
-    $app->withMiddleware(function (Middleware $middleware) {
+
+        // Cloudflare Flexible SSL için güvenli proxy başlığı tanımı
         $middleware->trustProxies(
             at: '*',
             headers: Request::HEADER_X_FORWARDED_PROTO,
         );
-    });
+    })
+
     /*
     |--------------------------------------------------------------------------
     | Exception Rendering
     |--------------------------------------------------------------------------
     |
-    | Buraya özel exception handler’larınızı koyabilirsiniz.
-    | Aşağıda CSRF TokenMismatchException için tek bir örnek var.
+    | Özel exception handler’larınızı buraya ekleyin.
     |
     */
     ->withExceptions(function (Exceptions $exceptions) {
