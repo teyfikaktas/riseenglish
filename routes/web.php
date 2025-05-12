@@ -19,6 +19,12 @@ use App\Http\Controllers\Admin\CourseFrequencyController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\FrontendCourseController;
 use App\Models\Course;
+use Illuminate\Support\Facades\URL;
+
+if (env('APP_ENV') === 'production') {
+    URL::forceScheme('https');
+}
+
 Route::get('/generate-sitemap', [App\Http\Controllers\SitemapController::class, 'generate'])
     ->middleware(['auth', 'role:yonetici']) // Sadece yöneticilerin erişebilmesi için
     ->name('generate-sitemap');
