@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('private_lesson_homework_submissions', function (Blueprint $table) {
-            $table->boolean('is_latest')->default(false)->after('submission_content');
+            if (!Schema::hasColumn('private_lesson_homework_submissions', 'is_latest')) {
+                $table->boolean('is_latest')->default(false)->after('submission_content');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('private_lesson_homework_submissions', function (Blueprint $table) {
-            $table->dropColumn('is_latest');
+            if (Schema::hasColumn('private_lesson_homework_submissions', 'is_latest')) {
+                $table->dropColumn('is_latest');
+            }
         });
     }
 };

@@ -12,6 +12,10 @@ class ChainBreakerTopBar extends Component
     public $currentLevel = 'Bronz';
     public $motivationalText = 'Yolun başındasın!';
     public $levelImagePath = 'images/bronz.png';
+    public $nextLevelDays = 0;
+    public $daysUntilNextLevel = 0;
+    public $nextLevel = '';
+    public $nextLevelImagePath = '';
     
     protected $listeners = [
         'refreshProgress' => 'refreshProgress',
@@ -39,6 +43,79 @@ class ChainBreakerTopBar extends Component
         $this->currentLevel = $progress->getCurrentLevel();
         $this->setMotivationalText();
         $this->setLevelImagePath();
+        $this->calculateNextLevel();
+    }
+
+    protected function calculateNextLevel()
+    {
+        // Seviye eşikleri ve sıralaması
+        $levelThresholds = [
+            'Bronz' => ['days' => 30, 'next' => 'Demir'],
+            'Demir' => ['days' => 60, 'next' => 'Gümüş'],
+            'Gümüş' => ['days' => 100, 'next' => 'Altın'],
+            'Altın' => ['days' => 150, 'next' => 'Platin'],
+            'Platin' => ['days' => 220, 'next' => 'Zümrüt'],
+            'Zümrüt' => ['days' => 330, 'next' => 'Elmas'],
+            'Elmas' => ['days' => 400, 'next' => 'MASTER'],
+            'MASTER' => ['days' => PHP_INT_MAX, 'next' => null]
+        ];
+
+        // Mevcut seviyenin eşiğini ve sonraki seviyeyi bul
+        if (isset($levelThresholds[$this->currentLevel])) {
+            $levelInfo = $levelThresholds[$this->currentLevel];
+            $this->nextLevelDays = $levelInfo['days'];
+            $this->daysUntilNextLevel = $this->nextLevelDays - $this->daysCompleted;
+            $this->nextLevel = $levelInfo['next'];
+            
+            // Sonraki seviye resmini belirle
+            if ($this->nextLevel) {
+                $this->setNextLevelImagePath();
+            }
+        } else {
+            $this->nextLevelDays = 30; // Varsayılan
+            $this->daysUntilNextLevel = 30;
+            $this->nextLevel = 'Demir';
+            $this->nextLevelImagePath = 'images/demir.png';
+        }
+
+        // MASTER seviyesindeyse
+        if ($this->currentLevel === 'MASTER') {
+            $this->daysUntilNextLevel = 0;
+            $this->nextLevel = null;
+            $this->nextLevelImagePath = null;
+        }
+    }
+
+    protected function setNextLevelImagePath()
+    {
+        switch ($this->nextLevel) {
+            case 'Bronz':
+                $this->nextLevelImagePath = 'images/bronz.png';
+                break;
+            case 'Demir':
+                $this->nextLevelImagePath = 'images/demir.png';
+                break;
+            case 'Gümüş':
+                $this->nextLevelImagePath = 'images/gumus.png';
+                break;
+            case 'Altın':
+                $this->nextLevelImagePath = 'images/altin.png';
+                break;
+            case 'Platin':
+                $this->nextLevelImagePath = 'images/platin.png';
+                break;
+            case 'Zümrüt':
+                $this->nextLevelImagePath = 'images/zumrut.png';
+                break;
+            case 'Elmas':
+                $this->nextLevelImagePath = 'images/elmas.png';
+                break;
+            case 'MASTER':
+                $this->nextLevelImagePath = 'images/master.png';
+                break;
+            default:
+                $this->nextLevelImagePath = 'images/demir.png';
+        }
     }
 
     protected function setMotivationalText()

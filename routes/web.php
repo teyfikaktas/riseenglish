@@ -228,7 +228,9 @@ Route::middleware(['auth', 'role:ogretmen', 'verified.phone'])->group(function (
             // Seans silme sayfası route'u
 Route::get('/ozel-ders-seans/{id}/sil', [TeacherPrivateLessonController::class, 'confirmDeleteSession'])
 ->name('private-lessons.session.delete');
-
+        Route::get('/zinciri-kirma-takip', function() {
+            return view('teacher.chain-breaker-dashboard');
+        })->name('chain-breaker-dashboard');
 // Mevcut seans silme route'u (bu zaten vardı, ama içeriğini güncelleyeceksiniz)
 Route::delete('/ozel-ders-seans/{id}', [TeacherPrivateLessonController::class, 'destroySession'])
 ->name('private-lessons.session.destroy');

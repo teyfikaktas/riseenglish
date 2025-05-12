@@ -39,7 +39,13 @@ class ChainProgress extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+    /**
+ * Günlük çalışmalar
+ */
+public function activities()
+{
+    return $this->hasMany(ChainActivity::class);
+}
     /**
      * Güncel seviyeyi hesapla
      */

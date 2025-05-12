@@ -58,7 +58,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Attendance::class, 'user_id');
     }
-
+public function chainActivities()
+{
+    return $this->hasMany(ChainActivity::class);
+}
 /**
  * Kullanıcının zincir ilerlemesi
  */
