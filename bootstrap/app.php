@@ -5,7 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
-use Illuminate\Http\Middleware\TrustProxies as Middleware;
+use Illuminate\Http\Middleware\TrustProxies as TrustProxiesMiddleware;
 
 return Application::configure(
     basePath: dirname(__DIR__),
@@ -30,21 +30,23 @@ return Application::configure(
     | Middleware Aliases & Trusted Proxies
     |--------------------------------------------------------------------------
     |
-    | Middleware alias’ları ve Cloudflare gibi proxy'lere güven ayarları burada.
+    | Middleware alias’ları ve proxy ayarları burada tanımlanır.
+    | Cloudflare Flexible SSL ile uyumlu çalışması için HEADER_X_FORWARDED_PROTO kullanılır.
     |
     */
     ->withMiddleware(function (Middleware $middleware) {
-        // Route middleware'lar
+        // Route middleware alias'ları
         $middleware->alias([
             'role'           => \App\Http\Middleware\EnsureUserHasRole::class,
             'verified.phone' => \App\Http\Middleware\EnsurePhoneVerified::class,
         ]);
 
-        // Cloudflare Flexible SSL için güvenli proxy başlığı tanımı
-        $middleware->trustProxies(
-            at: '*',
-            headers: Request::HEADER_X_FORWARDED_PROTO,
-        );
+        // Laravel 12 önerisiyle Trusted Proxies yapılandırması (Cloudflare uyumlu)
+        TrustProxiesMiddleware::trustAllProxies()
+            ->withTrustedHeaderNames([
+                'forwarded' => Request::HEADER_X_FORWARDED_PROTO,
+            ])
+            ->applyTo($middleware);
     })
 
     /*
