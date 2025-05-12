@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class ChainLeaderboard extends Component
 {
     public $leaderboardData = [];
-    public $filterType = 'current'; // current, longest, total
+    public $filterType = 'total'; // current, longest, total
     public $topLimit = 10; // İlk kaç kişiyi göstereceğiz
     public $showAll = false;
 
