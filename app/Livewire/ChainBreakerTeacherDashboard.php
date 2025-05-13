@@ -51,46 +51,65 @@ class ChainBreakerTeacherDashboard extends Component
         }
     }
 
-    public function adjustStudentDays()
-    {
-        $this->validate([
-            'adjustDays' => 'required|integer|between:-365,365',
-            'adjustReason' => 'required|string|min:5|max:255'
-        ]);
+public function adjustStudentDays()
+{
+    $this->validate([
+        'adjustDays' => 'required|integer|between:-365,365',
+        'adjustReason' => 'required|string|min:5|max:255'
+    ]);
 
-        $progress = $this->selectedStudent->chainProgress;
-        
-        if (!$progress) {
-            $progress = ChainProgress::create([
-                'user_id' => $this->selectedStudent->id,
-                'days_completed' => 0,
-                'current_streak' => 0,
-                'longest_streak' => 0
-            ]);
-        }
-
-        // Gün sayısını ayarla
-        $newDayCount = max(0, $progress->days_completed + $this->adjustDays);
-        
-        $progress->days_completed = $newDayCount;
-        $progress->current_streak = $newDayCount;
-        $progress->longest_streak = max($progress->longest_streak, $newDayCount);
-        $progress->save();
-
-        // Log kaydı oluştur
-        ChainActivity::create([
+    $progress = $this->selectedStudent->chainProgress;
+    
+    if (!$progress) {
+        $progress = ChainProgress::create([
             'user_id' => $this->selectedStudent->id,
-            'chain_progress_id' => $progress->id,
-            'teacher_id' => Auth::id(),
-            'content' => "Öğretmen tarafından gün sayısı ayarlandı: {$this->adjustDays} gün ({$this->adjustReason})",
-            'activity_date' => now(),
-            'is_adjustment' => true
+            'days_completed' => 0,
+            'current_streak' => 0,
+            'longest_streak' => 0
         ]);
-
-        $this->resetAdjustmentForm();
-        $this->dispatch('show-success', message: 'Gün sayısı başarıyla güncellendi!');
-        $this->selectStudent($this->selectedStudent->id); // Refresh data
     }
+
+    // Eski değeri kaydet
+    $oldDayCount = $progress->days_completed;
+
+    // Gün sayısını ayarla
+    $newDayCount = max(0, $oldDayCount + $this->adjustDays);
+    
+    $progress->days_completed = $newDayCount;
+    $progress->current_streak = $newDayCount;
+    $progress->longest_streak = max($progress->longest_streak, $newDayCount);
+    $progress->save();
+
+    // Log kaydı oluştur
+    ChainActivity::create([
+        'user_id' => $this->selectedStudent->id,
+        'chain_progress_id' => $progress->id,
+        'teacher_id' => Auth::id(),
+        'content' => "Öğretmen tarafından gün sayısı ayarlandı: {$this->adjustDays} gün ({$this->adjustReason})",
+        'activity_date' => now(),
+        'is_adjustment' => true
+    ]);
+
+    $this->resetAdjustmentForm();
+    
+    // Daha detaylı bir başarı mesajı
+    $actionText = $this->adjustDays > 0 
+        ? $this->adjustDays . " gün eklendi" 
+        : abs($this->adjustDays) . " gün çıkarıldı";
+        
+    $this->dispatch('show-success', [
+        'message' => "Gün sayısı başarıyla güncellendi! ($actionText: $oldDayCount → $newDayCount)"
+    ]);
+    
+    // Özel animasyon için olay gönder
+    $this->dispatch('student-days-updated', [
+        'studentId' => $this->selectedStudent->id,
+        'oldCount' => $oldDayCount,
+        'newCount' => $newDayCount
+    ]);
+    
+    $this->selectStudent($this->selectedStudent->id); // Refresh data
+}
 
     public function resetAdjustmentForm()
     {

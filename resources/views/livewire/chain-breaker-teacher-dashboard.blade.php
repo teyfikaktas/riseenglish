@@ -1,4 +1,22 @@
 <div>
+    <!-- Bildirim (Toast) Bileşeni -->
+    <div x-data="{ show: false, message: '' }" 
+         x-on:show-success.window="show = true; message = $event.detail.message; setTimeout(() => show = false, 3000)"
+         x-show="show"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-90"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="opacity-100 transform scale-100"
+         x-transition:leave-end="opacity-0 transform scale-90"
+         class="fixed top-16 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center"
+         style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <span x-text="message"></span>
+    </div>
+
     <div class="bg-white rounded-xl shadow-xl overflow-hidden">
         <!-- Başlık -->
         <div class="bg-gradient-to-r from-[#1a2e5a] to-[#e63946] p-6">
@@ -26,100 +44,100 @@
             </div>
         </div>
 
-<!-- Öğrenci Listesi -->
-<div class="overflow-x-auto">
-    <table class="w-full">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Öğrenci</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">Toplam Gün</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">Seviye</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">Son Aktivite</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">İşlemler</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            @foreach($students as $student)
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10">
-                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                                    {{ strtoupper(substr($student->name, 0, 1)) }}
+        <!-- Öğrenci Listesi -->
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Öğrenci</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">Toplam Gün</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">Seviye</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">Son Aktivite</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @foreach($students as $student)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                            {{ strtoupper(substr($student->name, 0, 1)) }}
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ $student->name }} {{ $student->surname }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ $student->email }}
+                                        </div>
+                                        <!-- Mobil görünümde gösterilecek özet bilgiler -->
+                                        <div class="md:hidden mt-2 flex space-x-3 text-xs">
+                                            @if($student->chainProgress)
+                                                <span class="text-gray-700">
+                                                    <span class="font-bold text-[#e63946]">{{ $student->chainProgress->days_completed }}</span> gün
+                                                </span>
+                                                <span class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full text-white"
+                                                    style="background-color: {{ $student->chainProgress->getLevelColor() }}">
+                                                    {{ $student->chainProgress->getCurrentLevel() }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Mobil görünümde detay butonu -->
+                                <div class="md:hidden">
+                                    <button 
+                                        wire:click="selectStudent({{ $student->id }})"
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">
-                                    {{ $student->name }} {{ $student->surname }}
-                                </div>
-                                <div class="text-sm text-gray-500">
-                                    {{ $student->email }}
-                                </div>
-                                <!-- Mobil görünümde gösterilecek özet bilgiler -->
-                                <div class="md:hidden mt-2 flex space-x-3 text-xs">
-                                    @if($student->chainProgress)
-                                        <span class="text-gray-700">
-                                            <span class="font-bold text-[#e63946]">{{ $student->chainProgress->days_completed }}</span> gün
-                                        </span>
-                                        <span class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full text-white"
-                                            style="background-color: {{ $student->chainProgress->getLevelColor() }}">
-                                            {{ $student->chainProgress->getCurrentLevel() }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Mobil görünümde detay butonu -->
-                        <div class="md:hidden">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
+                            @if($student->chainProgress)
+                                <span class="text-2xl font-bold text-[#e63946]">
+                                    {{ $student->chainProgress->days_completed }}
+                                </span>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
+                            @if($student->chainProgress)
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full text-white"
+                                      style="background-color: {{ $student->chainProgress->getLevelColor() }}">
+                                    {{ $student->chainProgress->getCurrentLevel() }}
+                                </span>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
+                            @if($student->chainActivities->isNotEmpty())
+                                <span class="text-sm text-gray-600">
+                                    {{ $student->chainActivities->first()->created_at->diffForHumans() }}
+                                </span>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
                             <button 
                                 wire:click="selectStudent({{ $student->id }})"
-                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs">
-                                <i class="fas fa-eye"></i>
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                                <i class="fas fa-eye mr-1"></i> Detay
                             </button>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
-                    @if($student->chainProgress)
-                        <span class="text-2xl font-bold text-[#e63946]">
-                            {{ $student->chainProgress->days_completed }}
-                        </span>
-                    @else
-                        <span class="text-gray-400">-</span>
-                    @endif
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
-                    @if($student->chainProgress)
-                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full text-white"
-                              style="background-color: {{ $student->chainProgress->getLevelColor() }}">
-                            {{ $student->chainProgress->getCurrentLevel() }}
-                        </span>
-                    @else
-                        <span class="text-gray-400">-</span>
-                    @endif
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
-                    @if($student->chainActivities->isNotEmpty())
-                        <span class="text-sm text-gray-600">
-                            {{ $student->chainActivities->first()->created_at->diffForHumans() }}
-                        </span>
-                    @else
-                        <span class="text-gray-400">-</span>
-                    @endif
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
-                    <button 
-                        wire:click="selectStudent({{ $student->id }})"
-                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
-                        <i class="fas fa-eye mr-1"></i> Detay
-                    </button>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-</div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
 
         <!-- Sayfalama -->
         <div class="px-6 py-4 border-t">
@@ -172,7 +190,13 @@
                 </div>
 
                 <!-- Gün Ayarlama -->
-                <div class="bg-gray-50 rounded-xl p-6 mb-8">
+                <div class="bg-gray-50 rounded-xl p-6 mb-8"
+                     x-data="{ isUpdated: false, clearFields: false }"
+                     x-on:student-days-updated.window="if($event.detail.studentId === {{ $selectedStudent->id }}) { 
+                         isUpdated = true; 
+                         clearFields = true;
+                         setTimeout(() => isUpdated = false, 2000); 
+                     }">
                     <h4 class="text-lg font-bold text-[#1a2e5a] mb-4">
                         <i class="fas fa-edit mr-2"></i>Gün Sayısı Ayarla
                     </h4>
@@ -184,6 +208,10 @@
                             <input 
                                 type="number" 
                                 wire:model="adjustDays"
+                                x-effect="if(clearFields) { 
+                                    $el.value = ''; 
+                                    setTimeout(() => clearFields = false, 100);
+                                }"
                                 class="w-full rounded-lg border-gray-300"
                                 placeholder="+5 veya -3">
                             @error('adjustDays') 
@@ -197,6 +225,10 @@
                             <input 
                                 type="text" 
                                 wire:model="adjustReason"
+                                x-effect="if(clearFields) { 
+                                    $el.value = ''; 
+                                    setTimeout(() => clearFields = false, 100);
+                                }"
                                 class="w-full rounded-lg border-gray-300"
                                 placeholder="Neden gün ekliyorsunuz veya çıkarıyorsunuz?">
                             @error('adjustReason') 
@@ -207,7 +239,8 @@
                     <div class="mt-4">
                         <button 
                             wire:click="adjustStudentDays"
-                            class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-2 px-4 rounded-lg">
+                            class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-2 px-4 rounded-lg transition-all"
+                            :class="{ 'ring-4 ring-green-400 ring-opacity-50': isUpdated }">
                             <i class="fas fa-save mr-2"></i>Güncelle
                         </button>
                     </div>
