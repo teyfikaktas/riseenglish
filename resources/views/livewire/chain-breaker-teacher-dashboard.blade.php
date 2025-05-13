@@ -26,78 +26,100 @@
             </div>
         </div>
 
-        <!-- Öğrenci Listesi -->
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Öğrenci</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Toplam Gün</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Seviye</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Son Aktivite</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @foreach($students as $student)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10">
-                                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                                        {{ strtoupper(substr($student->name, 0, 1)) }}
-                                    </div>
-                                </div>
-                                <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ $student->name }} {{ $student->surname }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ $student->email }}
-                                    </div>
+<!-- Öğrenci Listesi -->
+<div class="overflow-x-auto">
+    <table class="w-full">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Öğrenci</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">Toplam Gün</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">Seviye</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">Son Aktivite</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider md:table-cell hidden">İşlemler</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            @foreach($students as $student)
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                    {{ strtoupper(substr($student->name, 0, 1)) }}
                                 </div>
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            @if($student->chainProgress)
-                                <span class="text-2xl font-bold text-[#e63946]">
-                                    {{ $student->chainProgress->days_completed }}
-                                </span>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            @if($student->chainProgress)
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full text-white"
-                                      style="background-color: {{ $student->chainProgress->getLevelColor() }}">
-                                    {{ $student->chainProgress->getCurrentLevel() }}
-                                </span>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            @if($student->chainActivities->isNotEmpty())
-                                <span class="text-sm text-gray-600">
-                                    {{ $student->chainActivities->first()->created_at->diffForHumans() }}
-                                </span>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ $student->name }} {{ $student->surname }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ $student->email }}
+                                </div>
+                                <!-- Mobil görünümde gösterilecek özet bilgiler -->
+                                <div class="md:hidden mt-2 flex space-x-3 text-xs">
+                                    @if($student->chainProgress)
+                                        <span class="text-gray-700">
+                                            <span class="font-bold text-[#e63946]">{{ $student->chainProgress->days_completed }}</span> gün
+                                        </span>
+                                        <span class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full text-white"
+                                            style="background-color: {{ $student->chainProgress->getLevelColor() }}">
+                                            {{ $student->chainProgress->getCurrentLevel() }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Mobil görünümde detay butonu -->
+                        <div class="md:hidden">
                             <button 
                                 wire:click="selectStudent({{ $student->id }})"
-                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
-                                <i class="fas fa-eye mr-1"></i> Detay
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs">
+                                <i class="fas fa-eye"></i>
                             </button>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
+                    @if($student->chainProgress)
+                        <span class="text-2xl font-bold text-[#e63946]">
+                            {{ $student->chainProgress->days_completed }}
+                        </span>
+                    @else
+                        <span class="text-gray-400">-</span>
+                    @endif
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
+                    @if($student->chainProgress)
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full text-white"
+                              style="background-color: {{ $student->chainProgress->getLevelColor() }}">
+                            {{ $student->chainProgress->getCurrentLevel() }}
+                        </span>
+                    @else
+                        <span class="text-gray-400">-</span>
+                    @endif
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
+                    @if($student->chainActivities->isNotEmpty())
+                        <span class="text-sm text-gray-600">
+                            {{ $student->chainActivities->first()->created_at->diffForHumans() }}
+                        </span>
+                    @else
+                        <span class="text-gray-400">-</span>
+                    @endif
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
+                    <button 
+                        wire:click="selectStudent({{ $student->id }})"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-eye mr-1"></i> Detay
+                    </button>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
 
         <!-- Sayfalama -->
         <div class="px-6 py-4 border-t">
