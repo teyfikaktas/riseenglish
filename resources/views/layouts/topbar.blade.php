@@ -139,7 +139,17 @@
           <span>Zinciri Kırma</span>
         </a>
         @endif
-
+        @if(auth()->check() && auth()->user()->hasRole('ogretmen'))
+        <a href="{{ route('ogretmen.chain-breaker-dashboard') }}"
+        class="menu-link {{ request()->is('ogretmen/zinciri-kirma-takip') ? 'active' : '' }}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+        </svg>
+        <span>Zinciri Kırma Takip</span>
+        </a>
+        @endif
         <!-- Özel Ders / Derslerim -->
         @if(auth()->check() && auth()->user()->hasRole('ogretmen'))
         <a href="{{ route('ogretmen.private-lessons.index') }}"
@@ -277,7 +287,18 @@
       </svg>
       <span>İletişim</span>
     </a>
-
+<!-- Zinciri Kırma Takip (Öğretmen için) -->
+@if(auth()->check() && auth()->user()->hasRole('ogretmen'))
+<a href="{{ route('ogretmen.chain-breaker-dashboard') }}"
+  class="menu-link block border-0 bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-1 px-2 mx-1.5 my-1 rounded-md flex items-center transition text-xs {{ request()->is('ogretmen/zinciri-kirma-takip') ? 'active' : '' }}">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none"
+       viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+  </svg>
+  <span>Zinciri Kırma Takip</span>
+</a>
+@endif
     <!-- Belgeler (Öğretmen veya Öğrenci) -->
     @if(auth()->check() && auth()->user()->hasRole('ogretmen'))
     <a href="{{ url('/ogretmen/belgeler') }}"
