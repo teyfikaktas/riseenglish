@@ -54,7 +54,13 @@ class Course extends Model
         'price' => 'decimal:2',
         'discount_price' => 'decimal:2', // Yeni eklenen indirimli fiyat
     ];
-
+/**
+ * Kursa ait belgeler
+ */
+public function documents()
+{
+    return $this->hasMany(CourseDocument::class);
+}
     // Kursu veren öğretmen
     public function teacher()
     {

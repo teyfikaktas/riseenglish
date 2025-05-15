@@ -240,6 +240,22 @@ Route::get('/ozel-ders-seans/{id}/sil', [TeacherPrivateLessonController::class, 
 // Mevcut seans silme route'u (bu zaten vardı, ama içeriğini güncelleyeceksiniz)
 Route::delete('/ozel-ders-seans/{id}', [TeacherPrivateLessonController::class, 'destroySession'])
 ->name('private-lessons.session.destroy');
+Route::get('/belgeler', [App\Http\Controllers\Teacher\CourseDocumentController::class, 'listAllDocuments'])
+    ->name('documents.list');
+Route::get('/kurs/{courseId}/belgeler', [App\Http\Controllers\Teacher\CourseDocumentController::class, 'index'])
+    ->name('documents.index');
+Route::get('/kurs/{courseId}/belge/ekle', [App\Http\Controllers\Teacher\CourseDocumentController::class, 'create'])
+    ->name('documents.create');
+Route::post('/kurs/{courseId}/belge/kaydet', [App\Http\Controllers\Teacher\CourseDocumentController::class, 'store'])
+    ->name('documents.store');
+Route::get('/kurs/{courseId}/belge/{documentId}/duzenle', [App\Http\Controllers\Teacher\CourseDocumentController::class, 'edit'])
+    ->name('documents.edit');
+Route::put('/kurs/{courseId}/belge/{documentId}', [App\Http\Controllers\Teacher\CourseDocumentController::class, 'update'])
+    ->name('documents.update');
+Route::delete('/kurs/{courseId}/belge/{documentId}', [App\Http\Controllers\Teacher\CourseDocumentController::class, 'destroy'])
+    ->name('documents.destroy');
+Route::get('/kurs/{courseId}/belge/{documentId}/indir', [App\Http\Controllers\Teacher\CourseDocumentController::class, 'download'])
+    ->name('documents.download');
 // Takvim görünümü için route  
 Route::get('/ozel-ders/takvim', [TeacherPrivateLessonController::class, 'calendar'])
     ->name('private-lessons.calendar');
@@ -418,6 +434,12 @@ Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function ()
         ->name('settings.update-profile');
     Route::post('/ayarlar/sifre', [App\Http\Controllers\Student\StudentSettingsController::class, 'updatePassword'])
         ->name('settings.update-password');
+        Route::get('/belgeler', [App\Http\Controllers\Student\StudentDocumentController::class, 'listAllDocuments'])
+    ->name('documents.list');
+Route::get('/kurslarim/{slug}/belgeler', [App\Http\Controllers\Student\StudentDocumentController::class, 'index'])
+    ->name('documents.index');
+Route::get('/kurslarim/{slug}/belge/{documentId}/indir', [App\Http\Controllers\Student\StudentDocumentController::class, 'download'])
+    ->name('documents.download');
         // Öğrencinin kursları
         Route::get('/kurslarim', [App\Http\Controllers\Student\StudentCourseController::class, 'index'])
             ->name('kurslarim');

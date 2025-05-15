@@ -32,32 +32,34 @@
     <!-- Main Content -->
     <div class="container mx-auto px-4 pb-12 sm:pb-20">
         <div class="p-4 sm:p-6 md:p-10">
-    @livewire('chain-leaderboard')
-</div>
+            @livewire('chain-leaderboard')
+        </div>
         <div class="bg-white rounded-xl shadow-xl overflow-hidden">
             <!-- Zincir Görselleştirme Alanı -->
-            <div class="p-4 sm:p-6 md:p-10 bg-gray-50">
+            <div class="p-4 sm:p-6 md:p-10 bg-gray-50 relative">
                 <div class="mb-6 sm:mb-8 text-center">
                     <h2 class="text-2xl sm:text-3xl font-bold text-[#1a2e5a]">Günlük İlerleme Zinciriniz</h2>
                     <p class="text-gray-600 mt-2">Her gün düzenli çalışarak zincirinizi güçlendirin ve seviye atlayın!</p>
                 </div>
 
-                @if(!$isUserAuthenticated)
-                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 sm:mb-8">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm text-yellow-700">
-                                Zinciri başlatmak ve ilerlemenizi kaydetmek için <a href="{{ route('login') }}" class="font-medium underline text-yellow-700 hover:text-yellow-600">giriş yapın</a> veya <a href="{{ route('register') }}" class="font-medium underline text-yellow-700 hover:text-yellow-600">hesap oluşturun</a>.
-                            </p>
+                    @if(!$isUserAuthenticated)
+                    <div class="bg-gradient-to-r from-[#e63946] to-[#d62836] text-white p-6 rounded-lg mt-8 shadow-lg">
+                        <div class="flex flex-col md:flex-row items-center justify-between">
+                            <div class="mb-4 md:mb-0 text-center md:text-left">
+                                <h3 class="text-xl font-extrabold mb-2">BU YOLCULUKTA SEN DE YERİNİ AL!</h3>
+                                <p class="text-white/90">İlerleme kaydetmek, seviye atlamak ve kendi başarı hikayeni yazmak için hemen üye ol.</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <a href="{{ route('login') }}" class="px-6 py-3 bg-white text-[#e63946] font-bold rounded-lg hover:bg-gray-100 transition duration-300 text-center">
+                                    <i class="fas fa-sign-in-alt mr-2"></i>Giriş Yap
+                                </a>
+                                <a href="{{ route('register') }}" class="px-6 py-3 bg-[#1a2e5a] text-white font-bold rounded-lg hover:bg-[#15274d] transition duration-300 flex items-center justify-center animate-pulse">
+                                    <i class="fas fa-user-plus mr-2"></i>HEMEN ÜYE OL
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-                @endif
+                    @endif
 
                 <!-- Zinciriniz - MOBİL UYUMLU YENİ TASARIM -->
                 <div class="relative">
@@ -96,8 +98,8 @@
                         </div>
                     </div>
 
-                    <!-- Chain Container - Mobil için margin ekledik -->
-                    <div id="chain-container" class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-md relative overflow-hidden ml-16 sm:ml-20 md:ml-24">
+                    <!-- Chain Container - Giriş yapmamış kullanıcılar için bulanıklaştırma ekledik -->
+                    <div id="chain-container" class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-md relative overflow-hidden ml-16 sm:ml-20 md:ml-24 {{ !$isUserAuthenticated ? 'opacity-50 filter blur-sm' : '' }}">
                         <div class="flex flex-wrap justify-center gap-2" id="chain-links-container">
                             <!-- Zincir halkaları -->
                             @for($i = 0; $i < $maxDays; $i++)
@@ -114,6 +116,15 @@
                         </div>
                     </div>
 
+                    <!-- Giriş yapmamış kullanıcılar için overlay -->
+                    @if(!$isUserAuthenticated)
+                    <div class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                        <a href="{{ route('register') }}" class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition duration-300 animate-bounce pointer-events-auto">
+                            ÜYE OL & ZİNCİRE BAŞLA
+                        </a>
+                    </div>
+                    @endif
+
                     <!-- İlerleyiş Bilgisi -->
                     <div class="absolute -right-2 sm:-right-4 -bottom-2 sm:-bottom-4 bg-[#e63946] text-white rounded-lg p-2 sm:p-3 shadow-lg z-20">
                         <div class="text-center">
@@ -123,105 +134,349 @@
                     </div>
                 </div>
 
-<!-- Kontrol Butonları bölümüne ekleyin -->
-<div class="mt-8 sm:mt-10 flex flex-wrap justify-center gap-3 sm:gap-4">
-    <button wire:click="toggleActivityForm" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 flex items-center text-sm sm:text-base">
-        <i class="fas fa-plus-circle mr-2"></i>Çalışma Ekle
-    </button>
-    
-    <button wire:click="completeDay" class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 flex items-center text-sm sm:text-base">
-        <i class="fas fa-check-circle mr-2"></i>Günü Tamamla
-    </button>
-    
-    <button wire:click="toggleHistoryModal" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 flex items-center text-sm sm:text-base">
-        <i class="fas fa-history mr-2"></i>Geçmiş Çalışmalar
-    </button>
-</div>
-
-<!-- Liderlik Tablosu - Seviye Açıklamalarından önce ekleyin -->
-
-@if($showHistoryModal)
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl sm:text-3xl font-bold text-[#1a2e5a]">Geçmiş Çalışmalarım</h2>
-            <button wire:click="closeHistoryModal" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-2xl"></i>
-            </button>
-        </div>
-        
-        <!-- Ay Seçici -->
-        <div class="flex items-center justify-center gap-4 mb-6">
-            <button wire:click="changeMonth('prev')" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <div class="text-lg font-bold text-[#1a2e5a]">
-                {{ \Carbon\Carbon::createFromDate($selectedYear, $selectedMonth, 1)->locale('tr')->monthName }} {{ $selectedYear }}
-            </div>
-            <button wire:click="changeMonth('next')" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
-        
-        <!-- Takvim Grid -->
-        <div class="grid grid-cols-7 gap-2 mb-6">
-            <!-- Gün başlıkları -->
-            @foreach(['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] as $day)
-                <div class="text-center font-bold text-gray-600 text-sm">{{ $day }}</div>
-            @endforeach
-            
-            <!-- Takvim günleri -->
-            @php
-                $firstDayOfMonth = \Carbon\Carbon::createFromDate($selectedYear, $selectedMonth, 1);
-                $lastDayOfMonth = $firstDayOfMonth->copy()->endOfMonth();
-                $startDayOfWeek = $firstDayOfMonth->dayOfWeek === 0 ? 7 : $firstDayOfMonth->dayOfWeek;
-                $daysInMonth = $firstDayOfMonth->daysInMonth;
-            @endphp
-            
-            <!-- Boş günler (ay başlangıcından önce) -->
-            @for($i = 1; $i < $startDayOfWeek; $i++)
-                <div></div>
-            @endfor
-            
-            <!-- Ayın günleri -->
-            @for($day = 1; $day <= $daysInMonth; $day++)
-                @php
-                    $currentDate = \Carbon\Carbon::createFromDate($selectedYear, $selectedMonth, $day);
-                    $dateString = $currentDate->format('Y-m-d');
-                    $isCompleted = in_array($dateString, $historicalDates);
-                    $isToday = $currentDate->isToday();
-                    $isFuture = $currentDate->isFuture();
-                @endphp
-                
-                <div 
-                    wire:click="selectDate('{{ $dateString }}')"
-                    class="aspect-square flex items-center justify-center rounded-lg cursor-pointer transition-all
-                        {{ $isCompleted ? 'bg-[#e63946] text-white hover:bg-[#d62836]' : '' }}
-                        {{ $isToday ? 'ring-2 ring-blue-500' : '' }}
-                        {{ $isFuture ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100' }}
-                        {{ !$isCompleted && !$isFuture ? 'bg-white text-gray-700' : '' }}
-                        {{ $selectedDate === $dateString ? 'ring-2 ring-purple-500' : '' }}"
-                >
-                    <span class="text-sm sm:text-base font-medium">{{ $day }}</span>
+                <!-- Kontrol Butonları bölümüne ekleyin -->
+                <div class="mt-8 sm:mt-10 flex flex-wrap justify-center gap-3 sm:gap-4">
+                    @if($isUserAuthenticated)
+                    <button wire:click="toggleActivityForm" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 flex items-center text-sm sm:text-base">
+                        <i class="fas fa-plus-circle mr-2"></i>Çalışma Ekle
+                    </button>
+                    
+                    <button wire:click="completeDay" class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 flex items-center text-sm sm:text-base">
+                        <i class="fas fa-check-circle mr-2"></i>Günü Tamamla
+                    </button>
+                    
+                    <button wire:click="toggleHistoryModal" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 flex items-center text-sm sm:text-base">
+                        <i class="fas fa-history mr-2"></i>Geçmiş Çalışmalar
+                    </button>
+                    @else
+                    <!-- Üye olmayan kullanıcılar için butonların devre dışı ve daha az belirgin versiyonları -->
+                    <div class="relative group">
+                        <button class="bg-blue-300 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg flex items-center text-sm sm:text-base cursor-not-allowed opacity-70">
+                            <i class="fas fa-plus-circle mr-2"></i>Çalışma Ekle
+                        </button>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                            Önce üye olmalısınız
+                        </div>
+                    </div>
+                    
+                    <div class="relative group">
+                        <button class="bg-[#e6394680] text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg flex items-center text-sm sm:text-base cursor-not-allowed opacity-70">
+                            <i class="fas fa-check-circle mr-2"></i>Günü Tamamla
+                        </button>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                            Önce üye olmalısınız
+                        </div>
+                    </div>
+                    
+                    <div class="relative group">
+                        <button class="bg-purple-400 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg flex items-center text-sm sm:text-base cursor-not-allowed opacity-70">
+                            <i class="fas fa-history mr-2"></i>Geçmiş Çalışmalar
+                        </button>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                            Önce üye olmalısınız
+                        </div>
+                    </div>
+                    @endif
                 </div>
-            @endfor
-        </div>
-        
-        <!-- Seçili Günün Detayları -->
-        @if($selectedDate)
-        <div class="border-t pt-6">
-            <h3 class="text-xl font-bold text-[#1a2e5a] mb-4">
-                {{ \Carbon\Carbon::parse($selectedDate)->locale('tr')->dayName }}, 
-                {{ \Carbon\Carbon::parse($selectedDate)->format('d') }} 
-                {{ \Carbon\Carbon::parse($selectedDate)->locale('tr')->monthName }} 
-                {{ \Carbon\Carbon::parse($selectedDate)->year }}
-            </h3>
-            
-            @if(count($selectedDateActivities) > 0)
-                <div class="space-y-3">
-                    @foreach($selectedDateActivities as $activity)
-                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <div class="flex items-start space-x-3">
+
+                <!-- Giriş yapmamış kullanıcılar için ek call-to-action -->
+                @if(!$isUserAuthenticated)
+                <div class="mt-6 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg p-6 border border-blue-200 shadow-md">
+                    <div class="flex flex-col sm:flex-row items-center justify-between">
+                        <div class="mb-4 sm:mb-0">
+                            <h3 class="text-xl font-bold text-[#1a2e5a] mb-2">Sisteme Erişim Kısıtlı</h3>
+                            <p class="text-gray-700">Çalışma eklemek, dosya yüklemek ve ilerleme kaydetmek için üye olmalısınız.</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <a href="{{ route('login') }}" class="bg-white border border-[#1a2e5a] text-[#1a2e5a] hover:bg-gray-50 font-bold py-2 px-4 rounded-lg transition duration-300">
+                                Giriş Yap
+                            </a>
+                            <a href="{{ route('register') }}" class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                                Üye Ol
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Liderlik Tablosu - Seviye Açıklamalarından önce ekleyin -->
+
+                @if($showHistoryModal)
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl sm:text-3xl font-bold text-[#1a2e5a]">Geçmiş Çalışmalarım</h2>
+                            <button wire:click="closeHistoryModal" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Ay Seçici -->
+                        <div class="flex items-center justify-center gap-4 mb-6">
+                            <button wire:click="changeMonth('prev')" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="text-lg font-bold text-[#1a2e5a]">
+                                {{ \Carbon\Carbon::createFromDate($selectedYear, $selectedMonth, 1)->locale('tr')->monthName }} {{ $selectedYear }}
+                            </div>
+                            <button wire:click="changeMonth('next')" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Takvim Grid -->
+                        <div class="grid grid-cols-7 gap-2 mb-6">
+                            <!-- Gün başlıkları -->
+                            @foreach(['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] as $day)
+                                <div class="text-center font-bold text-gray-600 text-sm">{{ $day }}</div>
+                            @endforeach
+                            
+                            <!-- Takvim günleri -->
+                            @php
+                                $firstDayOfMonth = \Carbon\Carbon::createFromDate($selectedYear, $selectedMonth, 1);
+                                $lastDayOfMonth = $firstDayOfMonth->copy()->endOfMonth();
+                                $startDayOfWeek = $firstDayOfMonth->dayOfWeek === 0 ? 7 : $firstDayOfMonth->dayOfWeek;
+                                $daysInMonth = $firstDayOfMonth->daysInMonth;
+                            @endphp
+                            
+                            <!-- Boş günler (ay başlangıcından önce) -->
+                            @for($i = 1; $i < $startDayOfWeek; $i++)
+                                <div></div>
+                            @endfor
+                            
+                            <!-- Ayın günleri -->
+                            @for($day = 1; $day <= $daysInMonth; $day++)
+                                @php
+                                    $currentDate = \Carbon\Carbon::createFromDate($selectedYear, $selectedMonth, $day);
+                                    $dateString = $currentDate->format('Y-m-d');
+                                    $isCompleted = in_array($dateString, $historicalDates);
+                                    $isToday = $currentDate->isToday();
+                                    $isFuture = $currentDate->isFuture();
+                                @endphp
+                                
+                                <div 
+                                    wire:click="selectDate('{{ $dateString }}')"
+                                    class="aspect-square flex items-center justify-center rounded-lg cursor-pointer transition-all
+                                        {{ $isCompleted ? 'bg-[#e63946] text-white hover:bg-[#d62836]' : '' }}
+                                        {{ $isToday ? 'ring-2 ring-blue-500' : '' }}
+                                        {{ $isFuture ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100' }}
+                                        {{ !$isCompleted && !$isFuture ? 'bg-white text-gray-700' : '' }}
+                                        {{ $selectedDate === $dateString ? 'ring-2 ring-purple-500' : '' }}"
+                                >
+                                    <span class="text-sm sm:text-base font-medium">{{ $day }}</span>
+                                </div>
+                            @endfor
+                        </div>
+                        
+                        <!-- Seçili Günün Detayları -->
+                        @if($selectedDate)
+                        <div class="border-t pt-6">
+                            <h3 class="text-xl font-bold text-[#1a2e5a] mb-4">
+                                {{ \Carbon\Carbon::parse($selectedDate)->locale('tr')->dayName }}, 
+                                {{ \Carbon\Carbon::parse($selectedDate)->format('d') }} 
+                                {{ \Carbon\Carbon::parse($selectedDate)->locale('tr')->monthName }} 
+                                {{ \Carbon\Carbon::parse($selectedDate)->year }}
+                            </h3>
+                            
+                            @if(count($selectedDateActivities) > 0)
+                                <div class="space-y-3">
+                                    @foreach($selectedDateActivities as $activity)
+                                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <div class="flex items-start space-x-3">
+                                            <div class="flex-shrink-0">
+                                                <i class="fas fa-book text-blue-500 text-xl"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                @if($activity->content)
+                                                <p class="text-gray-700">{{ $activity->content }}</p>
+                                                @endif
+                                                @if($activity->file_name)
+                                                <a href="{{ Storage::url($activity->file_path) }}" target="_blank" 
+                                                    class="text-blue-600 hover:text-blue-800 text-sm mt-1 inline-flex items-center">
+                                                    <i class="fas fa-file mr-1"></i> {{ $activity->file_name }}
+                                                </a>
+                                                @endif
+                                                <p class="text-xs text-gray-500 mt-1">{{ $activity->created_at->format('H:i') }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-gray-500 text-center py-8">Bu tarihte çalışma kaydı bulunamadı.</p>
+                            @endif
+                        </div>
+                        @endif
+                        
+                        <!-- İstatistikler -->
+                        <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                                <div>
+                                    <div class="text-sm text-gray-600">Bu Ay Çalışılan Gün</div>
+                                    <div class="text-2xl font-bold text-[#e63946]">{{ count($historicalDates) }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">Toplam Çalışma</div>
+                                    <div class="text-2xl font-bold text-[#1a2e5a]">{{ $daysCompleted }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">En Uzun Seri</div>
+                                    <div class="text-2xl font-bold text-green-600">{{ $longestStreak }} gün</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Çalışma Ekleme Formu -->
+                @if($showActivityForm && $isUserAuthenticated)
+                <div class="mt-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 sm:p-8 border border-blue-200 shadow-lg">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-xl sm:text-2xl font-bold text-[#1a2e5a]">Bugünün Başarısını Kaydet! 🎯</h3>
+                            <p class="text-gray-600 text-sm mt-1">Her çalışma, seni bir adım daha yaklaştırıyor!</p>
+                        </div>
+                        <div class="hidden sm:block">
+                            <i class="fas fa-fire text-3xl text-orange-500 animate-pulse"></i>
+                        </div>
+                    </div>
+                    
+                    <form wire:submit.prevent="addActivity" class="space-y-6">
+                        <div class="group">
+                            <label for="content" class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-pencil-alt mr-1 text-blue-500"></i> 
+                                Bugün Ne Başardın?
+                            </label>
+                            <textarea wire:model.defer="activityContent" id="content" rows="3" 
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm transition-all duration-200 hover:border-blue-400"
+                                placeholder="Örnek: 2 sayfa kelime çalıştım, Listening pratiği yaptım..."></textarea>
+                            @error('activityContent') <span class="text-red-500 text-sm flex items-center mt-1"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</span> @enderror
+                        </div>
+                        
+                        <div class="group">
+                            <label class="block text-sm font-bold text-gray-700 mb-3">
+                                <i class="fas fa-cloud-upload-alt mr-1 text-indigo-500"></i> 
+                                Çalışmanı Paylaş (İsteğe Bağlı)
+                            </label>
+                            
+                            <!-- Drag & Drop Area -->
+                            <div class="relative">
+                                <input type="file" wire:model="activityFiles" multiple id="file-upload"
+                                    class="hidden">
+                                
+                                <label for="file-upload" 
+                                    class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all duration-300 group-hover:border-blue-400">
+                                    
+                                    <div class="space-y-4">
+                                        <!-- Upload Icon -->
+                                        <div class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                                            <i class="fas fa-cloud-upload-alt text-2xl text-white"></i>
+                                        </div>
+                                        
+                                        <!-- Text -->
+                                        <div>
+                                            <p class="text-lg font-bold text-gray-700">Dosyaları buraya sürükle</p>
+                                            <p class="text-sm text-gray-500">veya buraya tıklayarak seç</p>
+                                        </div>
+                                        
+                                        <!-- File Types -->
+                                        <div class="flex justify-center gap-4 text-xs text-gray-400">
+                                            <span><i class="fas fa-file-pdf text-red-500"></i> PDF</span>
+                                            <span><i class="fas fa-file-image text-green-500"></i> Resim</span>
+                                            <span><i class="fas fa-file-word text-blue-500"></i> Word</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            @error('activityFiles.*') 
+                            <span class="text-red-500 text-sm flex items-center mt-2">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>{{ $message }}
+                            </span> 
+                            @enderror
+                        </div>
+                        
+<!-- Yüklenen Dosyalar -->
+                        @if($activityFiles)
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <p class="text-sm font-bold text-gray-700 mb-3">
+                                <i class="fas fa-check-circle text-green-500 mr-1"></i> 
+                                Yüklenen Dosyalar:
+                            </p>
+                            <div class="space-y-2">
+                                @foreach($activityFiles as $file)
+                                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                            @php
+                                                $extension = strtolower($file->getClientOriginalExtension());
+                                                $icon = 'fa-file';
+                                                $color = 'text-gray-500';
+                                                
+                                                if(in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
+                                                    $icon = 'fa-file-image';
+                                                    $color = 'text-green-500';
+                                                } elseif($extension == 'pdf') {
+                                                    $icon = 'fa-file-pdf';
+                                                    $color = 'text-red-500';
+                                                } elseif(in_array($extension, ['doc', 'docx'])) {
+                                                    $icon = 'fa-file-word';
+                                                    $color = 'text-blue-500';
+                                                } elseif(in_array($extension, ['mp3', 'wav'])) {
+                                                    $icon = 'fa-file-audio';
+                                                    $color = 'text-purple-500';
+                                                }
+                                            @endphp
+                                            <i class="fas {{ $icon }} {{ $color }} text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-700">{{ $file->getClientOriginalName() }}</p>
+                                            <p class="text-xs text-gray-400">{{ round($file->getSize() / 1024, 1) }} KB</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-green-500">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                        
+                        <!-- Motivasyon Mesajı -->
+                        <div class="bg-gradient-to-r from-orange-100 to-yellow-100 rounded-lg p-4 border border-orange-200">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-rocket text-2xl text-orange-500"></i>
+                                <p class="text-sm font-medium text-orange-800">
+                                    Harika gidiyorsun! Her gün kaydettiğin çalışmalar seni hedefe yaklaştırıyor. 🚀
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Butonlar -->
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" wire:click="resetActivityForm" 
+                                class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex items-center">
+                                <i class="fas fa-times mr-2"></i> İptal
+                            </button>
+                            <button type="submit" 
+                                class="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center transform hover:scale-105">
+                                <i class="fas fa-save mr-2"></i> Çalışmayı Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                @endif
+
+                <!-- Bugünün Çalışmaları -->
+                @if(!empty($todayActivities) && $isUserAuthenticated)
+                <div class="mt-6 bg-white rounded-lg p-4 sm:p-6 border border-gray-200">
+                    <h3 class="text-lg sm:text-xl font-bold text-[#1a2e5a] mb-4">Bugünün Çalışmaları</h3>
+                    
+                    <div class="space-y-3">
+                        @foreach($todayActivities as $activity)
+                        <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                             <div class="flex-shrink-0">
                                 <i class="fas fa-book text-blue-500 text-xl"></i>
                             </div>
@@ -237,215 +492,19 @@
                                 @endif
                                 <p class="text-xs text-gray-500 mt-1">{{ $activity->created_at->format('H:i') }}</p>
                             </div>
+                            <div class="flex-shrink-0">
+                                <button 
+                                    wire:click="confirmDeleteActivity({{ $activity->id }})"
+                                    class="text-red-400 hover:text-red-600 transition-colors"
+                                    title="Çalışmayı Sil">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    @endforeach
-                </div>
-            @else
-                <p class="text-gray-500 text-center py-8">Bu tarihte çalışma kaydı bulunamadı.</p>
-            @endif
-        </div>
-        @endif
-        
-        <!-- İstatistikler -->
-        <div class="mt-6 bg-gray-50 rounded-lg p-4">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                <div>
-                    <div class="text-sm text-gray-600">Bu Ay Çalışılan Gün</div>
-                    <div class="text-2xl font-bold text-[#e63946]">{{ count($historicalDates) }}</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Toplam Çalışma</div>
-                    <div class="text-2xl font-bold text-[#1a2e5a]">{{ $daysCompleted }}</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">En Uzun Seri</div>
-                    <div class="text-2xl font-bold text-green-600">{{ $longestStreak }} gün</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
-
-                <!-- Çalışma Ekleme Formu -->
-<!-- Çalışma Ekleme Formu -->
-@if($showActivityForm)
-<div class="mt-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 sm:p-8 border border-blue-200 shadow-lg">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h3 class="text-xl sm:text-2xl font-bold text-[#1a2e5a]">Bugünün Başarısını Kaydet! 🎯</h3>
-            <p class="text-gray-600 text-sm mt-1">Her çalışma, seni bir adım daha yaklaştırıyor!</p>
-        </div>
-        <div class="hidden sm:block">
-            <i class="fas fa-fire text-3xl text-orange-500 animate-pulse"></i>
-        </div>
-    </div>
-    
-    <form wire:submit.prevent="addActivity" class="space-y-6">
-        <div class="group">
-            <label for="content" class="block text-sm font-bold text-gray-700 mb-2">
-                <i class="fas fa-pencil-alt mr-1 text-blue-500"></i> 
-                Bugün Ne Başardın?
-            </label>
-            <textarea wire:model.defer="activityContent" id="content" rows="3" 
-                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm transition-all duration-200 hover:border-blue-400"
-                placeholder="Örnek: 2 sayfa kelime çalıştım, Listening pratiği yaptım..."></textarea>
-            @error('activityContent') <span class="text-red-500 text-sm flex items-center mt-1"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</span> @enderror
-        </div>
-        
-        <div class="group">
-            <label class="block text-sm font-bold text-gray-700 mb-3">
-                <i class="fas fa-cloud-upload-alt mr-1 text-indigo-500"></i> 
-                Çalışmanı Paylaş (İsteğe Bağlı)
-            </label>
-            
-            <!-- Drag & Drop Area -->
-            <div class="relative">
-                <input type="file" wire:model="activityFiles" multiple id="file-upload"
-                    class="hidden">
-                
-                <label for="file-upload" 
-                    class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all duration-300 group-hover:border-blue-400">
-                    
-                    <div class="space-y-4">
-                        <!-- Upload Icon -->
-                        <div class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
-                            <i class="fas fa-cloud-upload-alt text-2xl text-white"></i>
-                        </div>
-                        
-                        <!-- Text -->
-                        <div>
-                            <p class="text-lg font-bold text-gray-700">Dosyaları buraya sürükle</p>
-                            <p class="text-sm text-gray-500">veya buraya tıklayarak seç</p>
-                        </div>
-                        
-                        <!-- File Types -->
-                        <div class="flex justify-center gap-4 text-xs text-gray-400">
-                            <span><i class="fas fa-file-pdf text-red-500"></i> PDF</span>
-                            <span><i class="fas fa-file-image text-green-500"></i> Resim</span>
-                            <span><i class="fas fa-file-word text-blue-500"></i> Word</span>
-                        </div>
-                    </div>
-                </label>
-            </div>
-            
-            @error('activityFiles.*') 
-            <span class="text-red-500 text-sm flex items-center mt-2">
-                <i class="fas fa-exclamation-triangle mr-1"></i>{{ $message }}
-            </span> 
-            @enderror
-        </div>
-        
-        <!-- Yüklenen Dosyalar -->
-        @if($activityFiles)
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-            <p class="text-sm font-bold text-gray-700 mb-3">
-                <i class="fas fa-check-circle text-green-500 mr-1"></i> 
-                Yüklenen Dosyalar:
-            </p>
-            <div class="space-y-2">
-                @foreach($activityFiles as $file)
-                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            @php
-                                $extension = strtolower($file->getClientOriginalExtension());
-                                $icon = 'fa-file';
-                                $color = 'text-gray-500';
-                                
-                                if(in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
-                                    $icon = 'fa-file-image';
-                                    $color = 'text-green-500';
-                                } elseif($extension == 'pdf') {
-                                    $icon = 'fa-file-pdf';
-                                    $color = 'text-red-500';
-                                } elseif(in_array($extension, ['doc', 'docx'])) {
-                                    $icon = 'fa-file-word';
-                                    $color = 'text-blue-500';
-                                } elseif(in_array($extension, ['mp3', 'wav'])) {
-                                    $icon = 'fa-file-audio';
-                                    $color = 'text-purple-500';
-                                }
-                            @endphp
-                            <i class="fas {{ $icon }} {{ $color }} text-xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-700">{{ $file->getClientOriginalName() }}</p>
-                            <p class="text-xs text-gray-400">{{ round($file->getSize() / 1024, 1) }} KB</p>
-                        </div>
-                    </div>
-                    <div class="text-green-500">
-                        <i class="fas fa-check-circle"></i>
+                        @endforeach
                     </div>
                 </div>
-                @endforeach
-            </div>
-        </div>
-        @endif
-        
-        <!-- Motivasyon Mesajı -->
-        <div class="bg-gradient-to-r from-orange-100 to-yellow-100 rounded-lg p-4 border border-orange-200">
-            <div class="flex items-center space-x-3">
-                <i class="fas fa-rocket text-2xl text-orange-500"></i>
-                <p class="text-sm font-medium text-orange-800">
-                    Harika gidiyorsun! Her gün kaydettiğin çalışmalar seni hedefe yaklaştırıyor. 🚀
-                </p>
-            </div>
-        </div>
-        
-        <!-- Butonlar -->
-        <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" wire:click="resetActivityForm" 
-                class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex items-center">
-                <i class="fas fa-times mr-2"></i> İptal
-            </button>
-            <button type="submit" 
-                class="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center transform hover:scale-105">
-                <i class="fas fa-save mr-2"></i> Çalışmayı Kaydet
-            </button>
-        </div>
-    </form>
-</div>
-@endif
-
-                <!-- Bugünün Çalışmaları -->
-<!-- Bugünün Çalışmaları bölümünü güncelleyin -->
-@if(!empty($todayActivities))
-<div class="mt-6 bg-white rounded-lg p-4 sm:p-6 border border-gray-200">
-    <h3 class="text-lg sm:text-xl font-bold text-[#1a2e5a] mb-4">Bugünün Çalışmaları</h3>
-    
-    <div class="space-y-3">
-        @foreach($todayActivities as $activity)
-        <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-            <div class="flex-shrink-0">
-                <i class="fas fa-book text-blue-500 text-xl"></i>
-            </div>
-            <div class="flex-1">
-                @if($activity->content)
-                <p class="text-gray-700">{{ $activity->content }}</p>
                 @endif
-                @if($activity->file_name)
-                <a href="{{ Storage::url($activity->file_path) }}" target="_blank" 
-                    class="text-blue-600 hover:text-blue-800 text-sm mt-1 inline-flex items-center">
-                    <i class="fas fa-file mr-1"></i> {{ $activity->file_name }}
-                </a>
-                @endif
-                <p class="text-xs text-gray-500 mt-1">{{ $activity->created_at->format('H:i') }}</p>
-            </div>
-            <div class="flex-shrink-0">
-                <button 
-                    wire:click="confirmDeleteActivity({{ $activity->id }})"
-                    class="text-red-400 hover:text-red-600 transition-colors"
-                    title="Çalışmayı Sil">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
-        </div>
-        @endforeach
-    </div>
-</div>
-@endif
 
             </div>
 
@@ -588,20 +647,23 @@
                         <li>Öğrenci, gelişimini <strong>somut ve adım adım</strong> izleyebilir.</li>
                     </ul>
                     
-<h3 class="text-xl sm:text-2xl font-bold text-[#1a2e5a] mt-6 sm:mt-8 mb-3 sm:mb-4">Sonuç Olarak</h3>
-                   <p>"Zinciri Kırma – Seviye Atlama" sistemi, öğrencilerin akademik gelişimlerini desteklerken aynı zamanda yaşam boyu sürecek bir disiplin anlayışı kazandırmayı amaçlamaktadır. Her ✔️ işareti, öğrencinin kendine olan bağlılığını ve hedeflerine olan inancını temsil eder.</p>
-                   
-                   <div class="bg-[#1a2e5a] text-white p-4 sm:p-6 rounded-lg mt-6 sm:mt-8">
-                       <p class="text-base sm:text-xl font-bold">Bugün bir adım at. Zinciri başlat. Seviyeni yükselt. Ve unutma: Zinciri Kırma, Geleceğini İnşa Et.</p>
-                   </div>
-                   
-                   <div class="text-center mt-8 sm:mt-10 text-[#e63946] font-bold text-lg sm:text-xl">
-                       RISE ENGLISH BAŞARILAR DİLER
-                   </div>
-               </div>
-           </div>
-       </div>
-   </div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-[#1a2e5a] mt-6 sm:mt-8 mb-3 sm:mb-4">Sonuç Olarak</h3>
+                    <p>"Zinciri Kırma – Seviye Atlama" sistemi, öğrencilerin akademik gelişimlerini desteklerken aynı zamanda yaşam boyu sürecek bir disiplin anlayışı kazandırmayı amaçlamaktadır. Her ✔️ işareti, öğrencinin kendine olan bağlılığını ve hedeflerine olan inancını temsil eder.</p>
+                    
+                    <div class="bg-[#1a2e5a] text-white p-4 sm:p-6 rounded-lg mt-6 sm:mt-8">
+                        <p class="text-base sm:text-xl font-bold">Bugün bir adım at. Zinciri başlat. Seviyeni yükselt. Ve unutma: Zinciri Kırma, Geleceğini İnşa Et.</p>
+                    </div>
+                    
+                    <!-- Üye olmayan kullanıcılar için son CTA eklentisi -->
+
+                    
+                    <div class="text-center mt-8 sm:mt-10 text-[#e63946] font-bold text-lg sm:text-xl">
+                        RISE ENGLISH BAŞARILAR DİLER
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Konfeti Efekti İçin Script -->
