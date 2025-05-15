@@ -97,57 +97,60 @@ public function listAllDocuments()
         }
     }
 
-    /**
-     * Belge kaydetme
-     */
-    public function store(Request $request, $courseId)
-    {
-        try {
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'file' => 'required|file|max:20480', // 20MB maksimum
-                'students_can_download' => 'nullable|boolean',
-            ]);
+/**
+ * Belge kaydetme
+ */
+public function store(Request $request, $courseId)
+{
+    try {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'file' => 'required|file|max:20480', // 20MB maksimum
+            'students_can_download' => 'nullable|boolean',
+            'is_public' => 'nullable|boolean',
+        ]);
 
-            $teacher = Auth::user();
+        $teacher = Auth::user();
 
-            // Kursun bu öğretmene ait olduğunu kontrol et
-            $course = Course::where('id', $courseId)
-                ->where('teacher_id', $teacher->id)
-                ->firstOrFail();
+        // Kursun bu öğretmene ait olduğunu kontrol et
+        $course = Course::where('id', $courseId)
+            ->where('teacher_id', $teacher->id)
+            ->firstOrFail();
 
-            // Dosya yükleme işlemi
-            $file = $request->file('file');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('course_documents', $fileName, 'public');
-            $fileSize = ceil($file->getSize() / 1024); // KB cinsinden dosya boyutu
+        // Dosya yükleme işlemi
+        $file = $request->file('file');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $filePath = $file->storeAs('course_documents', $fileName, 'public');
+        $fileSize = ceil($file->getSize() / 1024); // KB cinsinden dosya boyutu
 
-            // Belge veritabanı kaydı
-            $document = new CourseDocument([
-                'course_id' => $course->id,
-                'uploaded_by' => $teacher->id,
-                'title' => $request->title,
-                'description' => $request->description,
-                'file_path' => $filePath,
-                'file_name' => $file->getClientOriginalName(),
-                'file_type' => $file->getClientMimeType(),
-                'file_size' => $fileSize,
-                'is_active' => true,
-                'students_can_download' => $request->has('students_can_download'),
-            ]);
+        // Belge veritabanı kaydı
+        $document = new CourseDocument([
+            'course_id' => $course->id,
+            'uploaded_by' => $teacher->id,
+            'title' => $request->title,
+            'description' => $request->description,
+            'file_path' => $filePath,
+            'file_name' => $file->getClientOriginalName(),
+            'file_type' => $file->getClientMimeType(),
+            'file_size' => $fileSize,
+            'is_active' => true,
+            'students_can_download' => $request->has('students_can_download'),
+            'is_public' => $request->has('is_public'),
+        ]);
 
-            $document->save();
+        $document->save();
 
-            return redirect()->route('ogretmen.documents.index', $course->id)
-                ->with('success', 'Belge başarıyla yüklendi.');
-        } catch (\Exception $e) {
-            Log::error('Belge yükleme hatası: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Belge yüklenirken bir hata oluştu: ' . $e->getMessage())
-                ->withInput();
-        }
+        return redirect()->route('ogretmen.documents.index', $course->id)
+            ->with('success', 'Belge başarıyla yüklendi.');
+    } catch (\Exception $e) {
+        Log::error('Belge yükleme hatası: ' . $e->getMessage());
+        return redirect()->back()
+            ->with('error', 'Belge yüklenirken bir hata oluştu: ' . $e->getMessage())
+            ->withInput();
     }
+}
+
 
     /**
      * Belge düzenleme formu
@@ -175,69 +178,71 @@ public function listAllDocuments()
         }
     }
 
-    /**
-     * Belge güncelleme
-     */
-    public function update(Request $request, $courseId, $documentId)
-    {
-        try {
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'file' => 'nullable|file|max:20480', // 20MB maksimum
-                'is_active' => 'nullable|boolean',
-                'students_can_download' => 'nullable|boolean',
-            ]);
+/**
+ * Belge güncelleme
+ */
+public function update(Request $request, $courseId, $documentId)
+{
+    try {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'file' => 'nullable|file|max:20480', // 20MB maksimum
+            'is_active' => 'nullable|boolean',
+            'students_can_download' => 'nullable|boolean',
+            'is_public' => 'nullable|boolean',
+        ]);
 
-            $teacher = Auth::user();
+        $teacher = Auth::user();
 
-            // Kursun bu öğretmene ait olduğunu kontrol et
-            $course = Course::where('id', $courseId)
-                ->where('teacher_id', $teacher->id)
-                ->firstOrFail();
+        // Kursun bu öğretmene ait olduğunu kontrol et
+        $course = Course::where('id', $courseId)
+            ->where('teacher_id', $teacher->id)
+            ->firstOrFail();
 
-            // Belgenin bu kursa ait olduğunu kontrol et
-            $document = CourseDocument::where('id', $documentId)
-                ->where('course_id', $course->id)
-                ->firstOrFail();
+        // Belgenin bu kursa ait olduğunu kontrol et
+        $document = CourseDocument::where('id', $documentId)
+            ->where('course_id', $course->id)
+            ->firstOrFail();
 
-            // Belge bilgilerini güncelle
-            $document->title = $request->title;
-            $document->description = $request->description;
-            $document->is_active = $request->has('is_active');
-            $document->students_can_download = $request->has('students_can_download');
+        // Belge bilgilerini güncelle
+        $document->title = $request->title;
+        $document->description = $request->description;
+        $document->is_active = $request->has('is_active');
+        $document->students_can_download = $request->has('students_can_download');
+        $document->is_public = $request->has('is_public');
 
-            // Eğer yeni dosya yüklendiyse
-            if ($request->hasFile('file')) {
-                // Eski dosyayı sil
-                if (Storage::disk('public')->exists($document->file_path)) {
-                    Storage::disk('public')->delete($document->file_path);
-                }
-
-                // Yeni dosyayı yükle
-                $file = $request->file('file');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('course_documents', $fileName, 'public');
-                $fileSize = ceil($file->getSize() / 1024); // KB cinsinden dosya boyutu
-
-                // Belge dosya bilgilerini güncelle
-                $document->file_path = $filePath;
-                $document->file_name = $file->getClientOriginalName();
-                $document->file_type = $file->getClientMimeType();
-                $document->file_size = $fileSize;
+        // Eğer yeni dosya yüklendiyse
+        if ($request->hasFile('file')) {
+            // Eski dosyayı sil
+            if (Storage::disk('public')->exists($document->file_path)) {
+                Storage::disk('public')->delete($document->file_path);
             }
 
-            $document->save();
+            // Yeni dosyayı yükle
+            $file = $request->file('file');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('course_documents', $fileName, 'public');
+            $fileSize = ceil($file->getSize() / 1024); // KB cinsinden dosya boyutu
 
-            return redirect()->route('ogretmen.documents.index', $course->id)
-                ->with('success', 'Belge başarıyla güncellendi.');
-        } catch (\Exception $e) {
-            Log::error('Belge güncelleme hatası: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Belge güncellenirken bir hata oluştu: ' . $e->getMessage())
-                ->withInput();
+            // Belge dosya bilgilerini güncelle
+            $document->file_path = $filePath;
+            $document->file_name = $file->getClientOriginalName();
+            $document->file_type = $file->getClientMimeType();
+            $document->file_size = $fileSize;
         }
+
+        $document->save();
+
+        return redirect()->route('ogretmen.documents.index', $course->id)
+            ->with('success', 'Belge başarıyla güncellendi.');
+    } catch (\Exception $e) {
+        Log::error('Belge güncelleme hatası: ' . $e->getMessage());
+        return redirect()->back()
+            ->with('error', 'Belge güncellenirken bir hata oluştu: ' . $e->getMessage())
+            ->withInput();
     }
+}
 
     /**
      * Belge silme

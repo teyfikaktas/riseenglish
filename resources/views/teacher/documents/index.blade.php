@@ -19,8 +19,6 @@
         </ol>
     </nav>
 
-    {{-- @include('partials.alerts') --}}  {{-- Removed as requested --}}
-
     <div class="mt-4">
         <div class="flex flex-col mb-4">
             <div class="bg-white shadow rounded-lg">
@@ -94,13 +92,36 @@
                                                         {{ $document->is_active ? 'Aktif' : 'Pasif' }}
                                                     </span>
                                                 </li>
-                                                <li class="flex justify-between text-sm">
+<li class="flex justify-between text-sm">
                                                     <span>Öğrenci İndirebilir:</span>
                                                     <span class="{{ $document->students_can_download ? 'text-green-500' : 'text-red-500' }}">
                                                         {{ $document->students_can_download ? 'Evet' : 'Hayır' }}
                                                     </span>
                                                 </li>
+                                                <!-- Herkese Açık Durum -->
+                                                <li class="flex justify-between text-sm">
+                                                    <span>Herkese Açık:</span>
+                                                    <span class="{{ isset($document->is_public) && $document->is_public ? 'text-green-500' : 'text-red-500' }}">
+                                                        {{ isset($document->is_public) && $document->is_public ? 'Evet' : 'Hayır' }}
+                                                    </span>
+                                                </li>
                                             </ul>
+                                            
+                                            <!-- Herkese açık bağlantı varsa göster -->
+                                            @if(isset($document->is_public) && $document->is_public && !empty($document->public_url))
+                                            <div class="mt-3 p-2 bg-blue-50 rounded-md border border-blue-200">
+                                                <p class="text-xs text-blue-700 font-medium mb-1">Herkese Açık Bağlantı:</p>
+                                                <div class="flex">
+                                                    <input type="text" value="{{ $document->public_url }}" id="public_url_{{ $document->id }}"
+                                                        class="flex-1 text-xs bg-white border border-gray-300 text-gray-900 rounded-l-md px-2 py-1"
+                                                        readonly>
+                                                    <button type="button" onclick="copyToClipboard('public_url_{{ $document->id }}')"
+                                                        class="bg-blue-600 text-white px-2 py-1 rounded-r-md hover:bg-blue-700">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            @endif
                                         </div>
 
                                         <div class="px-4 py-3 border-t flex space-x-2">
@@ -156,4 +177,39 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // URL kopyalama fonksiyonu
+    function copyToClipboard(elementId) {
+        const copyText = document.getElementById(elementId);
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // Mobil cihazlar için
+        document.execCommand("copy");
+        
+        // Kopyalama bildirimini göster
+        const notification = document.createElement('div');
+        notification.textContent = 'Bağlantı kopyalandı!';
+        notification.style.position = 'fixed';
+        notification.style.bottom = '20px';
+        notification.style.right = '20px';
+        notification.style.backgroundColor = '#4CAF50';
+        notification.style.color = 'white';
+        notification.style.padding = '10px 20px';
+        notification.style.borderRadius = '4px';
+        notification.style.zIndex = '9999';
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(function() {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.5s';
+            
+            setTimeout(function() {
+                document.body.removeChild(notification);
+            }, 500);
+        }, 2000);
+    }
+</script>
 @endsection

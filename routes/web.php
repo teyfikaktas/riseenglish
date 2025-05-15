@@ -125,7 +125,8 @@ Route::get('/oturum-ac', function() {
     // Giriş yapmamışsa, login view'ını göster
     return view('auth.login');
 });
-
+Route::get('/belge/{token}', [App\Http\Controllers\PublicDocumentController::class, 'show'])
+    ->name('public.document.show');
 Route::get('/home', function () {
     // Yönetici kullanıcıları doğrudan yönetici paneline yönlendir
     if (Auth::check() && Auth::user()->hasRole('yonetici')) {

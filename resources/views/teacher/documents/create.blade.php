@@ -28,8 +28,6 @@
         </ol>
     </nav>
 
-    {{-- @include('partials.alerts') --}} {{-- Kaldırıldı --}}
-
     <div class="flex justify-center">
         <div class="w-full lg:w-2/3">
             <div class="bg-white shadow rounded-lg mb-6">
@@ -94,7 +92,7 @@
                             @enderror
                         </div>
 
-                        <div class="mb-6 flex items-start">
+                        <div class="mb-4 flex items-start">
                             <input
                                 type="checkbox"
                                 name="students_can_download"
@@ -108,11 +106,29 @@
                             </label>
                         </div>
 
-                        <div class="flex justify-between">
-                            <a
-                                href="{{ route('ogretmen.documents.index', $course->id) }}"
-                                class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm px-4 py-2 rounded"
+                        <!-- Herkese Açık Erişim Seçeneği -->
+                        <div class="mb-6 flex items-start">
+                            <input
+                                type="checkbox"
+                                name="is_public"
+                                id="is_public"
+                                value="1"
+                                {{ old('is_public') ? 'checked' : '' }}
+                                class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             >
+                            <div class="ml-2">
+                                <label for="is_public" class="block text-sm font-medium text-gray-700">
+                                    Herkese açık erişim
+                                </label>
+                                <p class="text-gray-500 text-xs">
+                                    Bu belge kayıt olmayan kullanıcılar tarafından URL ile görüntülenebilir. Belge kaydedildikten sonra bu URL'i herhangi biriyle paylaşabilirsiniz.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <a href="{{ route('ogretmen.documents.index', $course->id) }}"
+                                class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm px-4 py-2 rounded">
                                 <i class="fas fa-arrow-left mr-1"></i> Geri Dön
                             </a>
                             <button
