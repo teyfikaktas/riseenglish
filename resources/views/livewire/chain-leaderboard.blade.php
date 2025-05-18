@@ -1,3 +1,4 @@
+<!-- resources/views/livewire/chain-leaderboard.blade.php -->
 <div>
     <div class="bg-white rounded-xl shadow-xl overflow-hidden">
         <!-- Başlık ve Filtreler -->
@@ -16,11 +17,12 @@
                     <button 
                         wire:click="changeFilter('total')"
                         class="px-4 py-2 rounded-lg font-medium transition-all
-                            {{ true
+                            {{ $filterType === 'total'
                                 ? 'bg-white text-[#1a2e5a] shadow-lg transform scale-105' 
                                 : 'bg-white/20 text-white hover:bg-white/30' }}">
-                        <i class="fas fa-calendar-check mr-2"></i>Aktif Seri
+                        <i class="fas fa-calendar-check mr-2"></i>Toplam Gün
                     </button>
+                    
                 </div>
             </div>
         </div>
@@ -70,14 +72,42 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10">
-                                    @if($data['avatar'])
-                                        <img class="h-10 w-10 rounded-full" src="{{ $data['avatar'] }}" alt="">
-                                    @else
-                                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                                            {{ strtoupper(substr($data['user']->name, 0, 1)) }}
-                                        </div>
-                                    @endif
+                                <div class="flex-shrink-0 h-10 w-10 relative group">
+                                    <!-- Seviye ikonu - avatar yerine -->
+                                    <div class="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full opacity-0 group-hover:opacity-60 blur transition-opacity duration-300"></div>
+                                    <div class="relative z-10 h-10 w-10 overflow-hidden rounded-full border-2 
+                                        @if($data['level'] == 'Bronz') border-amber-600 
+                                        @elseif($data['level'] == 'Demir') border-gray-600
+                                        @elseif($data['level'] == 'Gümüş') border-gray-300
+                                        @elseif($data['level'] == 'Altın') border-yellow-400
+                                        @elseif($data['level'] == 'Platin') border-gray-200
+                                        @elseif($data['level'] == 'Zümrüt') border-emerald-500
+                                        @elseif($data['level'] == 'Elmas') border-blue-500
+                                        @elseif($data['level'] == 'MASTER') border-purple-600
+                                        @else border-amber-600
+                                        @endif
+                                        shadow-sm transform transition-transform group-hover:scale-105">
+                                        @php
+                                            // Seviyeye göre ikon dosyasını belirle
+                                            $levelIconMap = [
+                                                'Bronz' => $data['icon_gender'] == 'kadin' ? 'bronzkadin.jpg' : 'bronzerkek.jpg',
+                                                'Demir' => $data['icon_gender'] == 'kadin' ? 'demirkadin.jpg' : 'demirerkek.jpg',
+                                                'Gümüş' => $data['icon_gender'] == 'kadin' ? 'gumuskadin.jpg' : 'gumuserkek.jpg',
+                                                'Altın' => $data['icon_gender'] == 'kadin' ? 'altinkadin.jpg' : 'altinerkek.jpg',
+                                                'Platin' => $data['icon_gender'] == 'kadin' ? 'platinkadin.jpg' : 'platinerkek.jpg',
+                                                'Zümrüt' => $data['icon_gender'] == 'kadin' ? 'yakutkadin.jpg' : 'yakuterkek.jpg',
+                                                'Elmas' => $data['icon_gender'] == 'kadin' ? 'elmaskadin.jpg' : 'elmaserkek.jpg',
+                                                'MASTER' => $data['icon_gender'] == 'kadin' ? 'masterkadin.jpg' : 'mastererkek.jpg',
+                                            ];
+                                            
+                                            // Seviyeye göre ikon dosyasını belirle, yoksa varsayılan seviye
+                                            $iconFile = $levelIconMap[$data['level']] ?? ($data['icon_gender'] == 'kadin' ? 'bronzkadin.jpg' : 'bronzerkek.jpg');
+                                        @endphp
+                                        
+                                        <img class="h-full w-full object-cover" 
+                                            src="{{ asset('images/icons/' . $iconFile) }}" 
+                                            alt="{{ $data['level'] }} Seviye">
+                                    </div>
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">
@@ -106,7 +136,13 @@
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             <div class="flex flex-col items-center">
                                 <span class="text-2xl font-bold" style="color: {{ $data['level_color'] }}">
+                                    @if($filterType === 'current')
+                                        {{ $data['current_streak'] }}
+                                    @elseif($filterType === 'longest')
+                                        {{ $data['longest_streak'] }}
+                                    @else
                                         {{ $data['days_completed'] }}
+                                    @endif
                                 </span>
                                 <span class="text-xs text-gray-500">gün</span>
                             </div>
@@ -142,4 +178,27 @@
         </div>
         @endif
     </div>
+    <style>
+@keyframes shine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+.animate-shine {
+  overflow: hidden;
+  position: relative;
+}
+.animate-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent);
+  animation: shine 3s infinite;
+  transform: skewX(-15deg);
+}
+</style>
 </div>
+
+<!-- Shine Animasyonu İçin CSS (Eğer sayfaya eklemediyseniz) -->

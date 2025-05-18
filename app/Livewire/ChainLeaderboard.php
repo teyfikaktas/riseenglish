@@ -55,6 +55,7 @@ class ChainLeaderboard extends Component
                 'level' => $progress->getCurrentLevel(),
                 'level_color' => $progress->getLevelColor(),
                 'avatar' => $progress->user->profile_photo_url ?? null,
+                'icon_gender' => $progress->icon_gender ?? 'erkek', // İkon cinsiyeti eklendi
             ];
         });
     }
