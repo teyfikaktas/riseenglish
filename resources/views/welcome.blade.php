@@ -1059,676 +1059,761 @@
         </div>
     </div>
 
+  <script>
+    // Düzeltilmiş Video Slider JavaScript - Tam Versiyon
+    document.addEventListener('DOMContentLoaded', function() {
+        // Success message auto-hide functionality
+        initSuccessMessage();
 
-    <script>
-        // Düzeltilmiş Video Slider JavaScript - Tam Versiyon
-        document.addEventListener('DOMContentLoaded', function() {
-            // Success message auto-hide functionality
-            initSuccessMessage();
+        // Floating panel functionality
+        initFloatingPanel();
 
-            // Floating panel functionality
-            initFloatingPanel();
+        // Main featured courses slider functionality
+        initMainSlider();
 
-            // Main featured courses slider functionality
-            initMainSlider();
+        // Student Videos slider functionality - YENİLENMİŞ VERSİYON
+        initVideoSlider();
 
-            // Student Videos slider functionality - YENİ VERSİYON
-            initVideoSlider();
+        initMainPromoVideo();
 
-            initMainPromoVideo();
+        // ===== SUCCESS MESSAGE FUNCTIONS =====
+        function initSuccessMessage() {
+            const successMessage = document.getElementById('successMessage');
+            const progressBar = document.getElementById('successMessageProgress');
 
-            // ===== SUCCESS MESSAGE FUNCTIONS =====
-            function initSuccessMessage() {
-                const successMessage = document.getElementById('successMessage');
-                const progressBar = document.getElementById('successMessageProgress');
+            if (successMessage && progressBar) {
+                // Start the progress bar animation
+                progressBar.style.transition = 'width 5s linear';
+                progressBar.style.width = '0';
 
-                if (successMessage && progressBar) {
-                    // Start the progress bar animation
-                    progressBar.style.transition = 'width 5s linear';
-                    progressBar.style.width = '0';
-
-                    // Set a timeout to remove the message
+                // Set a timeout to remove the message
+                setTimeout(function() {
+                    successMessage.classList.add('translate-x-full');
                     setTimeout(function() {
-                        successMessage.classList.add('translate-x-full');
-                        setTimeout(function() {
-                            successMessage.remove();
-                        }, 300);
-                    }, 5000);
+                        successMessage.remove();
+                    }, 300);
+                }, 5000);
+            }
+
+            // Function to close the success message manually (global function)
+            window.closeSuccessMessage = function() {
+                const successMessage = document.getElementById('successMessage');
+                if (successMessage) {
+                    successMessage.classList.add('translate-x-full');
+                    setTimeout(function() {
+                        successMessage.remove();
+                    }, 300);
+                }
+            };
+        }
+
+        // ===== FLOATING PANEL FUNCTIONS =====
+        function initFloatingPanel() {
+            const closeFloatingPanelButton = document.getElementById('closeFloatingPanel');
+            const floatingSignupPanel = document.getElementById('floatingSignupPanel');
+
+            if (closeFloatingPanelButton && floatingSignupPanel) {
+                closeFloatingPanelButton.addEventListener('click', function() {
+                    floatingSignupPanel.classList.add('hidden');
+                    floatingSignupPanel.style.display = 'none';
+
+                    // Save user preference as cookie
+                    document.cookie =
+                        "hideFloatingPanel=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+                });
+
+                // Check if user closed the panel before
+                if (getCookie('hideFloatingPanel') === 'true') {
+                    floatingSignupPanel.classList.add('hidden');
+                }
+            }
+
+            // Helper function to get cookie value
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+            }
+        }
+
+        // ===== MAIN COURSES SLIDER FUNCTIONS =====
+        function initMainSlider() {
+            const slidesWrapper = document.getElementById('slidesWrapper');
+            const sliderDots = document.getElementById('sliderDots');
+            const nextButton = document.getElementById('nextButton');
+            const prevButton = document.getElementById('prevButton');
+            const mobileNextButton = document.getElementById('mobileNextButton');
+            const mobilePrevButton = document.getElementById('mobilePrevButton');
+            const sliderItems = document.querySelectorAll('.slider-item');
+
+            if (!slidesWrapper || sliderItems.length === 0) return;
+
+            let mainSliderIndex = 0;
+            let mainSliderWidthPercent = 100;
+            let mainVisibleSlides = 1;
+
+            // Configure slider based on screen size
+            function updateMainSlidesConfig() {
+                if (window.innerWidth >= 1024) { // lg
+                    mainVisibleSlides = 3;
+                    mainSliderWidthPercent = 100 / 3;
+                } else if (window.innerWidth >= 768) { // md
+                    mainVisibleSlides = 2;
+                    mainSliderWidthPercent = 50;
+                } else { // sm and below
+                    mainVisibleSlides = 1;
+                    mainSliderWidthPercent = 100;
                 }
 
-                // Function to close the success message manually (global function)
-                window.closeSuccessMessage = function() {
-                    const successMessage = document.getElementById('successMessage');
-                    if (successMessage) {
-                        successMessage.classList.add('translate-x-full');
-                        setTimeout(function() {
-                            successMessage.remove();
-                        }, 300);
+                // Set slide widths
+                sliderItems.forEach(item => {
+                    item.style.width = `${mainSliderWidthPercent}%`;
+                });
+
+                // Update active slide
+                updateMainSlide(mainSliderIndex);
+
+                // Create dots
+                createMainDots();
+            }
+
+            // Create dots for navigation
+            function createMainDots() {
+                if (!sliderDots) return;
+
+                sliderDots.innerHTML = '';
+                const totalDots = Math.ceil(sliderItems.length / mainVisibleSlides);
+
+                for (let i = 0; i < totalDots; i++) {
+                    const dot = document.createElement('div');
+                    dot.classList.add('w-2', 'h-2', 'rounded-full', 'bg-gray-300', 'cursor-pointer',
+                        'transition-colors');
+
+                    if (i === Math.floor(mainSliderIndex / mainVisibleSlides)) {
+                        dot.classList.remove('bg-gray-300');
+                        dot.classList.add('bg-[#1a2e5a]');
                     }
+
+                    dot.addEventListener('click', () => {
+                        goToMainSlide(i * mainVisibleSlides);
+                    });
+
+                    sliderDots.appendChild(dot);
+                }
+            }
+
+            // Update main slider position
+            function updateMainSlide(index) {
+                if (!slidesWrapper) return;
+
+                mainSliderIndex = index;
+
+                // Check maximum bounds
+                const maxIndex = Math.max(0, sliderItems.length - mainVisibleSlides);
+                if (mainSliderIndex > maxIndex) {
+                    mainSliderIndex = maxIndex;
+                }
+
+                // Smooth transition with transform
+                slidesWrapper.style.transition = 'transform 0.5s ease';
+                slidesWrapper.style.transform = `translateX(-${mainSliderIndex * mainSliderWidthPercent}%)`;
+
+                // Update dots
+                updateMainActiveDot();
+            }
+
+            // Update active dot
+            function updateMainActiveDot() {
+                if (!sliderDots) return;
+
+                const dots = sliderDots.querySelectorAll('div');
+                const activeDotIndex = Math.floor(mainSliderIndex / mainVisibleSlides);
+
+                dots.forEach((dot, index) => {
+                    if (index === activeDotIndex) {
+                        dot.classList.remove('bg-gray-300');
+                        dot.classList.add('bg-[#1a2e5a]');
+                    } else {
+                        dot.classList.remove('bg-[#1a2e5a]');
+                        dot.classList.add('bg-gray-300');
+                    }
+                });
+            }
+
+            // Go to specific slide
+            function goToMainSlide(index) {
+                updateMainSlide(index);
+            }
+
+            // Go to next slide
+            function nextMainSlide() {
+                if (mainSliderIndex < sliderItems.length - mainVisibleSlides) {
+                    updateMainSlide(mainSliderIndex + mainVisibleSlides);
+                } else {
+                    // Loop to beginning
+                    updateMainSlide(0);
+                }
+            }
+
+            // Go to previous slide
+            function prevMainSlide() {
+                if (mainSliderIndex > 0) {
+                    updateMainSlide(mainSliderIndex - mainVisibleSlides);
+                } else {
+                    // Loop to end
+                    updateMainSlide(Math.max(0, sliderItems.length - mainVisibleSlides));
+                }
+            }
+
+            // Single slide movement for mobile
+            function nextMainSingleSlide() {
+                if (mainSliderIndex < sliderItems.length - 1) {
+                    updateMainSlide(mainSliderIndex + 1);
+                } else {
+                    updateMainSlide(0);
+                }
+            }
+
+            function prevMainSingleSlide() {
+                if (mainSliderIndex > 0) {
+                    updateMainSlide(mainSliderIndex - 1);
+                } else {
+                    updateMainSlide(sliderItems.length - 1);
+                }
+            }
+
+            // Button event handlers
+            if (nextButton) nextButton.addEventListener('click', nextMainSlide);
+            if (prevButton) prevButton.addEventListener('click', prevMainSlide);
+            if (mobileNextButton) mobileNextButton.addEventListener('click', nextMainSingleSlide);
+            if (mobilePrevButton) mobilePrevButton.addEventListener('click', prevMainSingleSlide);
+
+            // Touch events for mobile swipe
+            let mainTouchStartX = 0;
+            let mainTouchEndX = 0;
+
+            if (slidesWrapper) {
+                slidesWrapper.addEventListener('touchstart', e => {
+                    mainTouchStartX = e.changedTouches[0].screenX;
+                });
+
+                slidesWrapper.addEventListener('touchend', e => {
+                    mainTouchEndX = e.changedTouches[0].screenX;
+                    handleMainSwipe();
+                });
+            }
+
+            function handleMainSwipe() {
+                const swipeThreshold = 30;
+
+                if (mainTouchEndX < mainTouchStartX - swipeThreshold) {
+                    // Swipe left
+                    nextMainSingleSlide();
+                } else if (mainTouchEndX > mainTouchStartX + swipeThreshold) {
+                    // Swipe right
+                    prevMainSingleSlide();
+                }
+            }
+
+            // Auto-slide functionality
+            let mainAutoSlide;
+            const sliderContainer = document.querySelector('.slider-container');
+
+            if (sliderContainer && slidesWrapper) {
+                mainAutoSlide = setInterval(nextMainSlide, 6000);
+
+                // Pause auto-slide on user interaction
+                sliderContainer.addEventListener('mouseenter', () => {
+                    clearInterval(mainAutoSlide);
+                });
+
+                // Resume auto-slide when user leaves
+                sliderContainer.addEventListener('mouseleave', () => {
+                    clearInterval(mainAutoSlide);
+                    mainAutoSlide = setInterval(nextMainSlide, 6000);
+                });
+            }
+
+            // Initialize with screen size
+            updateMainSlidesConfig();
+
+            // Update on window resize
+            window.addEventListener('resize', updateMainSlidesConfig);
+        }
+
+        function initMainPromoVideo() {
+            console.log("Video thumbnail işlemi başlatılıyor...");
+            
+            // Tüm video thumbnail'lerini seçin - ana tanıtım ve slayt videoları dahil
+            const videoThumbnails = document.querySelectorAll('.video-thumbnail');
+            console.log(`Toplam ${videoThumbnails.length} video thumbnail bulundu`);
+            
+            videoThumbnails.forEach((thumbnail, index) => {
+                const img = thumbnail.querySelector('img');
+                if (img) {
+                    const videoId = thumbnail.getAttribute('data-video-id');
+                    console.log(`[${index}] Video işleniyor: ${videoId}, mevcut src: ${img.src}`);
+                    
+                    // Direkt varsayılan bir değer koyalım, sonra asenkron olarak yükleyelim
+                    if (index === 0) {
+                        // Ana video için özel yüksek kaliteli placeholder
+                        thumbnail.classList.add('thumbnail-loading');
+                        img.style.background = '#f1f1f1';
+                    }
+                    
+                    // Tüm olası YouTube thumbnail formatlarını bir dizide tutalım
+                    const thumbnailOptions = [
+                        `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`, // HD
+                        `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,     // High quality
+                        `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,     // Medium quality
+                        `https://i.ytimg.com/vi/${videoId}/sddefault.jpg`,     // Standard quality
+                        `https://i.ytimg.com/vi/${videoId}/0.jpg`,             // Alternatif format
+                        `https://i.ytimg.com/vi/${videoId}/default.jpg`,       // Lowest quality
+                        'https://via.placeholder.com/480x360?text=Video+Thumbnail' // Fallback
+                    ];
+                    
+                    // Tüm formatlarda thumbnail'leri asenkron olarak kontrol edelim
+                    // ve ilk çalışanı kullanalım
+                    checkImageSources(thumbnailOptions, 0, (validSrc) => {
+                        console.log(`[${index}] ${videoId} için çalışan kaynak bulundu: ${validSrc}`);
+                        img.src = validSrc;
+                        img.style.opacity = '1';
+                        thumbnail.classList.remove('thumbnail-loading');
+                    });
+                    
+                    // Görünürlük için CSS ekle
+                    if (!document.getElementById('thumbnail-styles')) {
+                        const style = document.createElement('style');
+                        style.id = 'thumbnail-styles';
+                        style.textContent = `
+                            .thumbnail-loading { position: relative; }
+                            .thumbnail-loading::after {
+                                content: "Yükleniyor...";
+                                position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                transform: translate(-50%, -50%);
+                                color: #666;
+                                font-size: 14px;
+                                z-index: 1;
+                            }
+                        `;
+                        document.head.appendChild(style);
+                    }
+                }
+                
+                // Video tıklama işlevselliği - Ana video için
+                thumbnail.addEventListener('click', function() {
+                    const videoId = this.getAttribute('data-video-id');
+                    const iframeContainer = this.parentElement.querySelector('.video-iframe-container');
+                    
+                    if (iframeContainer) {
+                        // Slider slayt geçişini durdur - videoSliderIsPlaying değişkenini true yap
+                        if (window.videoSliderIsPlaying !== undefined) {
+                            window.videoSliderIsPlaying = true;
+                            // Varsa otomatik kaydırmayı durdur
+                            if (window.videoSliderInterval) {
+                                clearInterval(window.videoSliderInterval);
+                            }
+                        }
+                        
+                        // Video iframe'ini oluştur - video bittiğinde slayt geçişini tekrar başlatmak için event listener ekle
+                        iframeContainer.innerHTML = `<iframe class="w-full h-full absolute inset-0" 
+                            src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen></iframe>`;
+                        
+                        this.style.display = 'none';
+                        iframeContainer.classList.remove('hidden');
+                    }
+                });
+            });
+        }
+
+        // Görüntünün yüklenebilir olup olmadığını kontrol eden yardımcı fonksiyon
+        function checkImageSources(sources, index, callback) {
+            if (index >= sources.length) {
+                // Tüm kaynaklar denendi, varsayılan son kaynağı kullan
+                callback(sources[sources.length - 1]);
+                return;
+            }
+            
+            const img = new Image();
+            const timestamp = new Date().getTime();
+            const source = sources[index].includes('?') ? 
+                `${sources[index]}&_=${timestamp}` : 
+                `${sources[index]}?_=${timestamp}`;
+            
+            img.onload = function() {
+                // Bu kaynak çalıştı, geri çağır
+                callback(source);
+            };
+            
+            img.onerror = function() {
+                console.log(`${source} yüklenemedi, sıradaki kaynak deneniyor`);
+                // Bu kaynak çalışmadı, sıradakini dene
+                checkImageSources(sources, index + 1, callback);
+            };
+            
+            img.src = source;
+        }
+
+        // Alternatif thumbnail kaynaklarını deneyen yardımcı fonksiyon
+        function tryAlternativeThumbnails(imgElement, videoId) {
+            // Thumbnailleri kaliteden düşüğe doğru dene
+            const thumbnailQualities = [
+                'mqdefault.jpg',
+                'sddefault.jpg',
+                '0.jpg', // YouTube'un alternatif formatı
+                'default.jpg' // En düşük kalite
+            ];
+
+            // Recursive olarak her bir thumbnail kalitesini dene
+            function tryNextQuality(index) {
+                if (index >= thumbnailQualities.length) {
+                    // Tüm kaliteler başarısız olduysa, varsayılan bir görsel kullan
+                    console.log(
+                        `${videoId} için hiçbir thumbnail kalitesi bulunamadı, varsayılan görsel kullanılıyor`
+                        );
+                    imgElement.src = 'https://via.placeholder.com/480x360?text=Video+Thumbnail';
+                    // Hata durumunda görünürlük ayarları
+                    imgElement.style.objectFit = 'contain';
+                    imgElement.style.background = '#f0f0f0';
+                    return;
+                }
+
+                // Zamanlama sorunu olmaması için timestamp ekle
+                const timestamp = new Date().getTime();
+                imgElement.src =
+                `https://i.ytimg.com/vi/${videoId}/${thumbnailQualities[index]}?_=${timestamp}`;
+
+                // Bu thumbnail da başarısız olursa bir sonrakini dene
+                imgElement.onerror = function() {
+                    console.log(
+                        `${videoId} için ${thumbnailQualities[index]} yüklenemedi, sonraki deneniyor`);
+                    tryNextQuality(index + 1);
                 };
             }
 
-            // ===== FLOATING PANEL FUNCTIONS =====
-            function initFloatingPanel() {
-                const closeFloatingPanelButton = document.getElementById('closeFloatingPanel');
-                const floatingSignupPanel = document.getElementById('floatingSignupPanel');
-
-                if (closeFloatingPanelButton && floatingSignupPanel) {
-                    closeFloatingPanelButton.addEventListener('click', function() {
-                        floatingSignupPanel.classList.add('hidden');
-                        floatingSignupPanel.style.display = 'none';
-
-                        // Save user preference as cookie
-                        document.cookie =
-                            "hideFloatingPanel=true; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
-                    });
-
-                    // Check if user closed the panel before
-                    if (getCookie('hideFloatingPanel') === 'true') {
-                        floatingSignupPanel.classList.add('hidden');
-                    }
-                }
-
-                // Helper function to get cookie value
-                function getCookie(name) {
-                    const value = `; ${document.cookie}`;
-                    const parts = value.split(`; ${name}=`);
-                    if (parts.length === 2) return parts.pop().split(';').shift();
-                }
-            }
-
-            // ===== MAIN COURSES SLIDER FUNCTIONS =====
-            function initMainSlider() {
-                const slidesWrapper = document.getElementById('slidesWrapper');
-                const sliderDots = document.getElementById('sliderDots');
-                const nextButton = document.getElementById('nextButton');
-                const prevButton = document.getElementById('prevButton');
-                const mobileNextButton = document.getElementById('mobileNextButton');
-                const mobilePrevButton = document.getElementById('mobilePrevButton');
-                const sliderItems = document.querySelectorAll('.slider-item');
-
-                if (!slidesWrapper || sliderItems.length === 0) return;
-
-                let mainSliderIndex = 0;
-                let mainSliderWidthPercent = 100;
-                let mainVisibleSlides = 1;
-
-                // Configure slider based on screen size
-                function updateMainSlidesConfig() {
-                    if (window.innerWidth >= 1024) { // lg
-                        mainVisibleSlides = 3;
-                        mainSliderWidthPercent = 100 / 3;
-                    } else if (window.innerWidth >= 768) { // md
-                        mainVisibleSlides = 2;
-                        mainSliderWidthPercent = 50;
-                    } else { // sm and below
-                        mainVisibleSlides = 1;
-                        mainSliderWidthPercent = 100;
-                    }
-
-                    // Set slide widths
-                    sliderItems.forEach(item => {
-                        item.style.width = `${mainSliderWidthPercent}%`;
-                    });
-
-                    // Update active slide
-                    updateMainSlide(mainSliderIndex);
-
-                    // Create dots
-                    createMainDots();
-                }
-
-                // Create dots for navigation
-                function createMainDots() {
-                    if (!sliderDots) return;
-
-                    sliderDots.innerHTML = '';
-                    const totalDots = Math.ceil(sliderItems.length / mainVisibleSlides);
-
-                    for (let i = 0; i < totalDots; i++) {
-                        const dot = document.createElement('div');
-                        dot.classList.add('w-2', 'h-2', 'rounded-full', 'bg-gray-300', 'cursor-pointer',
-                            'transition-colors');
-
-                        if (i === Math.floor(mainSliderIndex / mainVisibleSlides)) {
-                            dot.classList.remove('bg-gray-300');
-                            dot.classList.add('bg-[#1a2e5a]');
-                        }
-
-                        dot.addEventListener('click', () => {
-                            goToMainSlide(i * mainVisibleSlides);
-                        });
-
-                        sliderDots.appendChild(dot);
-                    }
-                }
-
-                // Update main slider position
-                function updateMainSlide(index) {
-                    if (!slidesWrapper) return;
-
-                    mainSliderIndex = index;
-
-                    // Check maximum bounds
-                    const maxIndex = Math.max(0, sliderItems.length - mainVisibleSlides);
-                    if (mainSliderIndex > maxIndex) {
-                        mainSliderIndex = maxIndex;
-                    }
-
-                    // Smooth transition with transform
-                    slidesWrapper.style.transition = 'transform 0.5s ease';
-                    slidesWrapper.style.transform = `translateX(-${mainSliderIndex * mainSliderWidthPercent}%)`;
-
-                    // Update dots
-                    updateMainActiveDot();
-                }
-
-                // Update active dot
-                function updateMainActiveDot() {
-                    if (!sliderDots) return;
-
-                    const dots = sliderDots.querySelectorAll('div');
-                    const activeDotIndex = Math.floor(mainSliderIndex / mainVisibleSlides);
-
-                    dots.forEach((dot, index) => {
-                        if (index === activeDotIndex) {
-                            dot.classList.remove('bg-gray-300');
-                            dot.classList.add('bg-[#1a2e5a]');
-                        } else {
-                            dot.classList.remove('bg-[#1a2e5a]');
-                            dot.classList.add('bg-gray-300');
-                        }
-                    });
-                }
-
-                // Go to specific slide
-                function goToMainSlide(index) {
-                    updateMainSlide(index);
-                }
-
-                // Go to next slide
-                function nextMainSlide() {
-                    if (mainSliderIndex < sliderItems.length - mainVisibleSlides) {
-                        updateMainSlide(mainSliderIndex + mainVisibleSlides);
-                    } else {
-                        // Loop to beginning
-                        updateMainSlide(0);
-                    }
-                }
-
-                // Go to previous slide
-                function prevMainSlide() {
-                    if (mainSliderIndex > 0) {
-                        updateMainSlide(mainSliderIndex - mainVisibleSlides);
-                    } else {
-                        // Loop to end
-                        updateMainSlide(Math.max(0, sliderItems.length - mainVisibleSlides));
-                    }
-                }
-
-                // Single slide movement for mobile
-                function nextMainSingleSlide() {
-                    if (mainSliderIndex < sliderItems.length - 1) {
-                        updateMainSlide(mainSliderIndex + 1);
-                    } else {
-                        updateMainSlide(0);
-                    }
-                }
-
-                function prevMainSingleSlide() {
-                    if (mainSliderIndex > 0) {
-                        updateMainSlide(mainSliderIndex - 1);
-                    } else {
-                        updateMainSlide(sliderItems.length - 1);
-                    }
-                }
-
-                // Button event handlers
-                if (nextButton) nextButton.addEventListener('click', nextMainSlide);
-                if (prevButton) prevButton.addEventListener('click', prevMainSlide);
-                if (mobileNextButton) mobileNextButton.addEventListener('click', nextMainSingleSlide);
-                if (mobilePrevButton) mobilePrevButton.addEventListener('click', prevMainSingleSlide);
-
-                // Touch events for mobile swipe
-                let mainTouchStartX = 0;
-                let mainTouchEndX = 0;
-
-                if (slidesWrapper) {
-                    slidesWrapper.addEventListener('touchstart', e => {
-                        mainTouchStartX = e.changedTouches[0].screenX;
-                    });
-
-                    slidesWrapper.addEventListener('touchend', e => {
-                        mainTouchEndX = e.changedTouches[0].screenX;
-                        handleMainSwipe();
-                    });
-                }
-
-                function handleMainSwipe() {
-                    const swipeThreshold = 30;
-
-                    if (mainTouchEndX < mainTouchStartX - swipeThreshold) {
-                        // Swipe left
-                        nextMainSingleSlide();
-                    } else if (mainTouchEndX > mainTouchStartX + swipeThreshold) {
-                        // Swipe right
-                        prevMainSingleSlide();
-                    }
-                }
-
-                // Auto-slide functionality
-                let mainAutoSlide;
-                const sliderContainer = document.querySelector('.slider-container');
-
-                if (sliderContainer && slidesWrapper) {
-                    mainAutoSlide = setInterval(nextMainSlide, 6000);
-
-                    // Pause auto-slide on user interaction
-                    sliderContainer.addEventListener('mouseenter', () => {
-                        clearInterval(mainAutoSlide);
-                    });
-
-                    // Resume auto-slide when user leaves
-                    sliderContainer.addEventListener('mouseleave', () => {
-                        clearInterval(mainAutoSlide);
-                        mainAutoSlide = setInterval(nextMainSlide, 6000);
-                    });
-                }
-
-                // Initialize with screen size
-                updateMainSlidesConfig();
-
-                // Update on window resize
-                window.addEventListener('resize', updateMainSlidesConfig);
-            }
-function initMainPromoVideo() {
-    console.log("Video thumbnail işlemi başlatılıyor...");
-    
-    // Tüm video thumbnail'lerini seçin - ana tanıtım ve slayt videoları dahil
-    const videoThumbnails = document.querySelectorAll('.video-thumbnail');
-    console.log(`Toplam ${videoThumbnails.length} video thumbnail bulundu`);
-    
-    videoThumbnails.forEach((thumbnail, index) => {
-        const img = thumbnail.querySelector('img');
-        if (img) {
-            const videoId = thumbnail.getAttribute('data-video-id');
-            console.log(`[${index}] Video işleniyor: ${videoId}, mevcut src: ${img.src}`);
-            
-            // Direkt varsayılan bir değer koyalım, sonra asenkron olarak yükleyelim
-            if (index === 0) {
-                // Ana video için özel yüksek kaliteli placeholder
-                thumbnail.classList.add('thumbnail-loading');
-                img.style.background = '#f1f1f1';
-            }
-            
-            // Tüm olası YouTube thumbnail formatlarını bir dizide tutalım
-            const thumbnailOptions = [
-                `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`, // HD
-                `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,     // High quality
-                `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,     // Medium quality
-                `https://i.ytimg.com/vi/${videoId}/sddefault.jpg`,     // Standard quality
-                `https://i.ytimg.com/vi/${videoId}/0.jpg`,             // Alternatif format
-                `https://i.ytimg.com/vi/${videoId}/default.jpg`,       // Lowest quality
-                'https://via.placeholder.com/480x360?text=Video+Thumbnail' // Fallback
-            ];
-            
-            // Tüm formatlarda thumbnail'leri asenkron olarak kontrol edelim
-            // ve ilk çalışanı kullanalım
-            checkImageSources(thumbnailOptions, 0, (validSrc) => {
-                console.log(`[${index}] ${videoId} için çalışan kaynak bulundu: ${validSrc}`);
-                img.src = validSrc;
-                img.style.opacity = '1';
-                thumbnail.classList.remove('thumbnail-loading');
-            });
-            
-            // Görünürlük için CSS ekle
-            if (!document.getElementById('thumbnail-styles')) {
-                const style = document.createElement('style');
-                style.id = 'thumbnail-styles';
-                style.textContent = `
-                    .thumbnail-loading { position: relative; }
-                    .thumbnail-loading::after {
-                        content: "Yükleniyor...";
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        color: #666;
-                        font-size: 14px;
-                        z-index: 1;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
+            // İlk kaliteden başla
+            tryNextQuality(0);
         }
-        
-        // Video tıklama işlevselliği (değişmedi)
-        thumbnail.addEventListener('click', function() {
-            const videoId = this.getAttribute('data-video-id');
-            const iframeContainer = this.parentElement.querySelector('.video-iframe-container');
+
+        // ===== STUDENT VIDEOS SLIDER FUNCTIONS - YENİLENMİŞ VERSİYON =====
+        function initVideoSlider() {
+            // DOM Elemanlarını Seç
+            const videoSlidesWrapper = document.getElementById('videoSlidesWrapper');
+            const videoSliderDots = document.getElementById('videoSliderDots');
+            const nextVideoBtn = document.getElementById('nextVideo');
+            const prevVideoBtn = document.getElementById('prevVideo');
+            const videoSlides = document.querySelectorAll('.video-slide');
+
+            // Eğer gerekli elemanlar yoksa işlemi sonlandır
+            if (!videoSlidesWrapper || videoSlides.length === 0) return;
+
+            // Değişkenler
+            let currentIndex = 0;
+            let slidesPerView = 1;
+            const totalSlides = videoSlides.length;
+            let slideWidth = 100; // Yüzde cinsinden
+            let autoSlideInterval;
             
-            if (iframeContainer) {
-                iframeContainer.innerHTML = `<iframe class="w-full h-full absolute inset-0" 
-                    src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
-                    title="YouTube video player" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen></iframe>`;
-                
-                this.style.display = 'none';
-                iframeContainer.classList.remove('hidden');
-            }
-        });
-    });
-}
+            // Video oynatma durumunu global olarak izle
+            window.videoSliderIsPlaying = false;
+            window.videoSliderInterval = null;
 
-// Görüntünün yüklenebilir olup olmadığını kontrol eden yardımcı fonksiyon
-function checkImageSources(sources, index, callback) {
-    if (index >= sources.length) {
-        // Tüm kaynaklar denendi, varsayılan son kaynağı kullan
-        callback(sources[sources.length - 1]);
-        return;
-    }
-    
-    const img = new Image();
-    const timestamp = new Date().getTime();
-    const source = sources[index].includes('?') ? 
-        `${sources[index]}&_=${timestamp}` : 
-        `${sources[index]}?_=${timestamp}`;
-    
-    img.onload = function() {
-        // Bu kaynak çalıştı, geri çağır
-        callback(source);
-    };
-    
-    img.onerror = function() {
-        console.log(`${source} yüklenemedi, sıradaki kaynak deneniyor`);
-        // Bu kaynak çalışmadı, sıradakini dene
-        checkImageSources(sources, index + 1, callback);
-    };
-    
-    img.src = source;
-}
-
-            // Alternatif thumbnail kaynaklarını deneyen yardımcı fonksiyon
-            function tryAlternativeThumbnails(imgElement, videoId) {
-                // Thumbnailleri kaliteden düşüğe doğru dene
-                const thumbnailQualities = [
-                    'mqdefault.jpg',
-                    'sddefault.jpg',
-                    '0.jpg', // YouTube'un alternatif formatı
-                    'default.jpg' // En düşük kalite
-                ];
-
-                // Recursive olarak her bir thumbnail kalitesini dene
-                function tryNextQuality(index) {
-                    if (index >= thumbnailQualities.length) {
-                        // Tüm kaliteler başarısız olduysa, varsayılan bir görsel kullan
-                        console.log(
-                            `${videoId} için hiçbir thumbnail kalitesi bulunamadı, varsayılan görsel kullanılıyor`
-                            );
-                        imgElement.src = 'https://via.placeholder.com/480x360?text=Video+Thumbnail';
-                        // Hata durumunda görünürlük ayarları
-                        imgElement.style.objectFit = 'contain';
-                        imgElement.style.background = '#f0f0f0';
-                        return;
-                    }
-
-                    // Zamanlama sorunu olmaması için timestamp ekle
-                    const timestamp = new Date().getTime();
-                    imgElement.src =
-                    `https://i.ytimg.com/vi/${videoId}/${thumbnailQualities[index]}?_=${timestamp}`;
-
-                    // Bu thumbnail da başarısız olursa bir sonrakini dene
-                    imgElement.onerror = function() {
-                        console.log(
-                            `${videoId} için ${thumbnailQualities[index]} yüklenemedi, sonraki deneniyor`);
-                        tryNextQuality(index + 1);
-                    };
+            // Ekran boyutuna göre görünür slayt sayısını ayarla
+            function updateSlidesConfig() {
+                if (window.innerWidth >= 1024) { // lg
+                    slidesPerView = 3;
+                    slideWidth = 100 / 3;
+                } else if (window.innerWidth >= 768) { // md
+                    slidesPerView = 2;
+                    slideWidth = 50;
+                } else { // sm ve altı
+                    slidesPerView = 1;
+                    slideWidth = 100;
                 }
 
-                // İlk kaliteden başla
-                tryNextQuality(0);
-            }
-            // Call this function in your document.addEventListener('DOMContentLoaded', function() {...
-
-            // ===== STUDENT VIDEOS SLIDER FUNCTIONS - YENİLENMİŞ VERSİYON =====
-            function initVideoSlider() {
-                // DOM Elemanlarını Seç
-                const videoSlidesWrapper = document.getElementById('videoSlidesWrapper');
-                const videoSliderDots = document.getElementById('videoSliderDots');
-                const nextVideoBtn = document.getElementById('nextVideo');
-                const prevVideoBtn = document.getElementById('prevVideo');
-                const videoSlides = document.querySelectorAll('.video-slide');
-
-                // Eğer gerekli elemanlar yoksa işlemi sonlandır
-                if (!videoSlidesWrapper || videoSlides.length === 0) return;
-
-                // Değişkenler
-                let currentIndex = 0;
-                let slidesPerView = 1;
-                const totalSlides = videoSlides.length;
-                let slideWidth = 100; // Yüzde cinsinden
-                let autoSlideInterval;
-
-                // Ekran boyutuna göre görünür slayt sayısını ayarla
-                function updateSlidesConfig() {
-                    if (window.innerWidth >= 1024) { // lg
-                        slidesPerView = 3;
-                        slideWidth = 100 / 3;
-                    } else if (window.innerWidth >= 768) { // md
-                        slidesPerView = 2;
-                        slideWidth = 50;
-                    } else { // sm ve altı
-                        slidesPerView = 1;
-                        slideWidth = 100;
-                    }
-
-                    // Slayt genişliklerini ayarla
-                    videoSlides.forEach(slide => {
-                        slide.style.width = `${slideWidth}%`;
-                    });
-
-                    // Slaytları güncelle
-                    goToSlide(currentIndex);
-
-                    // Dot'ları oluştur
-                    createDots();
-                }
-
-                // Dot navigasyonu oluştur
-                function createDots() {
-                    if (!videoSliderDots) return;
-
-                    videoSliderDots.innerHTML = '';
-                    const dotsCount = Math.ceil(totalSlides / slidesPerView);
-
-                    for (let i = 0; i < dotsCount; i++) {
-                        const dot = document.createElement('div');
-                        dot.classList.add('w-2', 'h-2', 'rounded-full', 'bg-white', 'bg-opacity-30',
-                            'cursor-pointer', 'transition-all', 'duration-300');
-
-                        if (i === Math.floor(currentIndex / slidesPerView)) {
-                            dot.classList.remove('bg-opacity-30');
-                            dot.classList.add('bg-opacity-100');
-                        }
-
-                        dot.addEventListener('click', () => {
-                            goToSlide(i * slidesPerView);
-                        });
-
-                        videoSliderDots.appendChild(dot);
-                    }
-                }
-
-                // Belirli bir slayta git
-                function goToSlide(index) {
-                    // Otomatik geçişi durdur
-                    clearInterval(autoSlideInterval);
-
-                    // Index'in sınırlar içinde olduğunu kontrol et
-                    currentIndex = index;
-                    if (currentIndex < 0) {
-                        currentIndex = totalSlides - slidesPerView;
-                    } else if (currentIndex > totalSlides - slidesPerView) {
-                        currentIndex = 0;
-                    }
-
-                    // CSS transform ile slaytları kaydır
-                    videoSlidesWrapper.style.transition = 'transform 0.5s ease';
-                    videoSlidesWrapper.style.transform = `translateX(-${currentIndex * slideWidth}%)`;
-
-                    // Aktif dot'u güncelle
-                    updateActiveDot();
-
-                    // Otomatik geçişi yeniden başlat
-                    startAutoSlide();
-                }
-
-                // Aktif dot'u güncelle
-                function updateActiveDot() {
-                    if (!videoSliderDots) return;
-
-                    const dots = videoSliderDots.querySelectorAll('div');
-                    const activeDotIndex = Math.floor(currentIndex / slidesPerView);
-
-                    dots.forEach((dot, index) => {
-                        if (index === activeDotIndex) {
-                            dot.classList.remove('bg-opacity-30');
-                            dot.classList.add('bg-opacity-100');
-                        } else {
-                            dot.classList.remove('bg-opacity-100');
-                            dot.classList.add('bg-opacity-30');
-                        }
-                    });
-                }
-
-                // Sonraki slayta geç
-                function nextSlide() {
-                    goToSlide(currentIndex + slidesPerView);
-                }
-
-                // Önceki slayta geç
-                function prevSlide() {
-                    goToSlide(currentIndex - slidesPerView);
-                }
-
-                // Otomatik geçişi başlat
-                function startAutoSlide() {
-                    clearInterval(autoSlideInterval);
-                    autoSlideInterval = setInterval(() => {
-                        nextSlide();
-                    }, 5000);
-                }
-
-                // Buton event listener'ları
-                if (nextVideoBtn) {
-                    nextVideoBtn.addEventListener('click', () => {
-                        nextSlide();
-                    });
-                }
-
-                if (prevVideoBtn) {
-                    prevVideoBtn.addEventListener('click', () => {
-                        prevSlide();
-                    });
-                }
-                const videoThumbnail = document.querySelector('.video-thumbnail');
-                if (videoThumbnail) {
-                    videoThumbnail.addEventListener('click', function() {
-                        const videoId = this.getAttribute('data-video-id');
-                        const iframeContainer = this.parentElement.querySelector('.video-iframe-container');
-
-                        // Video iframe'ini oluştur
-                        iframeContainer.innerHTML = `<iframe class="w-full h-full absolute inset-0" 
-                src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
-                title="YouTube video player" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen></iframe>`;
-
-                        // Thumbnail'i gizle, iframe'i göster
-                        this.style.display = 'none';
-                        iframeContainer.classList.remove('hidden');
-                    });
-                }
-                // Video thumbnails tıklama olayları
-                const videoThumbnails = document.querySelectorAll('.video-thumbnail');
-
-                videoThumbnails.forEach(thumbnail => {
-                    thumbnail.addEventListener('click', function() {
-                        const videoId = this.getAttribute('data-video-id');
-                        const iframeContainer = this.parentElement.querySelector(
-                            '.video-iframe-container');
-
-                        console.log("Video ID:", videoId); // Debugging
-
-                        // Video iframe'ini oluştur
-                        iframeContainer.innerHTML =
-                            `<iframe class="w-full h-full absolute inset-0" src="https://www.youtube.com/embed/${videoId}?autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-
-                        // Thumbnail'i gizle, iframe'i göster
-                        this.style.display = 'none';
-                        iframeContainer.classList.remove('hidden');
-                    });
-
-                    // Swipe işlevselliği
-                    let touchStartX = 0;
-                    let touchEndX = 0;
-
-                    if (videoSlidesWrapper) {
-                        videoSlidesWrapper.addEventListener('touchstart', e => {
-                            touchStartX = e.changedTouches[0].screenX;
-                        });
-
-                        videoSlidesWrapper.addEventListener('touchend', e => {
-                            touchEndX = e.changedTouches[0].screenX;
-                            handleSwipe();
-                        });
-                    }
-                    const thumbnailImages = document.querySelectorAll('.video-thumbnail img');
-                    thumbnailImages.forEach(img => {
-                        img.addEventListener('error', function() {
-                            console.error('Thumbnail yükleme hatası:', this.src);
-
-                            // Video ID'sini al
-                            const videoId = this.parentElement.getAttribute(
-                                'data-video-id');
-
-                            // Alternatif thumbnail dene
-                            this.src = `https://i.ytimg.com/vi/${videoId}/default.jpg`;
-
-                            // İkinci deneme de başarısız olursa
-                            this.addEventListener('error', function() {
-                                // Placeholder resim göster
-                                this.src =
-                                    'https://via.placeholder.com/480x360?text=Video+Thumbnail';
-                            });
-                        });
-                    });
+                // Slayt genişliklerini ayarla
+                videoSlides.forEach(slide => {
+                    slide.style.width = `${slideWidth}%`;
                 });
 
-                function handleSwipe() {
-                    const swipeThreshold = 30;
+                // Slaytları güncelle
+                goToSlide(currentIndex);
 
-                    if (touchEndX < touchStartX - swipeThreshold) {
-                        // Sola kaydırma
-                        nextSlide();
-                    } else if (touchEndX > touchStartX + swipeThreshold) {
-                        // Sağa kaydırma
-                        prevSlide();
+                // Dot'ları oluştur
+                createDots();
+            }
+
+            // Dot navigasyonu oluştur
+            function createDots() {
+                if (!videoSliderDots) return;
+
+                videoSliderDots.innerHTML = '';
+                const dotsCount = Math.ceil(totalSlides / slidesPerView);
+
+                for (let i = 0; i < dotsCount; i++) {
+                    const dot = document.createElement('div');
+                    dot.classList.add('w-2', 'h-2', 'rounded-full', 'bg-white', 'bg-opacity-30',
+                        'cursor-pointer', 'transition-all', 'duration-300');
+
+                    if (i === Math.floor(currentIndex / slidesPerView)) {
+                        dot.classList.remove('bg-opacity-30');
+                        dot.classList.add('bg-opacity-100');
                     }
+
+                    dot.addEventListener('click', () => {
+                        goToSlide(i * slidesPerView);
+                    });
+
+                    videoSliderDots.appendChild(dot);
+                }
+            }
+
+            // Belirli bir slayta git
+            function goToSlide(index) {
+                // Video oynatılıyorsa slayt geçişini durdur
+                if (window.videoSliderIsPlaying) return;
+                
+                // Otomatik geçişi durdur
+                clearInterval(autoSlideInterval);
+
+                // Index'in sınırlar içinde olduğunu kontrol et
+                currentIndex = index;
+                if (currentIndex < 0) {
+                    currentIndex = totalSlides - slidesPerView;
+                } else if (currentIndex > totalSlides - slidesPerView) {
+                    currentIndex = 0;
                 }
 
-                // İlk yükleme için konfigürasyonu ayarla
-                updateSlidesConfig();
+                // CSS transform ile slaytları kaydır
+                videoSlidesWrapper.style.transition = 'transform 0.5s ease';
+                videoSlidesWrapper.style.transform = `translateX(-${currentIndex * slideWidth}%)`;
 
-                // Otomatik geçişi başlat
-                startAutoSlide();
+                // Aktif dot'u güncelle
+                updateActiveDot();
 
-                // Ekran boyutu değiştiğinde güncelle
-                window.addEventListener('resize', updateSlidesConfig);
+                // Eğer video oynatılmıyorsa otomatik geçişi yeniden başlat
+                if (!window.videoSliderIsPlaying) {
+                    startAutoSlide();
+                }
             }
-        });
-    </script>
+
+            // Aktif dot'u güncelle
+            function updateActiveDot() {
+                if (!videoSliderDots) return;
+
+                const dots = videoSliderDots.querySelectorAll('div');
+                const activeDotIndex = Math.floor(currentIndex / slidesPerView);
+
+                dots.forEach((dot, index) => {
+                    if (index === activeDotIndex) {
+                        dot.classList.remove('bg-opacity-30');
+                        dot.classList.add('bg-opacity-100');
+                    } else {
+                        dot.classList.remove('bg-opacity-100');
+                        dot.classList.add('bg-opacity-30');
+                    }
+                });
+            }
+
+            // Sonraki slayta geç
+            function nextSlide() {
+                // Video oynatılıyorsa slayt geçişini durdur
+                if (window.videoSliderIsPlaying) return;
+                goToSlide(currentIndex + slidesPerView);
+            }
+
+            // Önceki slayta geç
+            function prevSlide() {
+                // Video oynatılıyorsa slayt geçişini durdur
+                if (window.videoSliderIsPlaying) return;
+                goToSlide(currentIndex - slidesPerView);
+            }
+
+            // Otomatik geçişi başlat
+            function startAutoSlide() {
+                clearInterval(autoSlideInterval);
+                
+                // Eğer video oynatılmıyorsa otomatik geçişi başlat
+                if (!window.videoSliderIsPlaying) {
+                    autoSlideInterval = setInterval(() => {
+                        // Her kontrol et - eğer video oynatılıyorsa otomatik slayt geçişini durduracak
+                        if (!window.videoSliderIsPlaying) {
+                            nextSlide();
+                        }
+                    }, 5000);
+                    
+                    // Otomatik geçiş aralığını kaydet (video bitiminde tekrar başlatmak için)
+                    window.videoSliderInterval = autoSlideInterval;
+                }
+            }
+
+            // Otomatik geçişi durdur
+            function stopAutoSlide() {
+                clearInterval(autoSlideInterval);
+                window.videoSliderInterval = null;
+            }
+
+            // Buton event listener'ları
+            if (nextVideoBtn) {
+                nextVideoBtn.addEventListener('click', () => {
+                    nextSlide();
+                });
+            }
+
+            if (prevVideoBtn) {
+                prevVideoBtn.addEventListener('click', () => {
+                    prevSlide();
+                });
+            }
+
+            // Video thumbnails tıklama olayları
+            const videoThumbnails = document.querySelectorAll('.video-thumbnail');
+
+            videoThumbnails.forEach(thumbnail => {
+                thumbnail.addEventListener('click', function() {
+                    const videoId = this.getAttribute('data-video-id');
+                    const iframeContainer = this.parentElement.querySelector('.video-iframe-container');
+
+                    console.log("Video ID:", videoId); // Debugging
+
+                    // Video başlatıldığında otomatik geçişi durdur
+                    window.videoSliderIsPlaying = true;
+                    stopAutoSlide();
+
+                    // Video iframe'ini oluştur
+                    const iframeId = `video-iframe-${videoId}`;
+                    iframeContainer.innerHTML = `
+                        <iframe id="${iframeId}" class="w-full h-full absolute inset-0" 
+                            src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1" 
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen></iframe>`;
+
+                    // Thumbnail'i gizle, iframe'i göster
+                    this.style.display = 'none';
+                    iframeContainer.classList.remove('hidden');
+                    
+                    // YouTube iFrame API ile video bitiş olayını dinle
+                    window.addEventListener('message', function(event) {
+                        // YouTube'dan gelen mesaj mı kontrol et
+                        if (event.origin.startsWith('https://www.youtube.com') && 
+                            typeof event.data === 'string') {
+                            
+                            try {
+                                const data = JSON.parse(event.data);
+                                // Video bitiş durumunu kontrol et (0 = bitti)
+                                if (data.event === 'onStateChange' && data.info === 0) {
+                                    // Video bittiğinde otomatik kaydırmayı tekrar başlat
+                                    window.videoSliderIsPlaying = false;
+                                    startAutoSlide();
+                                }
+                            } catch (e) {
+                                // JSON değilse veya başka bir hata - yoksay
+                            }
+                        }
+                    });
+
+                    // Ayrıca, sayfadan ayrılma durumunda da otomatik kaydırmayı tekrar başlat
+                    document.addEventListener('visibilitychange', function() {
+                        if (document.visibilityState === 'hidden') {
+                            // Sayfa arkaplanda ise ve video oynatılıyorsa, otomatik kaydırmayı tekrar başlat
+                            // Bu, kullanıcı videoyu izlemekten vazgeçtiğinde yardımcı olur
+                            setTimeout(() => {
+                                window.videoSliderIsPlaying = false;
+                                startAutoSlide();
+                            }, 30000); // 30 saniye sonra tekrar başlat
+                        }
+                    });
+                });
+            });
+
+            // Swipe işlevselliği
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            if (videoSlidesWrapper) {
+                videoSlidesWrapper.addEventListener('touchstart', e => {
+                    touchStartX = e.changedTouches[0].screenX;
+                });
+
+                videoSlidesWrapper.addEventListener('touchend', e => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    handleSwipe();
+                });
+            }
+
+            function handleSwipe() {
+                const swipeThreshold = 30;
+
+                // Video oynatılıyorsa swipe işlemini durdur
+                if (window.videoSliderIsPlaying) return;
+
+                if (touchEndX < touchStartX - swipeThreshold) {
+                    // Sola kaydırma
+                    nextSlide();
+                } else if (touchEndX > touchStartX + swipeThreshold) {
+                    // Sağa kaydırma
+                    prevSlide();
+                }
+            }
+
+            // Thumbnail yükleme hatalarını işle
+            const thumbnailImages = document.querySelectorAll('.video-thumbnail img');
+            thumbnailImages.forEach(img => {
+                img.addEventListener('error', function() {
+                    console.error('Thumbnail yükleme hatası:', this.src);
+
+                    // Video ID'sini al
+                    const videoId = this.parentElement.getAttribute('data-video-id');
+
+                    // Alternatif thumbnail dene
+                    this.src = `https://i.ytimg.com/vi/${videoId}/default.jpg`;
+
+                    // İkinci deneme de başarısız olursa
+                    this.addEventListener('error', function() {
+                        // Placeholder resim göster
+                        this.src = 'https://via.placeholder.com/480x360?text=Video+Thumbnail';
+                    });
+                });
+            });
+
+            // İlk yükleme için konfigürasyonu ayarla
+            updateSlidesConfig();
+
+            // Otomatik geçişi başlat
+            startAutoSlide();
+
+            // Ekran boyutu değiştiğinde güncelle
+            window.addEventListener('resize', updateSlidesConfig);
+
+            // Eğer sayfa yüklendiğinde video oynatılmıyorsa, videoSliderIsPlaying değişkenini kontrol et
+            setInterval(() => {
+                // Tüm iframe konteynerlerini kontrol et
+                const videoContainers = document.querySelectorAll('.video-iframe-container');
+                let anyVideoVisible = false;
+
+                videoContainers.forEach(container => {
+                    // Eğer herhangi bir iframe container görünürse (display != 'none' ve hidden değilse)
+                    if (container.style.display !== 'none' && !container.classList.contains('hidden') && 
+                        container.querySelector('iframe')) {
+                        anyVideoVisible = true;
+                    }
+                });
+
+                // Görünür video yoksa otomatik kaydırmayı tekrar başlat
+                if (!anyVideoVisible && window.videoSliderIsPlaying) {
+                    window.videoSliderIsPlaying = false;
+                    startAutoSlide();
+                }
+            }, 10000); // Her 10 saniyede bir kontrol et
+        }
+    });
+</script>
 @endsection

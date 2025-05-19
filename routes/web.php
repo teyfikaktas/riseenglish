@@ -238,6 +238,12 @@ Route::get('/ozel-ders-seans/{id}/sil', [TeacherPrivateLessonController::class, 
         Route::get('/zinciri-kirma-takip', function() {
             return view('teacher.chain-breaker-dashboard');
         })->name('chain-breaker-dashboard');
+        Route::get('/ogrenci/{id}/zincir-detay', [App\Http\Controllers\ChainBreakerController::class, 'studentChainDetail'])
+    ->name('student.chain-detail');
+    
+// Öğrenci için direkt değiştirme yetkisi için route
+Route::post('/ogrenci/{id}/zincir-guncelle', [App\Http\Controllers\ChainBreakerController::class, 'updateStudentChain'])
+    ->name('student.chain-update');
 // Mevcut seans silme route'u (bu zaten vardı, ama içeriğini güncelleyeceksiniz)
 Route::delete('/ozel-ders-seans/{id}', [TeacherPrivateLessonController::class, 'destroySession'])
 ->name('private-lessons.session.destroy');

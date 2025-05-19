@@ -4,6 +4,6 @@
 @section('content')
 <div class="bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] min-h-screen">
     <!-- Livewire Bileşenini Dahil Et -->
-    @livewire('chain-breaker')
+@livewire('chain-breaker', [], key('chain-breaker-'.auth()->id()))
 </div>
 @endsection

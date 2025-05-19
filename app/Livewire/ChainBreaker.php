@@ -8,6 +8,7 @@ use App\Models\ChainActivity;
 use Illuminate\Support\Facades\Auth;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ChainBreaker extends Component
 {
@@ -36,13 +37,11 @@ class ChainBreaker extends Component
     public $todayActivities = [];
     public $teacherId = null;
     // Gender selection için
-    public $showGenderModal = false;
+    public $showGenderSelector = true; // Varsayılan olarak göster
     public $iconGender = null; // 'erkek' veya 'kadin'
 
     protected $listeners = [
-        'refreshProgress' => 'refreshProgress',
-        'confirmReset' => 'confirmReset',
-        'setGender' => 'setGender',
+        'confirmReset'
     ];
 
     protected $rules = [
@@ -52,6 +51,7 @@ class ChainBreaker extends Component
 
     public function mount()
     {
+        Log::info('ChainBreaker mounted');
         $this->isUserAuthenticated = Auth::check();
         $this->refreshProgress();
         
@@ -61,25 +61,24 @@ class ChainBreaker extends Component
             $this->selectedMonth = now()->month;
             $this->selectedYear = now()->year;
             
-            // Gender seçimini kontrol et
+            // Gender seçimi kontrolü
             $progress = ChainProgress::where('user_id', Auth::id())->first();
             if ($progress && $progress->icon_gender) {
                 $this->iconGender = $progress->icon_gender;
-            } else {
-                // Kullanıcı giriş yapmış ama cinsiyet seçimi yapmamış
-                $this->showGenderModal = true;
+                $this->showGenderSelector = false; // Eğer zaten seçim yapıldıysa saklayalım
             }
         }
     }
 
     public function setGender($gender)
     {
+        Log::info('Setting gender', ['gender' => $gender]);
         if (!in_array($gender, ['erkek', 'kadin'])) {
             return;
         }
 
         $this->iconGender = $gender;
-        $this->showGenderModal = false;
+        $this->showGenderSelector = false; // Seçim yapıldıktan sonra gizle
 
         $progress = ChainProgress::firstOrCreate(
             ['user_id' => Auth::id()],
@@ -92,7 +91,6 @@ class ChainBreaker extends Component
         $this->dispatch('show-success', message: 'İkon tercihiniz kaydedildi!');
     }
 
-    // Livewire ayarlarını güncelle
     private function getIconVersion($baseName)
     {
         if (!$this->iconGender || $this->iconGender === 'erkek') {
@@ -102,10 +100,9 @@ class ChainBreaker extends Component
         }
     }
 
-    // Diğer metodlar burada...
-    // Existing methods from your code...
     public function toggleHistoryModal()
     {
+        Log::info('Toggling history modal');
         $this->showHistoryModal = !$this->showHistoryModal;
         if ($this->showHistoryModal) {
             $this->loadHistoricalDates();
@@ -136,10 +133,13 @@ class ChainBreaker extends Component
             })
             ->unique()
             ->toArray();
+
+        Log::info('Historical dates loaded', ['dates' => $this->historicalDates]);
     }
 
     public function selectDate($date)
     {
+        Log::info('Selecting date', ['date' => $date]);
         $this->selectedDate = $date;
         $this->loadDateActivities($date);
     }
@@ -161,10 +161,13 @@ class ChainBreaker extends Component
             ->whereDate('activity_date', $date)
             ->orderBy('created_at', 'desc')
             ->get();
+
+        Log::info('Date activities loaded', ['count' => count($this->selectedDateActivities)]);
     }
 
     public function changeMonth($direction)
     {
+        Log::info('Changing month', ['direction' => $direction]);
         $currentDate = \Carbon\Carbon::createFromDate($this->selectedYear, $this->selectedMonth, 1);
         
         if ($direction === 'prev') {
@@ -180,6 +183,7 @@ class ChainBreaker extends Component
 
     public function deleteActivity($activityId)
     {
+        Log::info('Deleting activity', ['id' => $activityId]);
         $activity = ChainActivity::find($activityId);
         
         if (!$activity) {
@@ -208,11 +212,13 @@ class ChainBreaker extends Component
 
     public function confirmDeleteActivity($activityId)
     {
+        Log::info('Confirming activity deletion', ['id' => $activityId]);
         $this->dispatch('confirm-delete-activity', activityId: $activityId);
     }
     
     public function closeHistoryModal()
     {
+        Log::info('Closing history modal');
         $this->showHistoryModal = false;
         $this->selectedDate = null;
         $this->selectedDateActivities = [];
@@ -239,16 +245,24 @@ class ChainBreaker extends Component
         $this->levelColor = $progress->getLevelColor();
         $this->nextLevelProgress = $progress->getNextLevelProgress();
         $this->iconGender = $progress->icon_gender ?? 'erkek'; // Default erkek
+
+        Log::info('Progress refreshed', [
+            'days' => $this->daysCompleted,
+            'streak' => $this->currentStreak,
+            'level' => $this->currentLevel
+        ]);
     }
 
     public function findTeacher()
     {
         // Öğrencinin öğretmenini bulma - öğrencinin kayıtlı olduğu kurslardan öğretmeni bulabilirsiniz
-        // Şimdilik basit bir yaklaşım - ilk ders öğretmenini al
         $user = Auth::user();
-        $course = $user->enrolledCourses()->first();
-        if ($course) {
-            $this->teacherId = $course->teacher_id;
+        if (method_exists($user, 'enrolledCourses')) {
+            $course = $user->enrolledCourses()->first();
+            if ($course) {
+                $this->teacherId = $course->teacher_id;
+                Log::info('Teacher found', ['id' => $this->teacherId]);
+            }
         }
     }
     
@@ -279,57 +293,115 @@ class ChainBreaker extends Component
         if ($this->todayActivities === null) {
             $this->todayActivities = collect([]);
         }
+
+        Log::info('Today\'s activities loaded', ['count' => count($this->todayActivities)]);
     }
 
     public function toggleActivityForm()
     {
+        Log::info('Toggling activity form', ['current' => $this->showActivityForm]);
         $this->showActivityForm = !$this->showActivityForm;
+        
+        // Form açıldığında içeriği temizle
+        if ($this->showActivityForm) {
+            $this->activityContent = '';
+            $this->activityFiles = [];
+        }
     }
 
     public function addActivity()
     {
-        $this->validate();
+        Log::info('Add Activity method called', [
+            'content' => $this->activityContent,
+            'files' => is_array($this->activityFiles) ? count($this->activityFiles) : 'not an array'
+        ]);
 
-        $progress = ChainProgress::firstOrCreate(
-            ['user_id' => Auth::id()],
-            ['days_completed' => 0, 'current_streak' => 0, 'longest_streak' => 0]
-        );
-
-        // Dosya yükleme
-        foreach ($this->activityFiles as $file) {
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('activities', $fileName, 'public');
-            
-            ChainActivity::create([
-                'user_id' => Auth::id(),
-                'chain_progress_id' => $progress->id,
-                'teacher_id' => $this->teacherId,
-                'content' => $this->activityContent,
-                'file_path' => $filePath,
-                'file_name' => $file->getClientOriginalName(),
-                'file_type' => $file->getMimeType(),
-                'activity_date' => now(),
+        try {
+            // Doğrulama
+            $this->validate([
+                'activityContent' => 'required_without:activityFiles',
+                'activityFiles.*' => 'nullable|file|max:10240'
             ]);
-        }
 
-        // Sadece text varsa ve dosya yoksa
-        if (empty($this->activityFiles) && !empty($this->activityContent)) {
-            ChainActivity::create([
-                'user_id' => Auth::id(),
-                'chain_progress_id' => $progress->id,
-                'teacher_id' => $this->teacherId,
-                'content' => $this->activityContent,
-                'activity_date' => now(),
+            if (!Auth::check()) {
+                Log::error('User not authenticated in addActivity');
+                $this->dispatch('show-error', message: 'Çalışma eklemek için giriş yapmalısınız!');
+                return;
+            }
+
+            // Kullanıcı ilerlemesini bul veya oluştur
+            $progress = ChainProgress::firstOrCreate(
+                ['user_id' => Auth::id()],
+                ['days_completed' => 0, 'current_streak' => 0, 'longest_streak' => 0]
+            );
+
+            $createdActivity = false;
+
+            // Dosya yükleme
+            if (!empty($this->activityFiles) && is_array($this->activityFiles)) {
+                foreach ($this->activityFiles as $file) {
+                    if ($file && $file->isValid()) {
+                        $fileName = time() . '_' . $file->getClientOriginalName();
+                        $filePath = $file->storeAs('activities', $fileName, 'public');
+                        
+                        Log::info('File stored', [
+                            'path' => $filePath,
+                            'name' => $file->getClientOriginalName(),
+                            'type' => $file->getMimeType()
+                        ]);
+                        
+                        ChainActivity::create([
+                            'user_id' => Auth::id(),
+                            'chain_progress_id' => $progress->id,
+                            'teacher_id' => $this->teacherId,
+                            'content' => $this->activityContent,
+                            'file_path' => $filePath,
+                            'file_name' => $file->getClientOriginalName(),
+                            'file_type' => $file->getMimeType(),
+                            'activity_date' => now(),
+                        ]);
+                        
+                        $createdActivity = true;
+                    }
+                }
+            }
+
+            // Sadece içerik varsa
+            if (empty($this->activityFiles) && !empty($this->activityContent)) {
+                ChainActivity::create([
+                    'user_id' => Auth::id(),
+                    'chain_progress_id' => $progress->id,
+                    'teacher_id' => $this->teacherId,
+                    'content' => $this->activityContent,
+                    'activity_date' => now(),
+                ]);
+                
+                $createdActivity = true;
+            }
+
+            // Başarıyla eklendiyse
+            if ($createdActivity) {
+                $this->resetActivityForm();
+                $this->loadTodayActivities();
+                $this->dispatch('show-success', message: 'Çalışma başarıyla eklendi! Lütfen son çalışmanız ise günü tamamla tuşuna basmayı unutmayınız.');
+                Log::info('Activity added successfully');
+            } else {
+                $this->dispatch('show-error', message: 'Lütfen bir metin yazın veya dosya yükleyin!');
+                Log::warning('No activity was added');
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error in addActivity', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
+            $this->dispatch('show-error', message: 'Bir hata oluştu: ' . $e->getMessage());
         }
-
-        $this->resetActivityForm();
-        $this->loadTodayActivities();
-        $this->dispatch('show-success', message: 'Çalışma başarıyla eklendi!');
     }
 
     public function resetActivityForm()
     {
+        Log::info('Resetting activity form');
         $this->activityContent = '';
         $this->activityFiles = [];
         $this->showActivityForm = false;
@@ -337,6 +409,7 @@ class ChainBreaker extends Component
 
     public function completeDay()
     {
+        Log::info('Complete day method called');
         if (!Auth::check()) {
             $this->dispatch('show-error', message: 'Gün tamamlamak için giriş yapmalısınız.');
             return;
@@ -398,6 +471,7 @@ class ChainBreaker extends Component
 
     public function resetChain()
     {
+        Log::info('Reset chain method called');
         if (!Auth::check()) {
             return;
         }
@@ -413,6 +487,7 @@ class ChainBreaker extends Component
 
     public function confirmReset()
     {
+        Log::info('Confirm reset method called');
         if (!Auth::check()) {
             return;
         }
@@ -443,6 +518,7 @@ class ChainBreaker extends Component
 
     public function closeLevelUpModal()
     {
+        Log::info('Closing level up modal');
         $this->showLevelUpModal = false;
     }
 

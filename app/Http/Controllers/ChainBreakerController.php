@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
 use App\Models\ChainProgress;
+use App\Models\ChainActivity;
 use Illuminate\Support\Facades\Auth;
 
 class ChainBreakerController extends Controller
@@ -31,6 +33,109 @@ class ChainBreakerController extends Controller
         }
         
         return view('zinciri-kirma', compact('progress'));
+    }
+    
+    public function studentChainDetail($id)
+    {
+        // Öğretmen kontrolü
+        if (!Auth::user()->hasRole('ogretmen')) {
+            abort(403);
+        }
+        
+        // Öğrenci bilgilerini al
+        $student = User::with([
+            'chainProgress', 
+            'chainActivities' => function($query) {
+                $query->orderBy('activity_date', 'desc');
+            }
+        ])->findOrFail($id);
+        
+        // Aktiviteleri tarihe göre grupla
+        $activitiesByDate = $student->chainActivities
+            ->groupBy(function($activity) {
+                return $activity->activity_date->format('Y-m-d');
+            });
+        
+        // Son 30 günlük aktiviteleri hazırla
+        $today = now();
+        $last30Days = [];
+        
+        // Son 30 günlük döngü (geriye doğru 29 gün + bugün)
+        for ($i = 29; $i >= 0; $i--) {
+            $date = $today->copy()->subDays($i);
+            $dateStr = $date->format('Y-m-d');
+            
+            // Bu tarihte aktivite var mı kontrol et
+            $hasActivity = isset($activitiesByDate[$dateStr]) && $activitiesByDate[$dateStr]->count() > 0;
+            
+            // Ödev yapılmış veya yapılmamış olarak işaretle
+            $last30Days[$dateStr] = [
+                'date' => $date,
+                'has_activity' => $hasActivity,
+                'day_name' => $date->locale('tr')->shortDayName,
+                'day' => $date->day,
+                'month' => $date->monthName,
+                'is_today' => $date->isToday(),
+                'is_future' => $date->isAfter($today),
+                'is_past' => $date->isBefore($today) || $date->isToday(),
+            ];
+        }
+        
+        return view('teacher.student-chain-detail', [
+            'student' => $student,
+            'activitiesByDate' => $activitiesByDate,
+            'last30Days' => $last30Days
+        ]);
+    }
+
+    // Öğrenci zincir güncelleme metodu
+    public function updateStudentChain(Request $request, $id)
+    {
+        // Öğretmen kontrolü
+        if (!Auth::user()->hasRole('ogretmen')) {
+            abort(403);
+        }
+        
+        $request->validate([
+            'adjustDays' => 'required|integer|between:-365,365',
+            'adjustReason' => 'required|string|min:5|max:255'
+        ]);
+        
+        $student = User::findOrFail($id);
+        $progress = $student->chainProgress;
+        
+        if (!$progress) {
+            $progress = ChainProgress::create([
+                'user_id' => $student->id,
+                'days_completed' => 0,
+                'current_streak' => 0,
+                'longest_streak' => 0
+            ]);
+        }
+        
+        // Eski değeri kaydet
+        $oldDayCount = $progress->days_completed;
+        
+        // Gün sayısını ayarla
+        $newDayCount = max(0, $oldDayCount + $request->adjustDays);
+        
+        $progress->days_completed = $newDayCount;
+        $progress->current_streak = $newDayCount;
+        $progress->longest_streak = max($progress->longest_streak, $newDayCount);
+        $progress->save();
+        
+        // Log kaydı oluştur
+        ChainActivity::create([
+            'user_id' => $student->id,
+            'chain_progress_id' => $progress->id,
+            'teacher_id' => Auth::id(),
+            'content' => "Öğretmen tarafından gün sayısı ayarlandı: {$request->adjustDays} gün ({$request->adjustReason})",
+            'activity_date' => now(),
+            'is_adjustment' => true
+        ]);
+        
+        return redirect()->route('ogretmen.student.chain-detail', $id)
+            ->with('success', "Gün sayısı başarıyla güncellendi! ($oldDayCount → $newDayCount)");
     }
     
     /**
@@ -123,7 +228,66 @@ class ChainBreakerController extends Controller
             'level' => 'Bronz'
         ]);
     }
-    
+      /**
+     * Öğrenci zinciri detaylarını PDF olarak dışa aktar
+     */
+    public function exportStudentChainPdf($id)
+    {
+        // Öğretmen kontrolü
+        if (!Auth::user()->hasRole('ogretmen')) {
+            abort(403);
+        }
+        
+        // Öğrenci bilgilerini al
+        $student = User::with([
+            'chainProgress', 
+            'chainActivities' => function($query) {
+                $query->orderBy('activity_date', 'desc');
+            }
+        ])->findOrFail($id);
+        
+        // Aktiviteleri tarihe göre grupla
+        $activitiesByDate = $student->chainActivities
+            ->groupBy(function($activity) {
+                return $activity->activity_date->format('Y-m-d');
+            });
+        
+        // Son 30 günlük aktiviteleri hazırla
+        $today = now();
+        $last30Days = [];
+        
+        // Son 30 günlük döngü (geriye doğru 29 gün + bugün)
+        for ($i = 29; $i >= 0; $i--) {
+            $date = $today->copy()->subDays($i);
+            $dateStr = $date->format('Y-m-d');
+            
+            // Bu tarihte aktivite var mı kontrol et
+            $hasActivity = isset($activitiesByDate[$dateStr]) && $activitiesByDate[$dateStr]->count() > 0;
+            
+            // Ödev yapılmış veya yapılmamış olarak işaretle
+            $last30Days[$dateStr] = [
+                'date' => $date,
+                'has_activity' => $hasActivity,
+                'day_name' => $date->locale('tr')->shortDayName,
+                'day' => $date->day,
+                'month' => $date->monthName,
+                'is_today' => $date->isToday(),
+                'is_future' => $date->isAfter($today),
+                'is_past' => $date->isBefore($today) || $date->isToday(),
+            ];
+        }
+        
+        // PDF oluştur
+        $pdf = PDF::loadView('pdfs.student-chain-report', [
+            'student' => $student,
+            'activitiesByDate' => $activitiesByDate,
+            'last30Days' => $last30Days,
+            'exportDate' => now()->format('d.m.Y H:i')
+        ]);
+        
+        // PDF'i indir
+        return $pdf->download($student->name . '_' . $student->surname . '_çalışma_raporu.pdf');
+    }
     /**
      * Günlerin tamamlanma sayısına göre seviye hesapla
      */

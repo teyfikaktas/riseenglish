@@ -18,10 +18,12 @@ class ChainActivity extends Model
         'file_name',
         'file_type',
         'activity_date',
+        'is_adjustment' // Bu alan eksikti, ekledik
     ];
 
     protected $casts = [
         'activity_date' => 'date',
+        'is_adjustment' => 'boolean' // Bu da eksikti, ekledik
     ];
 
     public function user()

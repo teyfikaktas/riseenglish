@@ -21,6 +21,8 @@ class ChainProgress extends Model
         'current_streak',
         'longest_streak',
         'last_completed_at',
+        'icon_gender', // Bu satırı ekleyin
+
     ];
     
     /**
