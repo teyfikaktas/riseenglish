@@ -6,7 +6,8 @@ use App\Http\Controllers\Auth\CustomRegisterController;
 use App\Http\Controllers\Auth\ContactController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\Admin\PrivateLessonController;
-
+use App\Http\Controllers\Ogrenci\TestCategoryController;
+use App\Http\Controllers\Ogrenci\TestController;
 use App\Http\Controllers\Teacher\TeacherPrivateLessonController;
 use App\Http\Controllers\Student\StudentPrivateLessonController;
 use App\Http\Controllers\ResourceDownloadController;
@@ -174,9 +175,19 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         Route::post('/sms/send-individual', [App\Http\Controllers\Admin\SmsController::class, 'sendIndividual'])->name('sms.send-individual');
         Route::post('/sms/send-bulk', [App\Http\Controllers\Admin\SmsController::class, 'sendBulk'])->name('sms.send-bulk');
         Route::resource('/resources', App\Http\Controllers\ResourceController::class);
+         Route::get('/questions/bulk/create', [Admin\QuestionController::class, 'bulkCreate'])->name('questions.bulk-create');
+    Route::post('/questions/bulk/store', [Admin\QuestionController::class, 'bulkStore'])->name('questions.bulk-store');
+    Route::put('/questions/{question}/categories', [Admin\QuestionController::class, 'updateCategories'])->name('questions.update-categories');
+    Route::post('/questions/{question}/clone', [Admin\QuestionController::class, 'clone'])->name('questions.clone');
     // Kaynak Kategorileri Yönetimi
     Route::resource('/resource-categories', App\Http\Controllers\ResourceCategoryController::class);
         // Özel Ders Yönetimi temel rotaları (resource controller)
+    Route::resource('test-categories', Admin\TestCategoryController::class);
+    Route::resource('tests', Admin\TestController::class);
+    
+    Route::get('/tests/{test}/sorular', [Admin\TestController::class, 'manageQuestions'])->name('tests.manage-questions');
+    Route::post('/tests/{test}/soru-ekle', [Admin\TestController::class, 'addQuestion'])->name('tests.add-question');
+    Route::delete('/tests/{test}/sorular/{question}', [Admin\TestController::class, 'removeQuestion'])->name('tests.remove-question');
 
     // Kaynak Türleri Yönetimi
     Route::resource('/resource-types', App\Http\Controllers\ResourceTypeController::class);
@@ -443,12 +454,23 @@ Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function ()
         ->name('settings.update-password');
         Route::get('/belgeler', [App\Http\Controllers\Student\StudentDocumentController::class, 'listAllDocuments'])
     ->name('documents.list');
-Route::get('/kurslarim/{slug}/belgeler', [App\Http\Controllers\Student\StudentDocumentController::class, 'index'])
-    ->name('documents.index');
-Route::get('/kurslarim/{slug}/belge/{documentId}/indir', [App\Http\Controllers\Student\StudentDocumentController::class, 'download'])
-    ->name('documents.download');
-        // Öğrencinin kursları
-        Route::get('/kurslarim', [App\Http\Controllers\Student\StudentCourseController::class, 'index'])
+    Route::get('/kurslarim/{slug}/belgeler', [App\Http\Controllers\Student\StudentDocumentController::class, 'index'])
+        ->name('documents.index');
+    Route::get('/kurslarim/{slug}/belge/{documentId}/indir', [App\Http\Controllers\Student\StudentDocumentController::class, 'download'])
+        ->name('documents.download');
+        Route::get('/ogrenme-paneli', [App\Http\Controllers\Student\LearningPanelController::class, 'index'])
+            ->name('learning-panel.index');
+                Route::get('/test-kategorileri', [TestCategoryController::class, 'index'])->name('test-categories.index');
+    Route::get('/kategori/{slug}', [TestCategoryController::class, 'show'])->name('test-categories.show');
+    
+    Route::get('/test/{slug}', [TestController::class, 'show'])->name('tests.show');
+    Route::get('/test/{slug}/baslat', [TestController::class, 'start'])->name('tests.start');
+    Route::post('/test/{slug}/gonder', [TestController::class, 'submit'])->name('tests.submit');
+    Route::get('/sonuc/{id}', [TestController::class, 'result'])->name('tests.result');
+    Route::get('/gecmis', [TestController::class, 'history'])->name('tests.history');
+        Route::get('/ogrenme-paneli/sorular', [App\Http\Controllers\Student\LearningPanelController::class, 'questions'])
+            ->name('learning-panel.questions');
+                    Route::get('/kurslarim', [App\Http\Controllers\Student\StudentCourseController::class, 'index'])
             ->name('kurslarim');
              // Özel Ders Yönetimi için rotalar
         Route::get('/ozel-derslerim', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'index'])
@@ -493,7 +515,8 @@ Route::get('/odev-teslim-dosya/{id}/indir', [App\Http\Controllers\Student\Studen
         ->name('odev-yukle');
     });
 });
-
+Route::get('/export/leaderboard', [App\Http\Controllers\LeaderboardExportController::class, 'export'])
+    ->name('export.leaderboard');
 // Oturum açmış kullanıcı profil yönetimi - Telefon Doğrulaması Gerekli
 Route::middleware(['auth', 'verified.phone'])->group(function () {
     Route::get('/profil', [App\Http\Controllers\ProfileController::class, 'index'])->name('profile.index');
