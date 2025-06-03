@@ -114,7 +114,7 @@
                     <!-- Aksiyon Butonları -->
                     <div class="flex flex-col md:flex-row gap-4 justify-center">
                         <a href="{{ route('ogrenci.tests.result', $userTestResult->id) }}" 
-                           class="bg-[#1a2e5a] hover:bg-[#0f1b3d] text-white font-bold py-3 px-6 rounded-lg transition">
+                           class="bg-[#1a2e5a] hover:bg-[#0f1b3d] text-white font-bold py-3 px-6 rounded-lg transition text-center">
                             📊 Detaylı Sonuçları Gör
                         </a>
                         <button wire:click="$refresh" 
@@ -122,7 +122,7 @@
                             🔄 Testi Tekrar Çöz
                         </button>
                         <a href="{{ route('ogrenci.test-categories.show', $test->categories->first()->slug ?? '') }}" 
-                           class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition">
+                           class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition text-center">
                             📋 Diğer Testlere Git
                         </a>
                     </div>
@@ -179,16 +179,16 @@
                                     wire:loading.attr="disabled"
                                     wire:loading.class="opacity-50 cursor-not-allowed"
                                     @if($isCompleting) disabled @endif
-                                    class="bg-[#e63946] hover:bg-[#d52936] text-white px-4 py-2 rounded-lg text-sm font-medium transition 
+                                    class="bg-[#e63946] hover:bg-[#d52936] text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition 
                                            @if($isCompleting) opacity-50 cursor-not-allowed @endif">
-                                <span wire:loading.remove wire:target="completeTest">Testi Bitir</span>
-                                <span wire:loading wire:target="completeTest">Bitiriliyor...</span>
+                                <span wire:loading.remove wire:target="completeTest">Bitir</span>
+                                <span wire:loading wire:target="completeTest">...</span>
                             </button>
                             
                             @if($isCompleting)
                                 <button wire:click="$refresh" 
-                                        class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition">
-                                    🔄 Yenile
+                                        class="bg-orange-500 hover:bg-orange-600 text-white px-2 md:px-3 py-2 rounded-lg text-xs font-medium transition">
+                                    🔄
                                 </button>
                             @endif
                         </div>
@@ -204,17 +204,19 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <!-- Sol Taraf - Soru Navigasyonu -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-lg shadow-md p-4 border-2 border-[#1a2e5a]">
+            <!-- Desktop: Yan yana / Mobile: Soru üstte, navigasyon altta -->
+            <div class="lg:grid lg:grid-cols-4 lg:gap-6 space-y-6 lg:space-y-0">
+                
+                <!-- Desktop: Sol Taraf - Soru Navigasyonu -->
+                <div class="order-2 lg:order-1 lg:col-span-1 hidden lg:block">
+                    <div class="bg-white rounded-lg shadow-md p-4 border-2 border-[#1a2e5a] sticky top-24">
                         <h3 class="font-bold text-[#1a2e5a] mb-4">📋 Sorular</h3>
-                        <div class="grid grid-cols-5 lg:grid-cols-4 gap-2">
+                        <div class="grid grid-cols-4 gap-2 mb-4">
                             @foreach($questions as $index => $question)
                                 <button wire:click="goToQuestion({{ $index }})"
                                         class="w-10 h-10 rounded-lg text-sm font-medium transition
                                             @if($index == $currentQuestionIndex)
-                                                bg-[#1a2e5a] text-white
+                                                bg-[#1a2e5a] text-white shadow-lg
                                             @elseif(isset($answers[$question['id']]) && $answers[$question['id']] !== null)
                                                 bg-green-100 text-green-700 border border-green-300
                                             @else
@@ -225,13 +227,34 @@
                                 </button>
                             @endforeach
                         </div>
+
+                        <!-- Desktop Navigasyon Butonları -->
+                        <div class="space-y-2">
+                            <button wire:click="previousQuestion" 
+                                    @if($currentQuestionIndex == 0) disabled @endif
+                                    class="w-full flex items-center justify-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Önceki
+                            </button>
+
+                            <button wire:click="nextQuestion" 
+                                    @if($currentQuestionIndex == count($questions) - 1) disabled @endif
+                                    class="w-full flex items-center justify-center px-4 py-2 bg-[#1a2e5a] text-white rounded-lg hover:bg-[#0f1b3d] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                Sonraki
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Sağ Taraf - Soru İçeriği -->
-                <div class="lg:col-span-3">
+                <!-- Ana Soru İçeriği -->
+                <div class="order-1 lg:order-2 lg:col-span-3">
                     @if($currentQuestion)
-                        <div class="bg-white rounded-lg shadow-md p-6 border-2 border-[#1a2e5a]" wire:key="question-{{ $currentQuestion['id'] }}">
+                        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 border-2 border-[#1a2e5a]" wire:key="question-{{ $currentQuestion['id'] }}">
                             <!-- Soru Metni -->
                             <div class="mb-6">
                                 <div class="flex justify-between items-start mb-4">
@@ -244,7 +267,7 @@
                                         </span>
                                     @endif
                                 </div>
-                                <div class="text-gray-800 leading-relaxed text-lg">
+                                <div class="text-gray-800 leading-relaxed text-base md:text-lg">
                                     {!! nl2br(e($currentQuestion['question_text'])) !!}
                                 </div>
                                 
@@ -268,7 +291,7 @@
                                     @endphp
                                     <div wire:key="choice-{{ $currentQuestion['id'] }}-{{ $choice['id'] }}" 
                                          wire:click="selectAnswer({{ $currentQuestion['id'] }}, {{ $choice['id'] }})"
-                                         class="border-2 rounded-lg p-4 cursor-pointer transition
+                                         class="border-2 rounded-lg p-3 md:p-4 cursor-pointer transition
                                             @if($showCorrectAnswers)
                                                 @if($isWrong)
                                                     border-red-500 bg-red-50
@@ -352,8 +375,8 @@
                                 @endforeach
                             </div>
 
-                            <!-- Navigasyon Butonları -->
-                            <div class="flex justify-between mt-8">
+                            <!-- Mobil Navigasyon Butonları (Soru içeriği altında) -->
+                            <div class="flex justify-between mt-6 lg:hidden">
                                 <button wire:click="previousQuestion" 
                                         @if($currentQuestionIndex == 0) disabled @endif
                                         class="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
@@ -374,6 +397,49 @@
                             </div>
                         </div>
                     @endif
+                </div>
+
+                <!-- Soru Navigasyonu (Sadece Mobilde görünür) -->
+                <div class="order-2 lg:hidden">
+                    <div class="bg-white rounded-lg shadow-md p-4 border-2 border-[#1a2e5a]">
+                        <h3 class="font-bold text-[#1a2e5a] mb-4 text-center">📋 Soru Navigasyonu</h3>
+                        
+                        <!-- Mobilde 6 sütun, Tablet'te 8 sütun -->
+                        <div class="grid grid-cols-6 sm:grid-cols-8 gap-2">
+                            @foreach($questions as $index => $question)
+                                <button wire:click="goToQuestion({{ $index }})"
+                                        class="w-10 h-10 rounded-lg text-sm font-medium transition
+                                            @if($index == $currentQuestionIndex)
+                                                bg-[#1a2e5a] text-white shadow-lg transform scale-110
+                                            @elseif(isset($answers[$question['id']]) && $answers[$question['id']] !== null)
+                                                bg-green-100 text-green-700 border border-green-300
+                                            @else
+                                                bg-gray-100 text-gray-600 hover:bg-gray-200
+                                            @endif
+                                        ">
+                                    {{ $index + 1 }}
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <!-- Mobilde legend -->
+                        <div class="mt-4 text-center">
+                            <div class="flex justify-center space-x-4 text-xs">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-[#1a2e5a] rounded mr-1"></div>
+                                    <span>Şu an</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-green-100 border border-green-300 rounded mr-1"></div>
+                                    <span>Cevaplı</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-gray-100 rounded mr-1"></div>
+                                    <span>Boş</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
+<div data-session-id="{{ $session->id }}" style="display: none;"></div>
+
 <div class="bg-gray-800 rounded-xl shadow-lg p-4 md:p-5 border border-gray-600 max-w-5xl mx-auto">
     <div class="mb-4 flex justify-between items-center">
         <h1 class="text-xl font-bold text-indigo-300">İşlenen Konular</h1>
@@ -62,12 +64,21 @@
                         </div>
                         <div class="flex space-x-2">
                             <!-- Add Topic Button -->
-                            <button onclick="openTopicNoteModal({{ $topic->id }}, '{{ $topic->name }}')" 
+                            <button onclick="openTopicNoteModal({{ $topic->id }}, '{{ addslashes($topic->name) }}')" 
                                 class="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 text-xs flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
                                 <span>Ekle</span>
+                            </button>
+                            
+                            <!-- Hızlı Ekle - AJAX ile -->
+                            <button onclick="quickAddTopicAjax({{ $topic->id }}, '{{ addslashes($topic->name) }}')" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg text-xs flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                </svg>
+                                Hızlı
                             </button>
                             
                             <!-- Remove Topic Button (only if topic is covered at least once) -->
@@ -141,15 +152,94 @@
 </div>
 
 <script>
-    function openTopicNoteModal(topicId, topicName) {
-        document.getElementById('modalTopicId').value = topicId;
-        document.getElementById('modalTopicTitle').innerText = topicName + ' - Not Ekle';
-        document.getElementById('topicNoteModal').classList.remove('hidden');
+let selectedTopicId = null;
+
+// Mevcut not modalı açma fonksiyonu
+function openTopicNoteModal(topicId, topicName) {
+    selectedTopicId = topicId;
+    const modalTopicId = document.getElementById('modalTopicId');
+    const modalTopicTitle = document.getElementById('modalTopicTitle');
+    const notesField = document.getElementById('notes');
+    const modal = document.getElementById('topicNoteModal');
+    
+    if (modalTopicId) modalTopicId.value = topicId;
+    if (modalTopicTitle) modalTopicTitle.innerText = topicName + ' - Not Ekle';
+    if (notesField) notesField.value = '';
+    if (modal) modal.classList.remove('hidden');
+}
+
+// Not modalını kapatma
+function closeTopicNoteModal() {
+    const modal = document.getElementById('topicNoteModal');
+    const notesField = document.getElementById('notes');
+    
+    if (modal) modal.classList.add('hidden');
+    if (notesField) notesField.value = '';
+    selectedTopicId = null;
+}
+
+// Basit AJAX hızlı ekleme
+function quickAddTopicAjax(topicId, topicName) {
+    const sessionId = {{ $session->id }};
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Butonu disable et
+    event.target.disabled = true;
+    const originalHtml = event.target.innerHTML;
+    event.target.innerHTML = '<svg class="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+    
+    fetch(`/ogretmen/private-lessons/session/${sessionId}/topics/add`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: `topic_id=${topicId}&notes=`
+    })
+    .then(response => {
+        if (response.ok) {
+            // Başarılı - scroll pozisyonunu koru
+            const scrollPos = window.pageYOffset;
+            sessionStorage.setItem('scrollPosition', scrollPos);
+            location.reload();
+        } else {
+            throw new Error('İstek başarısız');
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        alert('Konu eklenirken hata oluştu');
+        // Butonu tekrar aktif et
+        event.target.disabled = false;
+        event.target.innerHTML = originalHtml;
+    });
+}
+
+// DOM yüklendiğinde çalışacak kodlar
+document.addEventListener('DOMContentLoaded', function() {
+    // Scroll pozisyonunu geri getir
+    const scrollPos = sessionStorage.getItem('scrollPosition');
+    if (scrollPos) {
+        window.scrollTo(0, parseInt(scrollPos));
+        sessionStorage.removeItem('scrollPosition');
     }
     
-    function closeTopicNoteModal() {
-        document.getElementById('topicNoteModal').classList.add('hidden');
-        document.getElementById('notes').value = '';
+    // ESC tuşu ile modal kapatma
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeTopicNoteModal();
+        }
+    });
+
+    // Modal dışına tıklayınca kapatma
+    const modal = document.getElementById('topicNoteModal');
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeTopicNoteModal();
+            }
+        });
     }
+});
 </script>
 @endsection

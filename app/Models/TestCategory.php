@@ -58,4 +58,15 @@ class TestCategory extends Model
     {
         return $query->where('slug', $slug);
     }
+
+    // Accessor'lar
+    public function getTestsCountAttribute()
+    {
+        return $this->tests()->count();
+    }
+
+    public function getActiveTestsCountAttribute()
+    {
+        return $this->tests()->where('is_active', true)->count();
+    }
 }

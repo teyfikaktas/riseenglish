@@ -22,6 +22,32 @@
                 <a href="{{ url('/admin/courses') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/courses*') ? 'text-red-400' : '' }}">Kurslar</a>
 
                 <a href="{{ url('/admin/sms') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/sms*') ? 'text-red-400' : '' }}">SMS Yönetimi</a>
+  <!-- Test Yönetimi Açılır Menü -->
+                <div class="relative">
+                    <a href="javascript:void(0)"
+                       class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/test*') ? 'text-red-400' : '' }} flex items-center"
+                       onclick="toggleDropdown('tests-dropdown')">
+                        Test Yönetimi
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+
+                    <!-- Dropdown Menü -->
+                    <div id="tests-dropdown" class="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
+                        <div class="py-1" role="menu" aria-orientation="vertical">
+                            <a href="{{ url('/admin/test-dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                📂 Test Kategorileri
+                            </a>
+                            <a href="{{ url('/admin/tests') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                📝 Testler
+                            </a>
+                            <a href="{{ url('/admin/questions') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                ❓ Sorular
+                            </a>
+                        </div>
+                    </div>
+                                        </div>
 
                 <!-- Kaynaklar Yönetimi Açılır Menü -->
                 <div class="relative">

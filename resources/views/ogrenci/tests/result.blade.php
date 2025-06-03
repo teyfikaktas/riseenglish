@@ -280,7 +280,7 @@
                             </div>
 
                             <!-- Açıklama (varsa) -->
-                            @if($question->explanation)
+                            {{-- @if($question->explanation)
                                 <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
                                     <h4 class="font-bold text-blue-800 mb-2 flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -290,7 +290,7 @@
                                     </h4>
                                     <p class="text-blue-700 leading-relaxed">{{ $question->explanation }}</p>
                                 </div>
-                            @endif
+                            @endif --}}
                         </div>
                     @endforeach
                 </div>
@@ -306,10 +306,13 @@
                    class="bg-[#1a2e5a] hover:bg-[#0f1b3d] text-white font-bold py-3 px-6 rounded-lg transition text-center">
                     📋 Diğer Testlere Git
                 </a>
-                <a href="{{ route('ogrenci.tests.history') }}" 
+                {{-- <a href="{{ route('ogrenci.tests.history') }}" 
                    class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition text-center">
-                    📊 Test Geçmişi
-                </a>
+                    📊 Test Geçmişi(Yakında)
+                </a> --}}
+                <a class="bg-gray-500 text-white font-bold py-3 px-6 rounded-lg text-center opacity-50 cursor-not-allowed">
+    📊 Test Geçmişi(Yakında)
+</a>
             </div>
         </div>
     </div>

@@ -192,7 +192,94 @@ public function generatePdfReport($id)
     // Download the PDF
     return $pdf->download('rise_english_ders_raporu_' . $session->id . '.pdf');
 }
+/**
+ * Hızlı konu ekleme (not olmadan)
+ */
+public function quickAddTopic(Request $request, $sessionId)
+{
+    try {
+        $validated = $request->validate([
+            'topic_id' => 'required|exists:topics,id',
+            'notes' => 'nullable|string|max:500'
+        ]);
 
+        $session = PrivateLessonSession::where('id', $sessionId)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+
+        // Aynı konu daha önce eklendi mi kontrol et (isteğe bağlı)
+        // $existingTopic = \App\Models\SessionTopic::where('session_id', $sessionId)
+        //     ->where('topic_id', $validated['topic_id'])
+        //     ->first();
+        // 
+        // if ($existingTopic) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Bu konu zaten eklenmiş'
+        //     ], 400);
+        // }
+
+        \App\Models\SessionTopic::create([
+            'session_id' => $sessionId,
+            'topic_id' => $validated['topic_id'],
+            'notes' => $validated['notes'] ?? ''
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Konu başarıyla eklendi'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Konu eklenirken hata oluştu: ' . $e->getMessage()
+        ], 400);
+    }
+}
+// TeacherPrivateLessonController.php'ye eklenecek
+public function addTopicToSession(Request $request, $sessionId)
+{
+    try {
+        $validated = $request->validate([
+            'topic_id' => 'required|exists:topics,id',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        $session = PrivateLessonSession::where('id', $sessionId)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+
+        // Aynı konu daha önce eklendi mi kontrol et
+        $existingTopic = \App\Models\SessionTopic::where('session_id', $sessionId)
+            ->where('topic_id', $validated['topic_id'])
+            ->first();
+
+        if ($existingTopic) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bu konu zaten eklenmiş'
+            ], 400);
+        }
+
+        \App\Models\SessionTopic::create([
+            'session_id' => $sessionId,
+            'topic_id' => $validated['topic_id'],
+            'notes' => $validated['notes'] ?? ''
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Konu başarıyla eklendi'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Konu eklenirken hata oluştu: ' . $e->getMessage()
+        ], 400);
+    }
+}
 /**
  * Generate an empty chart with a message
  * 

@@ -48,13 +48,18 @@ class Test extends Model
                     ->orderBy('pivot_order_number');
     }
 
-    // Test sonuçları (userResults ve results aynı şey)
+    // Test sonuçları - Tüm varyasyonlar
     public function userResults(): HasMany
     {
         return $this->hasMany(UserTestResult::class);
     }
 
     public function results(): HasMany
+    {
+        return $this->hasMany(UserTestResult::class);
+    }
+
+    public function userTestResults(): HasMany
     {
         return $this->hasMany(UserTestResult::class);
     }
@@ -130,5 +135,17 @@ class Test extends Model
     public function getStartUrlAttribute()
     {
         return route('ogrenci.tests.start', $this->slug);
+    }
+
+    // Kategorilerin adlarını getir (kolay erişim için)
+    public function getCategoryNamesAttribute()
+    {
+        return $this->categories->pluck('name')->join(', ') ?: 'Kategori Yok';
+    }
+
+    // İlk kategorinin adını getir
+    public function getPrimaryCategoryNameAttribute()
+    {
+        return $this->categories->first()?->name ?? 'Kategori Yok';
     }
 }

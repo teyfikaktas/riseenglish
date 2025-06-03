@@ -11,6 +11,10 @@ use App\Http\Controllers\Ogrenci\TestController;
 use App\Http\Controllers\Teacher\TeacherPrivateLessonController;
 use App\Http\Controllers\Student\StudentPrivateLessonController;
 use App\Http\Controllers\ResourceDownloadController;
+use App\Http\Controllers\Admin\TestDashboardController;
+use App\Http\Controllers\Admin\TestCategoryController as AdminTestCategoryController;
+use App\Http\Controllers\Admin\TestController as AdminTestController;
+use App\Http\Controllers\Admin\QuestionController;
 
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -170,68 +174,100 @@ Route::middleware(['auth', 'verified.phone'])->group(function () {
 // Yönetici rotaları - Laravel 12 tarzında middleware kullanımı
 Route::middleware(['auth', 'role:yonetici'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
+        
+        // ==========================================
+        // ANA DASHBOARD
+        // ==========================================
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/sms', [App\Http\Controllers\Admin\SmsController::class, 'index'])->name('sms.index');
-        Route::post('/sms/send-individual', [App\Http\Controllers\Admin\SmsController::class, 'sendIndividual'])->name('sms.send-individual');
-        Route::post('/sms/send-bulk', [App\Http\Controllers\Admin\SmsController::class, 'sendBulk'])->name('sms.send-bulk');
-        Route::resource('/resources', App\Http\Controllers\ResourceController::class);
-         Route::get('/questions/bulk/create', [Admin\QuestionController::class, 'bulkCreate'])->name('questions.bulk-create');
-    Route::post('/questions/bulk/store', [Admin\QuestionController::class, 'bulkStore'])->name('questions.bulk-store');
-    Route::put('/questions/{question}/categories', [Admin\QuestionController::class, 'updateCategories'])->name('questions.update-categories');
-    Route::post('/questions/{question}/clone', [Admin\QuestionController::class, 'clone'])->name('questions.clone');
-    // Kaynak Kategorileri Yönetimi
-    Route::resource('/resource-categories', App\Http\Controllers\ResourceCategoryController::class);
-        // Özel Ders Yönetimi temel rotaları (resource controller)
-    Route::resource('test-categories', Admin\TestCategoryController::class);
-    Route::resource('tests', Admin\TestController::class);
-    
-    Route::get('/tests/{test}/sorular', [Admin\TestController::class, 'manageQuestions'])->name('tests.manage-questions');
-    Route::post('/tests/{test}/soru-ekle', [Admin\TestController::class, 'addQuestion'])->name('tests.add-question');
-    Route::delete('/tests/{test}/sorular/{question}', [Admin\TestController::class, 'removeQuestion'])->name('tests.remove-question');
-
-    // Kaynak Türleri Yönetimi
-    Route::resource('/resource-types', App\Http\Controllers\ResourceTypeController::class);
-    
-    // Kaynak Etiketleri Yönetimi
-    Route::resource('/resource-tags', App\Http\Controllers\ResourceTagController::class);
+        
+        // ==========================================
+        // TEST YÖNETİMİ SİSTEMİ
+        // ==========================================
+        // Test Dashboard - Ana test yönetim sayfası
+        Route::get('/test-dashboard', [TestDashboardController::class, 'index'])
+            ->name('test-dashboard.index');
+        
+        // Test Kategorileri - ✅ Tam namespace ile
+        Route::resource('test-categories', AdminTestCategoryController::class);
+        
+        // Testler - ✅ Tam namespace ile
+        Route::resource('tests', AdminTestController::class);
+        Route::get('/tests/{test}/sorular', [AdminTestController::class, 'manageQuestions'])->name('tests.manage-questions');
+        Route::post('/tests/{test}/soru-ekle', [AdminTestController::class, 'addQuestion'])->name('tests.add-question');
+        Route::delete('/tests/{test}/sorular/{question}', [AdminTestController::class, 'removeQuestion'])->name('tests.remove-question');
+        
+        // Sorular (Questions) - ✅ Tam namespace ile
+        Route::resource('questions', QuestionController::class);
+        Route::get('/questions/bulk/create', [QuestionController::class, 'bulkCreate'])->name('questions.bulk-create');
+        Route::post('/questions/bulk/store', [QuestionController::class, 'bulkStore'])->name('questions.bulk-store');
+        Route::put('/questions/{question}/categories', [QuestionController::class, 'updateCategories'])->name('questions.update-categories');
+        Route::post('/questions/{question}/clone', [QuestionController::class, 'clone'])->name('questions.clone');
+        
+        // ==========================================
+        // KULLANICI YÖNETİMİ
+        // ==========================================
+        Route::resource('users', \App\Http\Controllers\Admin\AdminUserController::class);
+        
+        // Özel kullanıcı yönetimi rotaları
+        Route::get('/users/{user}/manage-courses', [\App\Http\Controllers\Admin\AdminUserController::class, 'manageCourses'])
+            ->name('users.manageCourses');
+        Route::post('/users/{user}/enroll-course', [\App\Http\Controllers\Admin\AdminUserController::class, 'enrollCourse'])
+            ->name('users.enrollCourse');
+        Route::put('/users/{user}/courses/{course}', [\App\Http\Controllers\Admin\AdminUserController::class, 'updateCourseEnrollment'])
+            ->name('users.updateCourseEnrollment');
+        Route::delete('/users/{user}/courses/{course}', [\App\Http\Controllers\Admin\AdminUserController::class, 'unenrollCourse'])
+            ->name('users.unenrollCourse');
+        Route::get('/users/{user}/courses/{course}/enrollment-data', [\App\Http\Controllers\Admin\AdminUserController::class, 'getEnrollmentData'])
+            ->name('users.enrollmentData');
+        
+        // ==========================================
+        // KURS YÖNETİMİ
+        // ==========================================
         Route::resources([
             'course-types' => CourseTypeController::class,
             'course-levels' => CourseLevelController::class,
             'course-frequencies' => CourseFrequencyController::class,
             'courses' => CourseController::class,
         ]);
-           // Eksik olan rotalar - bunları ekleyin
-           Route::get('/sms/search-users', [App\Http\Controllers\Admin\SmsController::class, 'searchUsers'])->name('sms.search-users');
-           Route::get('/sms/search-courses', [App\Http\Controllers\Admin\SmsController::class, 'searchCourses'])->name('sms.search-courses');
+        
+        // Kurs ek rotaları
         Route::get('/course-levels/list', [CourseLevelController::class, 'getList'])->name('course-levels.list');
         Route::get('/course-types/list', [CourseTypeController::class, 'getList'])->name('course-types.list');
         Route::get('/courses/{course}/enrollments', [CourseController::class, 'enrollments'])->name('courses.enrollments');
         Route::put('/courses/{course}/enrollments/{user}', [CourseController::class, 'updateEnrollment'])->name('courses.enrollments.update');
         Route::get('/courses/{course}/enrollments/{user}/data', [CourseController::class, 'getEnrollmentData'])->name('courses.enrollments.data');
+        
+        // ==========================================
+        // KAYNAK YÖNETİMİ
+        // ==========================================
+        Route::resource('/resources', App\Http\Controllers\ResourceController::class);
+        Route::resource('/resource-categories', App\Http\Controllers\ResourceCategoryController::class);
+        Route::resource('/resource-types', App\Http\Controllers\ResourceTypeController::class);
+        Route::resource('/resource-tags', App\Http\Controllers\ResourceTagController::class);
+        
+        // ==========================================
+        // SMS YÖNETİMİ
+        // ==========================================
+        Route::get('/sms', [App\Http\Controllers\Admin\SmsController::class, 'index'])->name('sms.index');
+        Route::post('/sms/send-individual', [App\Http\Controllers\Admin\SmsController::class, 'sendIndividual'])->name('sms.send-individual');
+        Route::post('/sms/send-bulk', [App\Http\Controllers\Admin\SmsController::class, 'sendBulk'])->name('sms.send-bulk');
+        Route::get('/sms/search-users', [App\Http\Controllers\Admin\SmsController::class, 'searchUsers'])->name('sms.search-users');
+        Route::get('/sms/search-courses', [App\Http\Controllers\Admin\SmsController::class, 'searchCourses'])->name('sms.search-courses');
+        
+        // ==========================================
+        // İLETİŞİM MESAJLARI
+        // ==========================================
         Route::get('/contacts', [App\Http\Controllers\Admin\ContactController::class, 'index'])->name('contacts.index');
         Route::get('/contacts/{contact}', [App\Http\Controllers\Admin\ContactController::class, 'show'])->name('contacts.show');
         Route::post('/contacts/{contact}/mark-as-read', [App\Http\Controllers\Admin\ContactController::class, 'markAsRead'])->name('contacts.mark-as-read');
         Route::post('/contacts/{contact}/mark-as-unread', [App\Http\Controllers\Admin\ContactController::class, 'markAsUnread'])->name('contacts.mark-as-unread');
         Route::delete('/contacts/{contact}', [App\Http\Controllers\Admin\ContactController::class, 'destroy'])->name('contacts.destroy');
-        // Kullanıcı yönetimi için resource routes
-        Route::resource('users', \App\Http\Controllers\Admin\AdminUserController::class);
         
-        // Özel kullanıcı yönetimi rotaları
-        Route::get('/users/{user}/manage-courses', [\App\Http\Controllers\Admin\AdminUserController::class, 'manageCourses'])
-            ->name('users.manageCourses');
+        // ==========================================
+        // ÖZEL DERS YÖNETİMİ (Admin tarafından)
+        // ==========================================
+        // Route::resource('private-lessons', Admin\PrivateLessonController::class);
         
-        Route::post('/users/{user}/enroll-course', [\App\Http\Controllers\Admin\AdminUserController::class, 'enrollCourse'])
-            ->name('users.enrollCourse');
-        
-        Route::put('/users/{user}/courses/{course}', [\App\Http\Controllers\Admin\AdminUserController::class, 'updateCourseEnrollment'])
-            ->name('users.updateCourseEnrollment');
-        
-        Route::delete('/users/{user}/courses/{course}', [\App\Http\Controllers\Admin\AdminUserController::class, 'unenrollCourse'])
-            ->name('users.unenrollCourse');
-        
-        // Kullanıcı kurs kayıt verilerini getiren API
-        Route::get('/users/{user}/courses/{course}/enrollment-data', [\App\Http\Controllers\Admin\AdminUserController::class, 'getEnrollmentData'])
-            ->name('users.enrollmentData');   
     });
 });
 
@@ -318,6 +354,8 @@ Route::get('/odevlerim', [App\Http\Controllers\Teacher\TeacherPrivateLessonContr
      ->name('private-lessons.session.topics.remove');
  Route::get('private-lessons/session/{id}/topics/view', [App\Http\Controllers\Teacher\SessionTopicsController::class, 'view'])
      ->name('private-lessons.session.topics.view');
+     Route::post('private-lessons/session/{sessionId}/topics/quick-add', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'quickAddTopic'])
+    ->name('private-lessons.session.topics.quick-add');
 // Ders bazlı route'lar
 // Öğretmen rotaları içinde, özel ders rotaları arasına ekleyin
 Route::get('/ozel-ders-grup/{id}', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'showLesson'])
@@ -483,7 +521,9 @@ Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function ()
         ->name('private-lessons.submission-file.delete');
     Route::get('/ozel-ders-seans/{id}', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'showSession'])
         ->name('private-lessons.session');
-        
+        Route::get('/test/{slug}/pdf-indir', [TestController::class, 'downloadTestPdf'])->name('tests.download-pdf');
+Route::get('/sonuc/{id}/pdf-indir', [TestController::class, 'downloadResultPdf'])->name('test-results.download-pdf');
+Route::get('/gecmis/pdf-indir', [TestController::class, 'downloadHistoryPdf'])->name('tests.history.download-pdf');
     // Materyal yönetimi
     Route::get('/ders-materyalleri', [App\Http\Controllers\Student\StudentPrivateLessonController::class, 'materials'])
         ->name('private-lessons.materials');

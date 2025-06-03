@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Ogrenci;
 use App\Http\Controllers\Controller;
 use App\Models\Test;
 use App\Models\TestCategory;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 use App\Models\UserTestResult;
 use Illuminate\Http\Request;
@@ -115,7 +117,60 @@ class TestController extends Controller
         return view('ogrenci.tests.result', compact('result'));
     }
 
+public function downloadTestPdf($slug)
+{
+    $test = Test::bySlug($slug)
+        ->active()
+        ->with(['categories', 'questions.choices'])
+        ->firstOrFail();
 
+    $pdf = PDF::loadView('ogrenci.tests.pdf', compact('test'))
+        ->setPaper('A4', 'portrait')
+        ->setOptions([
+            'defaultFont' => 'DejaVu Sans',
+            'isRemoteEnabled' => true,
+            'chroot' => public_path(),
+            'defaultPaperSize' => 'a4',
+        ]);
+    
+    $filename = 'test-' . date('Y-m-d') . '.pdf';
+    return $pdf->download($filename);
+}
+
+    // Test sonucu PDF indirme
+    public function downloadResultPdf($resultId)
+    {
+        $result = UserTestResult::with(['test.questions.choices', 'user'])
+            ->where('user_id', Auth::id())
+            ->findOrFail($resultId);
+
+        $pdf = PDF::loadView('ogrenci.tests.result-pdf', compact('result'));
+        
+        return $pdf->download('test-sonucu-' . $result->id . '.pdf');
+    }
+
+    // Test geçmişi PDF indirme
+    public function downloadHistoryPdf(Request $request)
+    {
+        $user = auth()->user();
+        
+        $results = UserTestResult::with(['test', 'test.categories'])
+            ->where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $stats = [
+            'total_tests' => $results->count(),
+            'average_score' => $results->avg('percentage') ?? 0,
+            'best_score' => $results->max('percentage') ?? 0,
+            'total_time_minutes' => round($results->sum('duration_seconds') / 60),
+        ];
+
+        $pdf = PDF::loadView('ogrenci.tests.history-pdf', compact('results', 'stats', 'user'));
+        
+        return $pdf->download('test-gecmisim.pdf');
+    }
 
 public function history(Request $request)
 {

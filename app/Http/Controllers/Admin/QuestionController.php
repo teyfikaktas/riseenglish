@@ -47,44 +47,52 @@ class QuestionController extends Controller
         return view('admin.questions.create', compact('categories', 'tests'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'question_text' => 'required|string',
-            'question_type' => 'required|in:multiple_choice,true_false,fill_blank,matching',
-            'options' => 'required_if:question_type,multiple_choice,matching|array',
-            'options.*' => 'required_with:options|string',
-            'correct_answer' => 'required|string',
-            'explanation' => 'nullable|string',
-            'difficulty_level' => 'nullable|string|max:50',
-            'points' => 'integer|min:1|max:10',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'boolean',
-            'categories' => 'required|array',
-            'categories.*' => 'exists:test_categories,id',
-            'tests' => 'nullable|array',
-            'tests.*' => 'exists:tests,id'
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'question_text' => 'required|string',
+        'question_type' => 'required|in:multiple_choice,true_false,fill_blank,matching',
+        'options' => 'required_if:question_type,multiple_choice,matching|array',
+        'options.*' => 'required_with:options|string',
+        'correct_answer' => 'required|string',
+        'explanation' => 'nullable|string',
+        'difficulty_level' => 'nullable|string|max:50',
+        'points' => 'integer|min:1|max:10',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'is_active' => 'boolean',
+        'categories' => 'required|array',
+        'categories.*' => 'exists:test_categories,id',
+        'tests' => 'nullable|array',
+        'tests.*' => 'exists:tests,id'
+    ]);
 
-        $data = $request->except(['image', 'categories', 'tests']);
+    $data = $request->except(['image', 'categories', 'tests']);
 
-        // Görsel yükleme
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('questions', 'public');
-            $data['image_path'] = $imagePath;
-        }
+    // Görsel yükleme
+    if ($request->hasFile('image')) {
+        $imagePath = $request->file('image')->store('questions', 'public');
+        $data['image_path'] = $imagePath;
+    }
 
-        // Çoktan seçmeli sorular için options formatla
-        if ($request->question_type === 'multiple_choice') {
-            $options = [];
-            foreach ($request->options as $key => $option) {
-                if (!empty($option)) {
-                    $options[chr(65 + $key)] = $option; // A, B, C, D
-                }
+    // Çoktan seçmeli sorular için options formatla
+    if ($request->question_type === 'multiple_choice') {
+        $options = [];
+        foreach ($request->options as $key => $option) {
+            if (!empty($option)) {
+                $options[chr(65 + $key)] = $option; // A, B, C, D
             }
-            $data['options'] = $options;
         }
+        // Array'i JSON string'e çevir
+        $data['options'] = json_encode($options);
+    } else {
+        // Diğer soru tipleri için options null
+        $data['options'] = null;
+    }
 
+    // is_active checkbox kontrolü
+    $data['is_active'] = $request->has('is_active');
+
+    try {
         $question = Question::create($data);
 
         // Kategorileri ekle
@@ -96,17 +104,25 @@ class QuestionController extends Controller
         if ($request->filled('tests')) {
             foreach ($request->tests as $testId) {
                 $test = Test::find($testId);
-                $orderNumber = $test->questions()->count() + 1;
-                $question->tests()->attach($testId, ['order_number' => $orderNumber]);
-                
-                // Test soru sayısını güncelle
-                $test->update(['question_count' => $test->questions()->count()]);
+                if ($test) {
+                    $orderNumber = $test->questions()->count() + 1;
+                    $question->tests()->attach($testId, ['order_number' => $orderNumber]);
+                    
+                    // Test soru sayısını güncelle
+                    $test->update(['question_count' => $test->questions()->count()]);
+                }
             }
         }
 
         return redirect()->route('admin.questions.index')
             ->with('success', 'Soru başarıyla oluşturuldu!');
+            
+    } catch (\Exception $e) {
+        return back()
+            ->withInput()
+            ->with('error', 'Soru oluşturulurken hata oluştu: ' . $e->getMessage());
     }
+}
 
     public function show(Question $question)
     {
