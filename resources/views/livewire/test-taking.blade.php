@@ -41,24 +41,70 @@
                             </div>
                         </div>
 
-                        <!-- Uyarılar -->
+                        <!-- Güvenlik Uyarıları -->
+                        <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-6">
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.876c1.07 0 1.968-.863 1.968-1.928 0-.366-.149-.718-.414-.981L12.707 2.657a1.933 1.933 0 00-2.828 0L2.093 19.091c-.265.263-.414.615-.414.981 0 1.065.898 1.928 1.968 1.928z" />
+                                    </svg>
+                                </div>
+                                <div class="text-left">
+                                    <h3 class="text-lg font-bold text-red-800 mb-2">⚠️ Önemli Güvenlik Kuralları</h3>
+                                    <ul class="text-sm text-red-700 space-y-1">
+                                        <li>• <strong>Sekme değiştirme yasak:</strong> Başka sekmelere geçiş yaparsanız sınav otomatik sonlanır</li>
+                                        <li>• <strong>Tarayıcıdan çıkma yasak:</strong> Tarayıcıyı kapatır veya minimize ederseniz sınav biter</li>
+                                        <li>• <strong>Tam ekran modu:</strong> Sınav boyunca tam ekran modunda kalmalısınız</li>
+                                        <li>• <strong>Alt+Tab yasak:</strong> Başka programlara geçiş yapamazsınız</li>
+                                        <li>• <strong>F12 / Developer Tools yasak:</strong> Geliştirici araçları açılması durumunda sınav sonlanır</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Süre Uyarısı -->
                         @if($test->duration_minutes)
                             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                                 <p class="text-yellow-800">
-                                    ⚠️ <strong>Dikkat:</strong> Bu test {{ $test->duration_minutes }} dakika süreli olup, süre dolduğunda otomatik olarak tamamlanacaktır.
+                                    ⏰ <strong>Süre:</strong> Bu test {{ $test->duration_minutes }} dakika süreli olup, süre dolduğunda otomatik olarak tamamlanacaktır.
                                 </p>
                             </div>
                         @endif
 
+                        <!-- Onay Checkbox -->
+                        <div class="mb-6">
+                            <label class="flex items-center justify-center space-x-3 cursor-pointer">
+                                <input type="checkbox" id="rulesAccepted" class="w-5 h-5 text-[#e63946] border-2 border-gray-300 rounded focus:ring-[#e63946]">
+                                <span class="text-gray-700 font-medium">Güvenlik kurallarını okudum ve kabul ediyorum</span>
+                            </label>
+                        </div>
+
                         <!-- Başla Butonu -->
-                        <button wire:click="startTest" 
-                                class="bg-[#e63946] hover:bg-[#d52936] text-white font-bold py-4 px-8 rounded-xl text-lg transition transform hover:scale-105">
+                        <button id="startTestBtn" wire:click="startTest" disabled
+                                class="bg-gray-400 text-white font-bold py-4 px-8 rounded-xl text-lg transition transform cursor-not-allowed">
                             🚀 Teste Başla
                         </button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const checkbox = document.getElementById('rulesAccepted');
+                const startBtn = document.getElementById('startTestBtn');
+                
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        startBtn.disabled = false;
+                        startBtn.className = 'bg-[#e63946] hover:bg-[#d52936] text-white font-bold py-4 px-8 rounded-xl text-lg transition transform hover:scale-105 cursor-pointer';
+                    } else {
+                        startBtn.disabled = true;
+                        startBtn.className = 'bg-gray-400 text-white font-bold py-4 px-8 rounded-xl text-lg transition transform cursor-not-allowed';
+                    }
+                });
+            });
+        </script>
 
     <!-- Test Sonuçları -->
     @elseif($showResults)
@@ -132,6 +178,28 @@
 
     <!-- Test Çözme Ekranı -->
     @else
+        <!-- Güvenlik Uyarı Modalı -->
+        <div id="securityWarningModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl p-8 max-w-md mx-4 text-center">
+                <div class="mb-4">
+                    <svg class="h-16 w-16 text-red-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.876c1.07 0 1.968-.863 1.968-1.928 0-.366-.149-.718-.414-.981L12.707 2.657a1.933 1.933 0 00-2.828 0L2.093 19.091c-.265.263-.414.615-.414.981 0 1.065.898 1.928 1.968 1.928z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-red-600 mb-4">⚠️ Güvenlik İhlali Tespit Edildi!</h2>
+                <p class="text-gray-700 mb-6">Sınav kurallarını ihlal ettiğiniz tespit edildi. Sınavınız sonlandırılacaktır.</p>
+                <div class="space-y-3">
+                    <button id="continueExamBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                        🔄 Sınava Devam Et (Son Şans)
+                    </button>
+                    <button id="endExamBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                        ❌ Sınavı Sonlandır
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500 mt-4">Tekrar ihlal durumunda sınav otomatik olarak sonlanacaktır.</p>
+            </div>
+        </div>
+
         <div class="container mx-auto px-4 py-4">
             <!-- Üst Bar -->
             <div class="bg-white rounded-lg shadow-md p-4 mb-6 border-2 border-[#1a2e5a]">
@@ -150,6 +218,12 @@
                         <div class="text-center">
                             <div class="text-lg font-bold text-[#1a2e5a]">{{ $answeredCount }}/{{ count($questions) }}</div>
                             <div class="text-xs text-gray-600">Cevaplanan</div>
+                        </div>
+
+                        <!-- Güvenlik Durumu -->
+                        <div class="text-center">
+                            <div id="securityStatus" class="text-lg font-bold text-green-600">🔒</div>
+                            <div class="text-xs text-gray-600">Güvenli</div>
                         </div>
 
                         <!-- Süre -->
@@ -443,5 +517,298 @@
                 </div>
             </div>
         </div>
+
+        <!-- Güvenlik JavaScript'i -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                let violationCount = 0;
+                let maxViolations = 2; // 2 uyarıdan sonra otomatik sonlandır
+                let isExamActive = true;
+                let hasWarningModalShown = false;
+                
+                const modal = document.getElementById('securityWarningModal');
+                const continueBtn = document.getElementById('continueExamBtn');
+                const endBtn = document.getElementById('endExamBtn');
+                const securityStatus = document.getElementById('securityStatus');
+                
+                // Tam ekran modunu zorla
+                function enterFullscreen() {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.mozRequestFullScreen) {
+                        document.documentElement.mozRequestFullScreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) {
+                        document.documentElement.msRequestFullscreen();
+                    }
+                }
+                
+                // Tam ekran modu kontrol et
+                function isFullscreen() {
+                    return !!(document.fullscreenElement || document.mozFullScreenElement || 
+                             document.webkitFullscreenElement || document.msFullscreenElement);
+                }
+                
+                // Güvenlik ihlali fonksiyonu
+                function handleSecurityViolation(reason) {
+                    if (!isExamActive) return;
+                    
+                    violationCount++;
+                    console.log(`Güvenlik ihlali: ${reason} (${violationCount}/${maxViolations})`);
+                    
+                    // Livewire 3'te event gönderme
+                    if (window.Livewire) {
+                        window.Livewire.dispatch('handleSecurityViolation', { reason: reason });
+                    }
+                    
+                    // Güvenlik durumunu güncelle
+                    updateSecurityStatus();
+                    
+                    if (violationCount >= maxViolations) {
+                        // Otomatik sonlandır
+                        endExamAutomatically(reason);
+                    } else {
+                        // Uyarı göster
+                        showWarningModal(reason);
+                    }
+                }
+                
+                // Güvenlik durumunu güncelle
+                function updateSecurityStatus() {
+                    if (violationCount === 0) {
+                        securityStatus.innerHTML = '🔒';
+                        securityStatus.className = 'text-lg font-bold text-green-600';
+                        securityStatus.nextElementSibling.textContent = 'Güvenli';
+                    } else if (violationCount === 1) {
+                        securityStatus.innerHTML = '⚠️';
+                        securityStatus.className = 'text-lg font-bold text-yellow-600';
+                        securityStatus.nextElementSibling.textContent = 'Uyarı';
+                    } else {
+                        securityStatus.innerHTML = '🚨';
+                        securityStatus.className = 'text-lg font-bold text-red-600';
+                        securityStatus.nextElementSibling.textContent = 'Tehlike';
+                    }
+                }
+                
+                // Uyarı modalını göster
+                function showWarningModal(reason) {
+                    if (hasWarningModalShown) return;
+                    hasWarningModalShown = true;
+                    
+                    modal.querySelector('h2').textContent = `⚠️ Güvenlik İhlali: ${reason}`;
+                    modal.classList.remove('hidden');
+                    
+                    // 10 saniye sonra otomatik devam et
+                    setTimeout(() => {
+                        if (!modal.classList.contains('hidden')) {
+                            modal.classList.add('hidden');
+                            hasWarningModalShown = false;
+                        }
+                    }, 10000);
+                }
+                
+                // Sınavı otomatik sonlandır
+                function endExamAutomatically(reason) {
+                    isExamActive = false;
+                    alert(`Sınav sonlandırıldı: ${reason}\nMaximum güvenlik ihlali sayısına ulaşıldı.`);
+                    
+                    // Livewire ile sınavı sonlandır
+                    if (window.Livewire) {
+                        Livewire.dispatch('forceCompleteTest', reason);
+                    }
+                    
+                    // 3 saniye sonra sayfayı yönlendir (Livewire işlemi tamamlanana kadar bekle)
+                    setTimeout(() => {
+                        if (window.location.pathname.includes('/test-taking/')) {
+                            window.location.href = '/ogrenci/test-categories';
+                        }
+                    }, 3000);
+                }
+                
+                // Modal buton olayları
+                continueBtn.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                    hasWarningModalShown = false;
+                    enterFullscreen(); // Tekrar tam ekrana geç
+                });
+                
+                endBtn.addEventListener('click', () => {
+                    endExamAutomatically('Kullanıcı tarafından sonlandırıldı');
+                });
+                
+                // Tam ekran modu kontrolleri
+                document.addEventListener('fullscreenchange', () => {
+                    if (!isFullscreen() && isExamActive) {
+                        handleSecurityViolation('Tam ekran modundan çıkış');
+                    }
+                });
+                
+                // Visibility API - Sekme değiştirme/minimize etme
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && isExamActive) {
+                        handleSecurityViolation('Sekme değiştirme/Tarayıcı minimize');
+                    }
+                });
+                
+                // Page Visibility - Fokus kaybı
+                window.addEventListener('blur', () => {
+                    if (isExamActive) {
+                        handleSecurityViolation('Pencere fokus kaybı');
+                    }
+                });
+                
+                // Alt+Tab ve diğer kısayol tuşları
+                document.addEventListener('keydown', (e) => {
+                    if (!isExamActive) return;
+                    
+                    // Alt+Tab
+                    if (e.altKey && e.key === 'Tab') {
+                        e.preventDefault();
+                        handleSecurityViolation('Alt+Tab kısayolu');
+                        return false;
+                    }
+                    
+                    // F12 (Developer Tools)
+                    if (e.key === 'F12') {
+                        e.preventDefault();
+                        handleSecurityViolation('Developer Tools açılması (F12)');
+                        return false;
+                    }
+                    
+                    // Ctrl+Shift+I (Developer Tools)
+                    if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                        e.preventDefault();
+                        handleSecurityViolation('Developer Tools açılması (Ctrl+Shift+I)');
+                        return false;
+                    }
+                    
+                    // Ctrl+Shift+J (Console)
+                    if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                        e.preventDefault();
+                        handleSecurityViolation('Console açılması (Ctrl+Shift+J)');
+                        return false;
+                    }
+                    
+                    // Ctrl+U (View Source)
+                    if (e.ctrlKey && e.key === 'u') {
+                        e.preventDefault();
+                        handleSecurityViolation('Kaynak kodunu görüntüleme (Ctrl+U)');
+                        return false;
+                    }
+                    
+                    // Ctrl+S (Save)
+                    if (e.ctrlKey && e.key === 's') {
+                        e.preventDefault();
+                        handleSecurityViolation('Sayfayı kaydetme girişimi (Ctrl+S)');
+                        return false;
+                    }
+                    
+                    // Windows tuşu
+                    if (e.key === 'Meta' || e.key === 'Super') {
+                        e.preventDefault();
+                        handleSecurityViolation('Windows tuşu');
+                        return false;
+                    }
+                });
+                
+                // Sağ tık menüsünü engelle
+                document.addEventListener('contextmenu', (e) => {
+                    if (isExamActive) {
+                        e.preventDefault();
+                        handleSecurityViolation('Sağ tık menüsü');
+                        return false;
+                    }
+                });
+                
+                // Console açılmasını tespit et (DevTools Detection)
+                let devtools = {open: false, orientation: null};
+                setInterval(() => {
+                    if (!isExamActive) return;
+                    
+                    if (window.outerHeight - window.innerHeight > 200 || 
+                        window.outerWidth - window.innerWidth > 200) {
+                        if (!devtools.open) {
+                            devtools.open = true;
+                            handleSecurityViolation('Developer Tools tespit edildi');
+                        }
+                    } else {
+                        devtools.open = false;
+                    }
+                }, 500);
+                
+                // Mobil cihazlarda app switch detection
+                let lastActiveTime = Date.now();
+                setInterval(() => {
+                    if (!isExamActive) return;
+                    
+                    if (Date.now() - lastActiveTime > 5000 && !document.hidden) {
+                        // 5 saniyeden fazla inaktiflik
+                        handleSecurityViolation('Uygulama değiştirme (mobil)');
+                    }
+                }, 1000);
+                
+                // Mouse/touch aktivitesini takip et
+                ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+                    document.addEventListener(event, () => {
+                        lastActiveTime = Date.now();
+                    }, { passive: true });
+                });
+                
+                // Sayfa yüklendiğinde tam ekrana geç
+                setTimeout(() => {
+                    enterFullscreen();
+                }, 1000);
+                
+                // Sayfa kapatılmaya çalışıldığında uyar
+                window.addEventListener('beforeunload', (e) => {
+                    if (isExamActive) {
+                        e.preventDefault();
+                        e.returnValue = 'Sınav devam ediyor. Çıkmak istediğinizden emin misiniz?';
+                        return e.returnValue;
+                    }
+                });
+                
+                // Print screen engelleme (tam olarak engellenemez ama tespit edilebilir)
+                document.addEventListener('keyup', (e) => {
+                    if (e.key === 'PrintScreen' && isExamActive) {
+                        handleSecurityViolation('Print Screen tuşu');
+                    }
+                });
+                
+                // Clipboard operations engelleme
+                document.addEventListener('copy', (e) => {
+                    if (isExamActive) {
+                        e.preventDefault();
+                        handleSecurityViolation('Kopyalama girişimi');
+                    }
+                });
+                
+                document.addEventListener('paste', (e) => {
+                    if (isExamActive) {
+                        e.preventDefault();
+                        handleSecurityViolation('Yapıştırma girişimi');
+                    }
+                });
+                
+                // Mouse selection engelleme
+                document.addEventListener('selectstart', (e) => {
+                    if (isExamActive) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+                
+                // Drag & drop engelleme
+                document.addEventListener('dragstart', (e) => {
+                    if (isExamActive) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+                
+                console.log('Sınav güvenlik sistemi aktif edildi.');
+            });
+        </script>
     @endif
 </div>

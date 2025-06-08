@@ -3,11 +3,11 @@
 namespace App\Livewire;
 
 use App\Models\Test;
-use App\Models\Question;
-use App\Models\UserTestResult;
 use App\Models\UserTestAnswer;
-use Livewire\Component;
+use App\Models\UserTestResult;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 
 class TestTaking extends Component
 {
@@ -21,10 +21,23 @@ class TestTaking extends Component
     public $userTestResult;
     public $showResults = false;
     public $showCorrectAnswers = false;
-    public $isCompleting = false; // Test bitirme işlemi için loading durumu
-    
-    // Bu property'yi ekleyelim - mevcut sorunun ID'sini tutmak için
+    public $isCompleting = false;
+
+    // Güvenlik özellikleri
+    public $securityViolations = 0;
+    public $maxViolations = 2;
+    public $lastViolationReason = '';
+    public $isSecurityActive = false;
+
     public $currentAnswer = null;
+
+    /**
+     * Bu dizi, JS'ten emit edilen event'leri doğrudan bu metotlara yönlendirir.
+     */
+    protected $listeners = [
+        'securityViolation'   => 'handleSecurityViolation',
+        'forceCompleteTest'   => 'forceCompleteTest',
+    ];
 
     public function mount($testSlug)
     {
@@ -32,19 +45,19 @@ class TestTaking extends Component
             ->where('slug', $testSlug)
             ->where('is_active', true)
             ->firstOrFail();
-            
-        $this->questions = $this->test->questions->toArray(); // Collection'ı array'e çevir
-        
-        // Cevapları başlat - key'leri string olarak tut
+
+        $this->questions = $this->test->questions->toArray();
+
+        // Cevapları başlat
         foreach ($this->questions as $question) {
             $this->answers[(string)$question['id']] = null;
         }
-        
+
         // İlk sorunun cevabını set et
         if (!empty($this->questions)) {
             $this->currentAnswer = $this->answers[(string)$this->questions[0]['id']] ?? null;
         }
-        
+
         // Süreyi ayarla
         if ($this->test->duration_minutes) {
             $this->timeRemaining = $this->test->duration_minutes * 60;
@@ -54,17 +67,27 @@ class TestTaking extends Component
     public function startTest()
     {
         $this->isStarted = true;
-        
+        $this->isSecurityActive = true;
+
         // Yeni test sonucu oluştur
         $this->userTestResult = UserTestResult::create([
             'user_id' => Auth::id(),
             'test_id' => $this->test->id,
-            'total_questions' => count($this->questions),
-            'status' => 'started',
-            'started_at' => now(),
-            'answers' => []
+            'total_questions'     => count($this->questions),
+            'status'              => 'started',
+            'started_at'          => now(),
+            'answers'             => [],
+            'security_violations' => 0,
+            'violation_details'   => []
         ]);
-        
+
+        Log::info('Test başlatıldı - Güvenlik aktif', [
+            'user_id'             => Auth::id(),
+            'test_id'             => $this->test->id,
+            'user_test_result_id' => $this->userTestResult->id
+        ]);
+
+        // Frontend'e event gönder (JS tarafında Livewire.on('test-started') varsa yakalar)
         $this->dispatch('test-started');
     }
 
@@ -73,12 +96,11 @@ class TestTaking extends Component
         if (!$this->isStarted || $this->isCompleted) {
             return;
         }
-        
-        // Key'i string olarak kullan
+
         $this->answers[(string)$questionId] = $choiceId;
         $this->currentAnswer = $choiceId;
-        
-        // Component'ı yeniden render etmek için
+
+        // Frontend'e event
         $this->dispatch('answer-selected');
     }
 
@@ -105,12 +127,112 @@ class TestTaking extends Component
             $this->updateCurrentAnswer();
         }
     }
-    
+
     private function updateCurrentAnswer()
     {
         $currentQuestion = $this->getCurrentQuestion();
         if ($currentQuestion) {
             $this->currentAnswer = $this->answers[(string)$currentQuestion['id']] ?? null;
+        }
+    }
+
+    /**
+     * JS'ten emit('securityViolation', reason) ile tetiklenecek.
+     */
+    public function handleSecurityViolation($reason = 'Bilinmeyen güvenlik ihlali')
+    {
+        if (!$this->isSecurityActive || $this->isCompleted) {
+            return;
+        }
+
+        $this->securityViolations++;
+        $this->lastViolationReason = $reason;
+
+        Log::warning('Güvenlik ihlali tespit edildi', [
+            'user_id'             => Auth::id(),
+            'test_id'             => $this->test->id,
+            'user_test_result_id' => $this->userTestResult->id,
+            'reason'              => $reason,
+            'violation_count'     => $this->securityViolations,
+            'current_question'    => $this->currentQuestionIndex + 1,
+            'timestamp'           => now()
+        ]);
+
+        // Veritabanını güncelle
+        if ($this->userTestResult) {
+            $violations = $this->userTestResult->violation_details ?? [];
+            $violations[] = [
+                'reason'         => $reason,
+                'timestamp'      => now()->toISOString(),
+                'question_index' => $this->currentQuestionIndex + 1,
+                'ip_address'     => request()->ip(),
+                'user_agent'     => request()->userAgent(),
+            ];
+
+            $this->userTestResult->update([
+                'security_violations' => $this->securityViolations,
+                'violation_details'   => $violations
+            ]);
+        }
+
+        // Maksimum ihlal sayısına ulaşıldı mı?
+        if ($this->securityViolations >= $this->maxViolations) {
+            $this->forceCompleteTest($reason);
+        }
+
+        // Frontend'e event
+        $this->dispatch('security-violation-logged', [
+            'count'         => $this->securityViolations,
+            'reason'        => $reason,
+            'maxViolations' => $this->maxViolations
+        ]);
+    }
+
+    /**
+     * JS'ten emit('forceCompleteTest', reason) ile tetiklenecek.
+     */
+    public function forceCompleteTest($reason = 'Güvenlik ihlali')
+    {
+        if ($this->isCompleted) {
+            return;
+        }
+
+        $this->isSecurityActive = false;
+        $this->isCompleting = true;
+
+        try {
+            $this->isCompleted = true;
+            $this->calculateResults();
+
+            // Test sonucunu güvenlik ihlali ile güncelle
+            $this->userTestResult->update([
+                'status'             => 'terminated_security',
+                'termination_reason' => $reason,
+                'terminated_at'      => now()
+            ]);
+
+            Log::critical('Test güvenlik ihlali nedeniyle sonlandırıldı', [
+                'user_id'             => Auth::id(),
+                'test_id'             => $this->test->id,
+                'user_test_result_id' => $this->userTestResult->id,
+                'reason'              => $reason,
+                'total_violations'    => $this->securityViolations
+            ]);
+
+            $this->showResults = true;
+            $this->showCorrectAnswers = false;
+
+            $this->dispatch('test-terminated-security', ['reason' => $reason]);
+            session()->flash('error', "Test güvenlik ihlali nedeniyle sonlandırıldı: {$reason}");
+        } catch (\Exception $e) {
+            Log::error('Güvenlik sonlandırması sırasında hata', [
+                'error'   => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'test_id' => $this->test->id
+            ]);
+
+            $this->isCompleting = false;
+            session()->flash('error', 'Test sonlandırılırken bir hata oluştu.');
         }
     }
 
@@ -120,19 +242,34 @@ class TestTaking extends Component
             return;
         }
 
-        $this->isCompleting = true; // Loading durumu başlat
+        $this->isCompleting = true;
+        $this->isSecurityActive = false;
 
         try {
             $this->isCompleted = true;
             $this->calculateResults();
             $this->showResults = true;
             $this->showCorrectAnswers = true;
-            
+
+            Log::info('Test normal olarak tamamlandı', [
+                'user_id'             => Auth::id(),
+                'test_id'             => $this->test->id,
+                'user_test_result_id' => $this->userTestResult->id,
+                'security_violations' => $this->securityViolations
+            ]);
+
             $this->dispatch('test-completed');
         } catch (\Exception $e) {
             $this->isCompleting = false;
             $this->isCompleted = false;
-            // Hata durumunda kullanıcıyı bilgilendir
+            $this->isSecurityActive = true;
+
+            Log::error('Test tamamlama hatası', [
+                'error'   => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'test_id' => $this->test->id
+            ]);
+
             session()->flash('error', 'Test tamamlanırken bir hata oluştu. Lütfen tekrar deneyin.');
         }
     }
@@ -146,11 +283,10 @@ class TestTaking extends Component
 
         foreach ($this->questions as $question) {
             $userAnswer = $this->answers[(string)$question['id']] ?? null;
-            
+
             if ($userAnswer === null) {
                 $emptyAnswers++;
             } else {
-                // Doğru cevabı bul
                 $correctChoice = collect($question['choices'])->where('is_correct', true)->first();
                 if ($correctChoice && $userAnswer == $correctChoice['id']) {
                     $correctAnswers++;
@@ -160,40 +296,51 @@ class TestTaking extends Component
                 }
             }
 
-            // Kullanıcı cevabını kaydet
             if ($userAnswer) {
                 UserTestAnswer::create([
                     'user_test_result_id' => $this->userTestResult->id,
-                    'question_id' => $question['id'],
-                    'selected_choice_id' => $userAnswer,
-                    'is_correct' => $correctChoice && $userAnswer == $correctChoice['id'],
-                    'points_earned' => ($correctChoice && $userAnswer == $correctChoice['id']) ? ($question['points'] ?? 1) : 0
+                    'question_id'         => $question['id'],
+                    'selected_choice_id'  => $userAnswer,
+                    'is_correct'          => $correctChoice && $userAnswer == $correctChoice['id'],
+                    'points_earned'       => ($correctChoice && $userAnswer == $correctChoice['id'])
+                                            ? ($question['points'] ?? 1)
+                                            : 0
                 ]);
             }
         }
 
-        $percentage = ($correctAnswers / count($this->questions)) * 100;
-        $duration = $this->test->duration_minutes ? 
-            ($this->test->duration_minutes * 60) - $this->timeRemaining : 
-            0;
+        $percentage = count($this->questions) > 0
+            ? ($correctAnswers / count($this->questions)) * 100
+            : 0;
 
-        // Test sonucunu güncelle
+        $duration = $this->test->duration_minutes
+            ? ($this->test->duration_minutes * 60) - $this->timeRemaining
+            : 0;
+
         $this->userTestResult->update([
-            'score' => $score,
-            'correct_answers' => $correctAnswers,
-            'wrong_answers' => $wrongAnswers,
-            'empty_answers' => $emptyAnswers,
-            'percentage' => $percentage,
+            'score'            => $score,
+            'correct_answers'  => $correctAnswers,
+            'wrong_answers'    => $wrongAnswers,
+            'empty_answers'    => $emptyAnswers,
+            'percentage'       => $percentage,
             'duration_seconds' => $duration,
-            'completed_at' => now(),
-            'status' => 'completed',
-            'answers' => $this->answers
+            'completed_at'     => now(),
+            'status'           => $this->userTestResult->status === 'terminated_security'
+                                ? 'terminated_security'
+                                : 'completed',
+            'answers'          => $this->answers
         ]);
     }
 
     public function timeUp()
     {
         if ($this->isStarted && !$this->isCompleted && !$this->isCompleting) {
+            Log::info('Test süre doldu', [
+                'user_id'             => Auth::id(),
+                'test_id'             => $this->test->id,
+                'user_test_result_id' => $this->userTestResult->id
+            ]);
+
             $this->completeTest();
             $this->dispatch('time-up');
         }
@@ -207,7 +354,9 @@ class TestTaking extends Component
     public function getProgress()
     {
         $answered = collect($this->answers)->filter()->count();
-        return ($answered / count($this->questions)) * 100;
+        return count($this->questions) > 0
+            ? ($answered / count($this->questions)) * 100
+            : 0;
     }
 
     public function getAnsweredCount()
@@ -215,20 +364,36 @@ class TestTaking extends Component
         return collect($this->answers)->filter()->count();
     }
 
+    public function getSecurityStatus()
+    {
+        return [
+            'violations'    => $this->securityViolations,
+            'maxViolations' => $this->maxViolations,
+            'isActive'      => $this->isSecurityActive,
+            'lastViolation' => $this->lastViolationReason
+        ];
+    }
+
     public function render()
     {
         return view('livewire.test-taking', [
             'currentQuestion' => $this->getCurrentQuestion(),
-            'progress' => $this->getProgress(),
-            'answeredCount' => $this->getAnsweredCount()
+            'progress'        => $this->getProgress(),
+            'answeredCount'   => $this->getAnsweredCount(),
+            'securityStatus'  => $this->getSecurityStatus()
         ]);
     }
-    
-    // Acil durum için reset metodu
+
     public function resetTest()
     {
         $this->isCompleting = false;
         $this->isCompleted = false;
-        // Eğer gerçekten stuck olduysa bu metodu çağırabilirsin
+        $this->isSecurityActive = true;
+
+        Log::info('Test reset edildi', [
+            'user_id'             => Auth::id(),
+            'test_id'             => $this->test->id,
+            'user_test_result_id' => $this->userTestResult->id ?? null
+        ]);
     }
 }
