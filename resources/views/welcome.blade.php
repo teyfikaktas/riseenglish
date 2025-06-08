@@ -33,7 +33,7 @@
             <div id="successMessageProgress" class="h-1 bg-green-500 mt-2 w-full transform origin-left"></div>
         </div>
     @endif
-    <div class="relative bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] py-20 overflow-hidden">
+    <div class="relative overflow-hidden">
         <!-- Dekoratif arka plan desenleri -->
         <div class="absolute inset-0 opacity-10">
             <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -46,6 +46,14 @@
             </svg>
         </div>
         <!-- Öğrenci Videoları Slider Bölümü - Komple Düzeltilmiş Versiyon -->
+
+<div class="relative py-20 overflow-hidden"
+         style="background-image: url('{{ asset('images/student.jpg') }}'); background-size: cover; background-position: center; background-blend-mode: multiply;">
+        <!-- Dekoratif arka plan desenleri -->
+
+
+        <!-- Resim üzerinde koyu overlay (okunabilirlik için) -->
+        <div class="absolute inset-0 bg-black opacity-30"></div>
 
         <!-- İçerik kısmı -->
         <div class="container mx-auto px-6 relative z-10">
@@ -256,6 +264,7 @@
                 </div>
             </div>
         </div>
+    </div>
         <div class="relative bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] py-16 overflow-hidden">
             <!-- Dekoratif arka plan desenleri -->
             <div class="absolute inset-0 opacity-10">

@@ -15,6 +15,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Öğrencilere ders hatırlatma SMS'i gönderme komutu
+// Öğrencilere ders hatırlatma SMS'i gönderme komutu
 Artisan::command('lessons:send-reminders', function () {
     /** @var ClosureCommand $this */
     $this->comment('Ders hatırlatma SMS\'leri gönderiliyor...');
@@ -45,9 +46,11 @@ Artisan::command('lessons:send-reminders', function () {
                   ->orWhere('end_date', '>=', $now->format('Y-m-d'));
             });
         })
+        ->orderBy('created_at', 'desc') // En son oluşturulan dersleri önce getir
         ->get();
     
     $remindersSent = 0;
+    $processedStudents = []; // İşlenmiş öğrencileri takip et
     
     foreach ($sessions as $session) {
         // Dersin başlama saatini al
@@ -63,17 +66,33 @@ Artisan::command('lessons:send-reminders', function () {
         // Eğer ders saati şu andan belirli bir süre sonraya denk geliyorsa (tolerans ekli)
         $diffInMinutes = $now->diffInMinutes($sessionDateTime, false);
         
-        // Son günün tarihini kontrol et - aynı günde tekrar SMS göndermeyi önler
-        $todayKey = $now->format('Y-m-d');
-        $reminderKey = "lesson_reminder_{$session->id}_{$todayKey}";
-        $reminderSent = \Illuminate\Support\Facades\Cache::has($reminderKey);
-        
-        if ($diffInMinutes >= 5 && $diffInMinutes <= 35 && !$reminderSent) {
+        if ($diffInMinutes >= 5 && $diffInMinutes <= 35) {
+            // SADECE HER ÖĞRENCİ İÇİN İLK (SON) DERSİ İŞLE
+            $studentSessionKey = $session->student_id . '_' . $session->start_time;
+            
+            if (in_array($studentSessionKey, $processedStudents)) {
+                $this->comment("Öğrenci ID {$session->student_id} için bu saatte zaten SMS gönderildi, atlanıyor...");
+                continue; // Bu öğrenci için bu saatte zaten işlem yapıldı
+            }
+            
+            // Bu öğrenciyi işlenmiş olarak işaretle
+            $processedStudents[] = $studentSessionKey;
+            
             // Öğrenciyi bul
             $student = User::find($session->student_id);
             $teacher = User::find($session->teacher_id);
             
             if ($student && $teacher) {
+                // Son günün tarihini kontrol et - aynı günde tekrar SMS göndermeyi önler
+                $todayKey = $now->format('Y-m-d');
+                $masterReminderKey = "lesson_reminder_master_{$session->student_id}_{$todayKey}_{$session->start_time}";
+                $masterReminderSent = \Illuminate\Support\Facades\Cache::has($masterReminderKey);
+                
+                if ($masterReminderSent) {
+                    $this->comment("Öğrenci {$student->name} için bugün bu saatte zaten SMS gönderilmiş.");
+                    continue;
+                }
+                
                 // SMS'leri gönder - hem öğrenciye hem de velilere
                 $phones = [];
                 $sentCount = 0;
@@ -102,11 +121,10 @@ Artisan::command('lessons:send-reminders', function () {
                     ];
                 }
                 
-                // Aynı private_lesson_id için geçerli session sayısını bul 
-                // (Sadece approved ve completed durumundaki dersleri sayar)
-                $sessionCount = PrivateLessonSession::where('private_lesson_id', $session->private_lesson_id)
+                // TOPLAM DERS SAYISINI BUL (Bu student için aynı private_lesson_id'ye sahip onaylı derslerin sayısı)
+                $totalSessionCount = PrivateLessonSession::where('private_lesson_id', $session->private_lesson_id)
                     ->whereIn('status', ['approved', 'completed'])
-                    ->where('id', '<=', $session->id)
+                    ->where('student_id', $session->student_id)
                     ->count();
                 
                 if (count($phones) > 0) {
@@ -114,7 +132,15 @@ Artisan::command('lessons:send-reminders', function () {
                     foreach ($phones as $phone) {
                         // SMS içeriği - öğrenci veya veli için
                         $recipientType = $phone['type'] === 'Öğrenci' ? "Sayın {$student->name}" : "Sayın Veli";
-                        $smsContent = "{$recipientType}, bugün saat {$session->start_time} - {$session->end_time} arasında {$teacher->name} hocamız ile {$sessionCount}. dersiniz bulunmaktadır. Bilgilerinize Risenglish.";
+                        
+                        // Ders numarasını dinamik olarak hesapla: bu session'ın bu student için kaçıncı ders olduğunu bul
+                        $currentSessionNumber = PrivateLessonSession::where('private_lesson_id', $session->private_lesson_id)
+                            ->where('student_id', $session->student_id)
+                            ->whereIn('status', ['approved', 'completed'])
+                            ->where('created_at', '<=', $session->created_at)
+                            ->count();
+                        
+                        $smsContent = "{$recipientType}, bugün saat {$session->start_time} - {$session->end_time} arasında {$teacher->name} hocamız ile {$currentSessionNumber}. dersiniz bulunmaktadır. Bilgilerinize Risenglish.";
                         
                         // SMS gönder
                         try {
@@ -134,7 +160,9 @@ Artisan::command('lessons:send-reminders', function () {
                                     'teacher_name' => $teacher->name,
                                     'session_id' => $session->id,
                                     'start_time' => $session->start_time,
-                                    'session_count' => $sessionCount
+                                    'current_session_number' => $currentSessionNumber,
+                                    'total_sessions' => $totalSessionCount,
+                                    'master_cache_key' => $masterReminderKey
                                 ]);
                             } else {
                                 $this->error("SMS gönderilemedi: {$phone['type']} - {$phone['number']}");
@@ -158,13 +186,10 @@ Artisan::command('lessons:send-reminders', function () {
                         }
                     }
                     
-                    // Başarıyla SMS gönderildiyse, hatırlatma gönderildiğini cache'e kaydet
-                    // 24 saatlik bir süre ile kaydediyoruz, böylece ertesi gün yine gönderilebilir
+                    // Başarıyla SMS gönderildiyse, bu öğrenci için bugün bu saatte SMS gönderildiğini kaydet
                     if ($sentCount > 0) {
-                        \Illuminate\Support\Facades\Cache::put($reminderKey, true, Carbon::now()->addHours(24));
-                        $this->comment("Öğrenci {$student->name} için toplam {$sentCount} adet SMS gönderildi ve kaydedildi.");
-                    } else {
-                        $this->comment("Öğrenci {$student->name} için toplam {$sentCount} adet SMS gönderildi.");
+                        \Illuminate\Support\Facades\Cache::put($masterReminderKey, true, Carbon::now()->addHours(24));
+                        $this->comment("Öğrenci {$student->name} için toplam {$sentCount} adet SMS gönderildi ve master cache kaydedildi.");
                     }
                 } else {
                     $this->warn("Öğrenci {$student->name} (ID: {$student->id}) için hiçbir telefon numarası bulunamadı.");
@@ -174,7 +199,7 @@ Artisan::command('lessons:send-reminders', function () {
     }
     
     $this->comment("Toplam {$remindersSent} adet hatırlatma SMS'i gönderildi.");
-})->purpose('Dersleri başlamadan 30 dakika önce öğrencilere SMS hatırlatması gönder');
+})->purpose('Dersleri başlamadan 30 dakika önce öğrencilere SMS hatırlatması gönder - Her öğrenci için sadece son ders');
 
 // SMS hatırlatma sistemini zamanla
 Schedule::command('lessons:send-reminders')->everyFiveMinutes();

@@ -1,97 +1,108 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-gradient-to-b from-blue-50 to-white min-h-screen">
-    <div class="container mx-auto px-4 py-12">
+<div class="bg-gradient-to-b from-blue-50 to-white min-h-screen"
+     style="background-image: url('{{ asset('images/free.jpg') }}'); background-size: cover; background-position: center; background-attachment: fixed; background-blend-mode: multiply;">
+    
+    <!-- Arka plan üzerinde overlay (okunabilirlik için) -->
+    <div class="absolute inset-0 bg-white opacity-75"></div>
+    
+    <div class="container mx-auto px-4 py-12 relative z-10">
         <div class="text-center mb-12">
-            <h1 class="text-5xl font-bold text-[#2c3e7f] mb-4">Ücretsiz Kaynaklar</h1>
-            <p class="text-gray-600 text-lg max-w-2xl mx-auto">Ücretsiz sunduğumuz kaynaklarımızla dil sınavına hazırlanan herkesin yanındayız.</p>
+            <div class="bg-white rounded-2xl shadow-xl p-8 max-w-4xl mx-auto border border-gray-100">
+                <h1 class="text-5xl font-bold text-[#2c3e7f] mb-4">Ücretsiz Kaynaklar</h1>
+                <p class="text-gray-600 text-lg max-w-2xl mx-auto">Ücretsiz sunduğumuz kaynaklarımızla dil sınavına hazırlanan herkesin yanındayız.</p>
+            </div>
         </div>
-                {{-- Geliştirilmiş Filtreler --}}
-                <div class="bg-white rounded-2xl shadow-xl p-6 mb-16 max-w-4xl mx-auto transition duration-300 hover:shadow-2xl border border-gray-100">
-                    <h3 class="text-2xl font-bold text-[#2c3e7f] mb-6 text-center">Kaynakları Filtrele</h3>
-                    
-                    {{-- Arama Kutusu --}}
-                    <div class="mb-6">
-                        <div class="relative">
-                            <input type="text" id="search-resources" placeholder="Kaynak ara..." class="w-full border-0 bg-gray-50 rounded-xl p-4 pl-12 shadow-sm focus:border-[#2c3e7f] focus:ring focus:ring-[#2c3e7f] focus:ring-opacity-50">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
-                            <button id="search-button" class="absolute inset-y-0 right-0 px-4 py-2 bg-[#2c3e7f] text-white font-medium rounded-r-xl hover:bg-[#1e3370] transition duration-300">
-                                Ara
-                            </button>
-                        </div>
+        
+        {{-- Geliştirilmiş Filtreler --}}
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-16 max-w-4xl mx-auto transition duration-300 hover:shadow-2xl border border-gray-100">
+            <h3 class="text-2xl font-bold text-[#2c3e7f] mb-6 text-center">Kaynakları Filtrele</h3>
+            
+            {{-- Arama Kutusu --}}
+            <div class="mb-6">
+                <div class="relative">
+                    <input type="text" id="search-resources" placeholder="Kaynak ara..." class="w-full border-0 bg-gray-50 rounded-xl p-4 pl-12 shadow-sm focus:border-[#2c3e7f] focus:ring focus:ring-[#2c3e7f] focus:ring-opacity-50">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <div class="relative">
-                                <select id="main-category-filter" class="w-full border-0 bg-gray-50 rounded-xl p-4 pr-10 shadow-sm focus:border-[#2c3e7f] focus:ring focus:ring-[#2c3e7f] focus:ring-opacity-50 appearance-none">
-                                    <option value="">Ana Kategori</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#2c3e7f]">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="relative">
-                                <select id="sub-category-filter" class="w-full border-0 bg-gray-50 rounded-xl p-4 pr-10 shadow-sm focus:border-[#2c3e7f] focus:ring focus:ring-[#2c3e7f] focus:ring-opacity-50 appearance-none">
-                                    <option value="">Alt Kategori</option>
-                                    <!-- Alt kategoriler JavaScript ile doldurulacak -->
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#2c3e7f]">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="relative">
-                                <select id="resource-type" class="w-full border-0 bg-gray-50 rounded-xl p-4 pr-10 shadow-sm focus:border-[#2c3e7f] focus:ring focus:ring-[#2c3e7f] focus:ring-opacity-50 appearance-none">
-                                    <option value="">Kaynak Türü</option>
-                                    @foreach($types as $type)
-                                        <option value="{{ $type->slug }}">{{ $type->name }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#2c3e7f]">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 flex justify-center">
-                        <button id="filter-button" class="px-8 py-3 bg-gradient-to-r from-[#2c3e7f] to-[#264285] text-white font-medium rounded-xl shadow-md hover:from-[#264285] hover:to-[#1e3370] transition duration-300 transform hover:scale-105 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    <button id="search-button" class="absolute inset-y-0 right-0 px-4 py-2 bg-[#2c3e7f] text-white font-medium rounded-r-xl hover:bg-[#1e3370] transition duration-300">
+                        Ara
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <div class="relative">
+                        <select id="main-category-filter" class="w-full border-0 bg-gray-50 rounded-xl p-4 pr-10 shadow-sm focus:border-[#2c3e7f] focus:ring focus:ring-[#2c3e7f] focus:ring-opacity-50 appearance-none">
+                            <option value="">Ana Kategori</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#2c3e7f]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
-                            Filtrele
-                        </button>
-                        <button id="reset-filters" class="ml-4 px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl shadow-md hover:bg-gray-200 transition duration-300">
-                            Sıfırla
-                        </button>
+                        </div>
                     </div>
                 </div>
+                <div>
+                    <div class="relative">
+                        <select id="sub-category-filter" class="w-full border-0 bg-gray-50 rounded-xl p-4 pr-10 shadow-sm focus:border-[#2c3e7f] focus:ring focus:ring-[#2c3e7f] focus:ring-opacity-50 appearance-none">
+                            <option value="">Alt Kategori</option>
+                            <!-- Alt kategoriler JavaScript ile doldurulacak -->
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#2c3e7f]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="relative">
+                        <select id="resource-type" class="w-full border-0 bg-gray-50 rounded-xl p-4 pr-10 shadow-sm focus:border-[#2c3e7f] focus:ring focus:ring-[#2c3e7f] focus:ring-opacity-50 appearance-none">
+                            <option value="">Kaynak Türü</option>
+                            @foreach($types as $type)
+                                <option value="{{ $type->slug }}">{{ $type->name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#2c3e7f]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-center">
+                <button id="filter-button" class="px-8 py-3 bg-gradient-to-r from-[#2c3e7f] to-[#264285] text-white font-medium rounded-xl shadow-md hover:from-[#264285] hover:to-[#1e3370] transition duration-300 transform hover:scale-105 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filtrele
+                </button>
+                <button id="reset-filters" class="ml-4 px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl shadow-md hover:bg-gray-200 transition duration-300">
+                    Sıfırla
+                </button>
+            </div>
+        </div>
+
         {{-- Popüler Kaynaklar Slider --}}
         <div id="popular-resources-section" class="mb-16">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-3xl font-bold text-[#2c3e7f] flex items-center">
-                    <div class="w-6 h-1 bg-[#e43546] rounded-full mr-3"></div>
-                    Popüler Kaynaklar
-                </h2>
-                <div class="flex space-x-2">
+            <div class="flex items-center justify-center mb-6">
+                <div class="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
+                    <h2 class="text-3xl font-bold text-[#2c3e7f] flex items-center">
+                        <div class="w-6 h-1 bg-[#e43546] rounded-full mr-3"></div>
+                        Popüler Kaynaklar
+                    </h2>
+                </div>
+                <div class="flex space-x-2 ml-4">
                     <button id="slideLeft" class="p-2 rounded-full bg-white shadow-md hover:bg-gray-100 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#2c3e7f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -146,15 +157,15 @@
             </div>
         </div>
         
-
-
         {{-- Filtrelenmiş Sonuçlar (Başlangıçta gizli) --}}
         <div id="filtered-results" class="mb-16 hidden">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-3xl font-bold text-[#2c3e7f] flex items-center">
-                    <div class="w-6 h-1 bg-[#e43546] rounded-full mr-3"></div>
-                    Filtrelenmiş Kaynaklar
-                </h2>
+            <div class="flex items-center justify-center mb-6">
+                <div class="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
+                    <h2 class="text-3xl font-bold text-[#2c3e7f] flex items-center">
+                        <div class="w-6 h-1 bg-[#e43546] rounded-full mr-3"></div>
+                        Filtrelenmiş Kaynaklar
+                    </h2>
+                </div>
             </div>
             
             {{-- Kaynaklar Grid --}}
@@ -178,12 +189,16 @@
         {{-- Tüm Kategoriler ve Kaynaklar --}}
         @foreach($categories as $category)
         <div class="mb-16">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-3xl font-bold text-[#2c3e7f] flex items-center">
-                    <div class="w-6 h-1 bg-[#e43546] rounded-full mr-3"></div>
-                    {{ $category->name }} Kaynakları
-                </h2>
-                <a href="#" class="text-[#2c3e7f] font-medium hover:underline">Tümünü Gör &rarr;</a>
+            <div class="flex items-center justify-center mb-6">
+                <div class="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 flex-grow max-w-2xl">
+                    <h2 class="text-3xl font-bold text-[#2c3e7f] flex items-center justify-center">
+                        <div class="w-6 h-1 bg-[#e43546] rounded-full mr-3"></div>
+                        {{ $category->name }} Kaynakları
+                    </h2>
+                </div>
+                <a href="#" class="ml-4 bg-white rounded-xl shadow-lg p-3 text-[#2c3e7f] font-medium hover:bg-gray-50 transition duration-300 border border-gray-100">
+                    Tümünü Gör &rarr;
+                </a>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -231,50 +246,49 @@
                 </div>
                 @empty
                 <div class="col-span-full text-center py-8">
-                    <p class="text-gray-500">{{ $category->name }} kategorisinde kaynak bulunamadı.</p>
+                    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 max-w-md mx-auto">
+                        <p class="text-gray-500">{{ $category->name }} kategorisinde kaynak bulunamadı.</p>
+                    </div>
                 </div>
                 @endforelse
             </div>
-            
-            {{-- Alt Kategorileri Göster --}}
-
         </div>
         @endforeach
         
-{{-- Newsletter --}}
-<div class="max-w-4xl mx-auto bg-gradient-to-r from-[#2c3e7f] to-[#1e3370] 
-            rounded-2xl shadow-xl p-10 mb-16 text-white overflow-hidden relative">
-    <!-- Dekoratif arka plan elementleri (daha belirgin) -->
-    <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-20 
-                rounded-full -mr-20 -mt-20"></div>
-    <div class="absolute bottom-0 left-0 w-40 h-40 bg-white opacity-20 
-                rounded-full -ml-10 -mb-10"></div>
-    
-    <!-- İçerik alanı -->
-    <div class="relative z-10">
-        <!-- Başlık ve açıklama metni (daha belirgin) -->
-        <div class="text-center mb-8">
-            <h3 class="text-3xl font-bold mb-3 text-white">Yeni Kaynaklar Eklendiğinde Haberdar Olun</h3>
-            <p class="text-white text-lg max-w-2xl mx-auto">
-                Email adresinizi bırakarak yeni eklenen kaynaklardan anında haberdar olabilirsiniz.
-            </p>
+        {{-- Newsletter --}}
+        <div class="max-w-4xl mx-auto bg-gradient-to-r from-[#2c3e7f] to-[#1e3370] 
+                    rounded-2xl shadow-xl p-10 mb-16 text-white overflow-hidden relative">
+            <!-- Dekoratif arka plan elementleri (daha belirgin) -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-20 
+                        rounded-full -mr-20 -mt-20"></div>
+            <div class="absolute bottom-0 left-0 w-40 h-40 bg-white opacity-20 
+                        rounded-full -ml-10 -mb-10"></div>
+            
+            <!-- İçerik alanı -->
+            <div class="relative z-10">
+                <!-- Başlık ve açıklama metni (daha belirgin) -->
+                <div class="text-center mb-8">
+                    <h3 class="text-3xl font-bold mb-3 text-white">Yeni Kaynaklar Eklendiğinde Haberdar Olun</h3>
+                    <p class="text-white text-lg max-w-2xl mx-auto">
+                        Email adresinizi bırakarak yeni eklenen kaynaklardan anında haberdar olabilirsiniz.
+                    </p>
+                </div>
+                
+                <!-- Form alanı (daha belirgin) -->
+                <div class="flex flex-col md:flex-row gap-4 max-w-xl mx-auto">
+                    <input type="email" 
+                           placeholder="Email adresinizi giriniz" 
+                           class="w-full md:flex-1 px-5 py-4 rounded-xl text-gray-800 
+                                  border-2 border-gray-300 bg-white
+                                  focus:outline-none focus:ring-2 focus:ring-[#e43546]">
+                    <button class="bg-[#e43546] text-white font-bold px-8 py-4 rounded-xl 
+                                   hover:bg-[#c52e3d] transition duration-300 shadow-lg
+                                   border-2 border-[#ff4757]">
+                        Abone Ol
+                    </button>
+                </div>
+            </div>
         </div>
-        
-        <!-- Form alanı (daha belirgin) -->
-        <div class="flex flex-col md:flex-row gap-4 max-w-xl mx-auto">
-            <input type="email" 
-                   placeholder="Email adresinizi giriniz" 
-                   class="w-full md:flex-1 px-5 py-4 rounded-xl text-gray-800 
-                          border-2 border-gray-300 bg-white
-                          focus:outline-none focus:ring-2 focus:ring-[#e43546]">
-            <button class="bg-[#e43546] text-white font-bold px-8 py-4 rounded-xl 
-                           hover:bg-[#c52e3d] transition duration-300 shadow-lg
-                           border-2 border-[#ff4757]">
-                Abone Ol
-            </button>
-        </div>
-    </div>
-</div>
     </div>
 </div>
 
@@ -342,9 +356,8 @@
     }
 }
 </style>
-<script>
 
-// Kategoriler verisini JavaScript'e aktarma
+<script>
 // Kategoriler verisini JavaScript'e aktarma
 const categoriesData = @json($categories);
 
@@ -700,6 +713,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
-    </script>
+</script>
 
-    @endsection
+@endsection

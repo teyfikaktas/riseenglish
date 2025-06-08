@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\DB;
 
 class TestCategory extends Model
 {
@@ -34,11 +35,22 @@ class TestCategory extends Model
                     ->withTimestamps();
     }
 
-    // Test kategorisi ile sorular arasında many-to-many ilişki
-    public function questions(): BelongsToMany
+    // Test kategorisi ile sorular arasında doğru ilişki
+    // Kategori -> Testler -> Sorular (hasManyThrough kullanarak)
+    public function questions()
     {
-        return $this->belongsToMany(Question::class, 'question_test_categories')
-                    ->withTimestamps();
+        return $this->hasManyThrough(
+            Question::class,
+            Test::class,
+            'id', // tests tablosundaki foreign key
+            'id', // questions tablosundaki foreign key
+            'id', // test_categories tablosundaki local key
+            'id'  // tests tablosundaki local key
+        )->join('test_category_tests', function($join) {
+            $join->on('test_category_tests.test_id', '=', 'tests.id')
+                 ->where('test_category_tests.test_category_id', '=', $this->id ?? 0);
+        })->join('question_tests', 'question_tests.test_id', '=', 'tests.id')
+          ->where('question_tests.question_id', '=', DB::raw('questions.id'));
     }
 
     // Aktif kategorileri getir
@@ -59,14 +71,50 @@ class TestCategory extends Model
         return $query->where('slug', $slug);
     }
 
-    // Accessor'lar
+    // Accessor'lar - Manuel hesaplama
     public function getTestsCountAttribute()
     {
-        return $this->tests()->count();
+        if (!array_key_exists('tests_count', $this->attributes)) {
+            $this->attributes['tests_count'] = $this->tests()->count();
+        }
+        return $this->attributes['tests_count'];
+    }
+
+    public function getQuestionsCountAttribute()
+    {
+        if (!array_key_exists('questions_count', $this->attributes)) {
+            // Manuel SQL ile hesapla
+            $count = DB::table('test_category_tests')
+                ->join('question_tests', 'test_category_tests.test_id', '=', 'question_tests.test_id')
+                ->where('test_category_tests.test_category_id', $this->id)
+                ->count();
+            
+            $this->attributes['questions_count'] = $count;
+        }
+        return $this->attributes['questions_count'];
     }
 
     public function getActiveTestsCountAttribute()
     {
         return $this->tests()->where('is_active', true)->count();
+    }
+
+    // Helper method - tüm kategorilerin soru sayılarını hesapla
+    public static function withQuestionCounts()
+    {
+        return static::select('test_categories.*')
+            ->selectSub(
+                DB::table('test_category_tests')
+                    ->join('question_tests', 'test_category_tests.test_id', '=', 'question_tests.test_id')
+                    ->whereColumn('test_category_tests.test_category_id', 'test_categories.id')
+                    ->selectRaw('COUNT(*)'),
+                'questions_count'
+            )
+            ->selectSub(
+                DB::table('test_category_tests')
+                    ->whereColumn('test_category_tests.test_category_id', 'test_categories.id')
+                    ->selectRaw('COUNT(DISTINCT test_category_tests.test_id)'),
+                'tests_count'
+            );
     }
 }

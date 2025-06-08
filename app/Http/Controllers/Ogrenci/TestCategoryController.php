@@ -11,10 +11,14 @@ class TestCategoryController extends Controller
     // Test kategorilerini listele
     public function index()
     {
-        $categories = TestCategory::active()
+        // withQuestionCounts static method'unu kullan
+        $categories = TestCategory::withQuestionCounts()
+            ->active()
             ->ordered()
-            ->withCount(['tests', 'questions'])
             ->get();
+
+        // Debug için log
+        \Log::info('Categories with counts:', $categories->toArray());
 
         return view('ogrenci.test-categories.index', compact('categories'));
     }
@@ -28,6 +32,10 @@ class TestCategoryController extends Controller
                 $query->active()->ordered()->withCount('questions');
             }])
             ->firstOrFail();
+
+        // Manuel soru sayısı hesaplama
+        $category->questions_count = $category->tests->sum('questions_count');
+        $category->tests_count = $category->tests->count();
 
         return view('ogrenci.test-categories.show', compact('category'));
     }
