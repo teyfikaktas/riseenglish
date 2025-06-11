@@ -48,7 +48,7 @@
         <!-- Öğrenci Videoları Slider Bölümü - Komple Düzeltilmiş Versiyon -->
 
 <div class="relative py-20 overflow-hidden"
-         style="background-image: url('{{ asset('images/student.jpg') }}'); background-size: cover; background-position: center; background-blend-mode: multiply;">
+         style="background-image: url('{{ asset('images/free.jpg') }}'); background-size: cover; background-position: center; background-blend-mode: multiply;">
         <!-- Dekoratif arka plan desenleri -->
 
 
