@@ -150,7 +150,7 @@
                             class="mt-6 bg-gradient-to-r from-[#e63946] to-[#d62836] rounded-lg p-3 shadow-lg transform -rotate-1 hover:rotate-0 transition-transform duration-300 mx-auto sm:mx-0 max-w-xs">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <div class="text-white font-bold text-lg">%15 İNDİRİM</div>
+                                    <div class="text-white font-bold text-lg">%40 İNDİRİM</div>
                                     <div class="text-xs text-white opacity-90">Tüm eğitimlerde geçerli</div>
                                 </div>
                                 <div class="bg-white text-[#e63946] text-xs font-bold py-1 px-3 rounded-full shadow">
@@ -1008,7 +1008,7 @@
             <!-- İndirim etiketi - Öğrenci DEĞİLSE göster -->
             <div
                 class="absolute -top-4 -left-4 z-10 bg-[#e63946] text-white px-3 py-1 rounded-lg transform -rotate-12 shadow-md font-bold text-sm">
-                %15 İNDİRİM
+                %40 İNDİRİM
             </div>
         @endif
 
