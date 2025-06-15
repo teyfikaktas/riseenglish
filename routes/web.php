@@ -170,7 +170,31 @@ Route::middleware(['auth', 'verified.phone'])->group(function () {
     // Kurs değerlendirme
     Route::post('/egitimler/{id}/yorum', [FrontendCourseController::class, 'review'])->name('course.review');
 });
-
+Route::prefix('ogrenci')->name('ogrenci.')->group(function () {
+    
+    // Test Kategorileri - Misafirler de görebilir (pazarlama için)
+    Route::get('/test-categories', [TestCategoryController::class, 'index'])
+        ->name('test-categories.index');
+    
+    Route::get('/test-categories/{category:slug}', [TestCategoryController::class, 'show'])
+        ->name('test-categories.show');
+    
+    // Test Detayları - Misafirler de görebilir (teaser için)
+    Route::get('/tests/{test:slug}', [TestController::class, 'show'])
+        ->name('tests.show');
+    
+    // Test Çözme - Misafirler sınırlı erişim
+    Route::get('/test-taking/{test:slug}', [TestController::class, 'take'])
+        ->name('tests.take');
+    
+    // Öğrenme Paneli - Misafirler de görebilir (teaser)
+    Route::get('/ogrenme-paneli', [App\Http\Controllers\Student\LearningPanelController::class, 'index'])
+        ->name('learning-panel.index');
+    
+    // Öğrenme Paneli Sorular - Misafirler sınırlı erişim
+    Route::get('/ogrenme-paneli/sorular', [App\Http\Controllers\Student\LearningPanelController::class, 'questions'])
+        ->name('learning-panel.questions');
+});
 // Yönetici rotaları - Laravel 12 tarzında middleware kullanımı
 Route::middleware(['auth', 'role:yonetici'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -480,7 +504,9 @@ Route::post('/ozel-ders-grup/{id}/seans-ekle', [TeacherPrivateLessonController::
     });
 });
 
-
+        Route::get('/ogrenme-paneli', [App\Http\Controllers\Student\LearningPanelController::class, 'index'])
+            ->name('ogrenci.learning-panel.index');
+            
 // Öğrenci rotaları
 Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function () {
     Route::prefix('ogrenci')->name('ogrenci.')->group(function () {
@@ -496,10 +522,6 @@ Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function ()
         ->name('documents.index');
     Route::get('/kurslarim/{slug}/belge/{documentId}/indir', [App\Http\Controllers\Student\StudentDocumentController::class, 'download'])
         ->name('documents.download');
-        Route::get('/ogrenme-paneli', [App\Http\Controllers\Student\LearningPanelController::class, 'index'])
-            ->name('learning-panel.index');
-                Route::get('/test-kategorileri', [TestCategoryController::class, 'index'])->name('test-categories.index');
-    Route::get('/kategori/{slug}', [TestCategoryController::class, 'show'])->name('test-categories.show');
     
     Route::get('/test/{slug}', [TestController::class, 'show'])->name('tests.show');
     Route::get('/test/{slug}/baslat', [TestController::class, 'start'])->name('tests.start');

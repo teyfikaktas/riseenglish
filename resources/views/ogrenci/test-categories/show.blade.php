@@ -16,6 +16,16 @@
                     <div class="bg-[#e63946] px-3 py-1 rounded-md">
                         <span class="text-white text-sm font-semibold">{{ $category->icon ?: '📝' }} {{ strtoupper($category->name) }}</span>
                     </div>
+                    <!-- Misafir/Üye durumu göster -->
+                    @auth
+                        <div class="bg-green-600 px-3 py-1 rounded-md">
+                            <span class="text-white text-sm font-semibold">✅ Üye</span>
+                        </div>
+                    @else
+                        <div class="bg-orange-600 px-3 py-1 rounded-md">
+                            <span class="text-white text-sm font-semibold">🎯 Misafir</span>
+                        </div>
+                    @endauth
                 </div>
             </div>
 
@@ -31,6 +41,9 @@
                         </h1>
                         <p class="text-lg text-gray-300">
                             {{ $category->description }}
+                            @guest
+                                <span class="text-orange-300"> - Deneme testleri çözün!</span>
+                            @endguest
                         </p>
                     </div>
                 </div>
@@ -45,7 +58,13 @@
                         <div class="w-px h-8 bg-[#1a2e5a] opacity-30"></div>
                         <div class="text-center">
                             <div class="text-2xl font-bold text-[#1a2e5a]">{{ $category->tests->sum('questions_count') }}</div>
-                            <div class="text-sm text-[#1a2e5a]">Soru</div>
+                            <div class="text-sm text-[#1a2e5a]">
+                                @guest
+                                    Soru <span class="text-orange-600">(Sınırlı)</span>
+                                @else
+                                    Soru
+                                @endguest
+                            </div>
                         </div>
                         <div class="w-px h-8 bg-[#1a2e5a] opacity-30"></div>
                         <div class="text-center">
@@ -73,6 +92,37 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Misafir için Bilgilendirme Kutusu -->
+            @guest
+                <div class="bg-gradient-to-r from-orange-500 to-red-600 rounded-lg p-6 mb-6 text-white">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">🎯 Ücretsiz Deneme Testleri</h3>
+                            <div class="text-sm space-y-1 mb-4">
+                                <p>• Her testten sadece <strong>5 soru</strong> çözebilirsiniz</p>
+                                <p>• Maksimum süre: <strong>10 dakika</strong></p>
+                                <p>• Test sonunda doğru cevapları <strong>göremezsiniz</strong></p>
+                                <p>• Günde sadece <strong>1 ücretsiz test</strong> hakkınız var</p>
+                                <p>• Tam erişim için <strong>ücretsiz üye olun!</strong></p>
+                            </div>
+                            <div class="flex gap-3">
+                                <a href="{{ route('register') }}" class="bg-white text-orange-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition">
+                                    🚀 Ücretsiz Üye Ol
+                                </a>
+                                <a href="{{ route('login') }}" class="border border-white text-white px-4 py-2 rounded-lg font-bold hover:bg-white hover:text-orange-600 transition">
+                                    Giriş Yap
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endguest
             
             <!-- Testler Listesi -->
             <div class="space-y-4">
@@ -85,7 +135,12 @@
                             <div class="flex-1 mb-4 md:mb-0">
                                 <div class="flex items-start justify-between mb-3">
                                     <div class="flex-1">
-                                        <h3 class="text-xl font-bold text-[#1a2e5a] mb-2">{{ $test->title }}</h3>
+                                        <h3 class="text-xl font-bold text-[#1a2e5a] mb-2">
+                                            {{ $test->title }}
+                                            @guest
+                                                <span class="text-sm bg-orange-100 text-orange-600 px-2 py-1 rounded ml-2">Deneme</span>
+                                            @endguest
+                                        </h3>
                                         <p class="text-gray-600 text-sm mb-3">{{ $test->description }}</p>
                                         
                                         <!-- Test Özellikleri -->
@@ -94,7 +149,11 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                                                 </svg>
-                                                {{ $test->questions_count }} Soru
+                                                @guest
+                                                    5 Soru (Deneme)
+                                                @else
+                                                    {{ $test->questions_count }} Soru
+                                                @endguest
                                             </span>
                                             
                                             @if($test->duration_minutes)
@@ -102,7 +161,11 @@
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    {{ $test->duration_minutes }} Dakika
+                                                    @guest
+                                                        10 Dakika (Deneme)
+                                                    @else
+                                                        {{ $test->duration_minutes }} Dakika
+                                                    @endguest
                                                 </span>
                                             @endif
                                             
@@ -132,6 +195,12 @@
                                                     Öne Çıkan
                                                 </span>
                                             @endif
+
+                                            @guest
+                                                <span class="bg-orange-100 text-orange-600 px-2 py-1 rounded flex items-center">
+                                                    🎯 Deneme Modu
+                                                </span>
+                                            @endguest
                                         </div>
                                     </div>
                                 </div>
@@ -139,19 +208,36 @@
                             
                             <!-- Test Butonları -->
                             <div class="flex flex-col sm:flex-row gap-3 md:ml-6">
+                                <!-- Detaylar Butonu - Herkese açık -->
                                 <a href="{{ route('ogrenci.tests.show', $test->slug) }}" 
                                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-center text-sm font-medium">
                                     📊 Detaylar
                                 </a>
-                                <a href="{{ route('ogrenci.tests.start', $test->slug) }}" 
-                                   class="px-6 py-2 bg-[#e63946] hover:bg-[#d52936] text-white rounded-lg transition text-center font-medium">
-                                    🚀 Teste Başla
-                                </a>
-                                    <!-- PDF İndirme Butonu -->
-                                <a href="{{ route('ogrenci.tests.download-pdf', $test->slug) }}" 
-                                class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-center text-sm font-medium">
-                                    📄 PDF İndir
-                                </a>
+
+                                <!-- Test Başlama Butonu - Misafir/Üye ayrımı -->
+                                @guest
+                                    <!-- Misafir için deneme test butonu -->
+                                    <a href="{{ route('ogrenci.tests.take', $test->slug) }}" 
+                                       class="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition text-center font-medium">
+                                        🎯 Deneme Testi Çöz
+                                    </a>
+                                @else
+                                    <!-- Üye için tam test butonu -->
+                                    <a href="{{ route('ogrenci.tests.take', $test->slug) }}" 
+                                       class="px-6 py-2 bg-[#e63946] hover:bg-[#d52936] text-white rounded-lg transition text-center font-medium">
+                                        🚀 Tam Test Çöz
+                                    </a>
+                                @endguest
+
+                                <!-- PDF İndirme - Sadece üyeler -->
+                         @auth
+                                    @if(Auth::user()->hasRole('ogretmen'))
+                                        <a href="{{ route('ogrenci.tests.download-pdf', $test->slug) }}" 
+                                           class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-center text-sm font-medium">
+                                            📄 PDF İndir
+                                        </a>
+                                    @endif
+                                @endauth
                             </div>
                         </div>
                     </div>
@@ -180,7 +266,12 @@
                     </svg>
                     <div>
                         <h3 class="font-bold text-[#1a2e5a] mb-2">{{ $category->name }} Hakkında</h3>
-                        <p class="text-sm text-gray-700">{{ $category->description }} Bu kategorideki testleri çözerek {{ strtolower($category->name) }} konusundaki bilginizi geliştirebilir ve sınav performansınızı artırabilirsiniz.</p>
+                        <p class="text-sm text-gray-700">
+                            {{ $category->description }} Bu kategorideki testleri çözerek {{ strtolower($category->name) }} konusundaki bilginizi geliştirebilir ve sınav performansınızı artırabilirsiniz.
+                            @guest
+                                <strong class="text-orange-600">Misafir kullanıcılar deneme testleri çözebilir, tam erişim için üye olmanız gerekir.</strong>
+                            @endguest
+                        </p>
                     </div>
                 </div>
             </div>

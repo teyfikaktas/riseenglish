@@ -97,7 +97,6 @@
                     </svg>
                     <span>Eğitimler</span>
                 </a>
-                @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
                     <a href="{{ route('ogrenci.learning-panel.index') }}"
                         class="menu-link {{ request()->is('ogrenci/ogrenme-paneli') || request()->is('ogrenci/ogrenme-paneli/*') ? 'active' : '' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
@@ -107,7 +106,6 @@
                         </svg>
                         <span>Öğrenme Paneli</span>
                     </a>
-                @endif
 
                 <!-- İletişim -->
                 <a href="{{ url('/iletisim') }}" class="menu-link {{ request()->is('iletisim') ? 'active' : '' }}">
@@ -304,7 +302,6 @@
             </svg>
             <span>Eğitimler</span>
         </a>
-        @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
             <a href="{{ route('ogrenci.learning-panel.index') }}"
                 class="menu-link block border-0 bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-1 px-2 mx-1.5 my-1 rounded-md flex items-center transition text-xs {{ request()->is('ogrenci/ogrenme-paneli') || request()->is('ogrenci/ogrenme-paneli/*') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
@@ -314,7 +311,6 @@
                 </svg>
                 <span>Öğrenme Paneli</span>
             </a>
-        @endif
         <!-- İletişim -->
         <a href="{{ url('/iletisim') }}"
             class="menu-link block border-0 bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-1 px-2 mx-1.5 my-1 rounded-md flex items-center transition text-xs {{ request()->is('iletisim') ? 'active' : '' }}">

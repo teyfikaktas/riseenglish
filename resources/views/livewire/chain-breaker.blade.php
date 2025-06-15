@@ -72,7 +72,83 @@
                     <p class="text-gray-600 mt-2">Her gün düzenli çalışarak zincirinizi güçlendirin ve seviye atlayın!
                     </p>
                 </div>
+                <!-- Kontrol Butonları bölümüne ekleyin -->
+                <div class="mt-8 sm:mt-10 flex flex-wrap justify-center gap-3 sm:gap-4">
+                    @if ($isUserAuthenticated)
+                        <button wire:click="toggleActivityForm"
+                            class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 flex items-center text-sm sm:text-base">
+                            <i class="fas fa-plus-circle mr-2"></i>Çalışma Ekle
+                        </button>
 
+                        <button wire:click="completeDay"
+                            class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 flex items-center text-sm sm:text-base">
+                            <i class="fas fa-check-circle mr-2"></i>Günü Tamamla
+                        </button>
+
+                        <button wire:click="toggleHistoryModal"
+                            class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 flex items-center text-sm sm:text-base">
+                            <i class="fas fa-history mr-2"></i>Geçmiş Çalışmalar
+                        </button>
+                    @else
+                        <!-- Üye olmayan kullanıcılar için butonların devre dışı ve daha az belirgin versiyonları -->
+                        <div class="relative group">
+                            <button
+                                class="bg-blue-300 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg flex items-center text-sm sm:text-base cursor-not-allowed opacity-70">
+                                <i class="fas fa-plus-circle mr-2"></i>Çalışma Ekle
+                            </button>
+                            <div
+                                class="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                                Önce üye olmalısınız
+                            </div>
+                        </div>
+
+                        <div class="relative group">
+                            <button
+                                class="bg-[#e6394680] text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg flex items-center text-sm sm:text-base cursor-not-allowed opacity-70">
+                                <i class="fas fa-check-circle mr-2"></i>Günü Tamamla
+                            </button>
+                            <div
+                                class="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                                Önce üye olmalısınız
+                            </div>
+                        </div>
+
+                        <div class="relative group">
+                            <button
+                                class="bg-purple-400 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg shadow-lg flex items-center text-sm sm:text-base cursor-not-allowed opacity-70">
+                                <i class="fas fa-history mr-2"></i>Geçmiş Çalışmalar
+                            </button>
+                            <div
+                                class="absolute bottom-full left-1/2 transform -translate-x-1/2 -translate-y-2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                                Önce üye olmalısınız
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Giriş yapmamış kullanıcılar için ek call-to-action -->
+                @if (!$isUserAuthenticated)
+                    <div
+                        class="mt-6 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg p-6 border border-blue-200 shadow-md">
+                        <div class="flex flex-col sm:flex-row items-center justify-between">
+                            <div class="mb-4 sm:mb-0">
+                                <h3 class="text-xl font-bold text-[#1a2e5a] mb-2">Sisteme Erişim Kısıtlı</h3>
+                                <p class="text-gray-700">Çalışma eklemek, dosya yüklemek ve ilerleme kaydetmek için üye
+                                    olmalısınız.</p>
+                            </div>
+                            <div class="flex space-x-3">
+                                <a href="{{ route('login') }}"
+                                    class="bg-white border border-[#1a2e5a] text-[#1a2e5a] hover:bg-gray-50 font-bold py-2 px-4 rounded-lg transition duration-300">
+                                    Giriş Yap
+                                </a>
+                                <a href="{{ route('register') }}"
+                                    class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                                    Üye Ol
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 @if (!$isUserAuthenticated)
                     <div class="bg-gradient-to-r from-[#e63946] to-[#d62836] text-white p-6 rounded-lg mt-8 shadow-lg">
                         <div class="flex flex-col md:flex-row items-center justify-between">
