@@ -171,7 +171,213 @@
                     </div>
                 @endif <!-- Zinciriniz - MOBİL UYUMLU YENİ TASARIM -->
 
+               <!-- Çalışma Ekleme Formu -->
+               @if ($showActivityForm && $isUserAuthenticated)
+                   <div
+                       class="mt-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 sm:p-8 border border-blue-200 shadow-lg">
+                       <div class="flex items-center justify-between mb-6">
+                           <div>
+                               <h3 class="text-xl sm:text-2xl font-bold text-[#1a2e5a]">Bugünün Başarısını Kaydet! 🎯
+                               </h3>
+                               <p class="text-gray-600 text-sm mt-1">Her çalışma, seni bir adım daha yaklaştırıyor!
+                               </p>
+                           </div>
+                           <div class="hidden sm:block">
+                               <i class="fas fa-fire text-3xl text-orange-500 animate-pulse"></i>
+                           </div>
+                       </div>
+
+            <form class="space-y-6" onsubmit="event.preventDefault();">
+                           <div class="group">
+                               <label for="content" class="block text-sm font-bold text-gray-700 mb-2">
+                                   <i class="fas fa-pencil-alt mr-1 text-blue-500"></i>
+                                   Bugün Ne Başardın?
+                               </label>
+                               <textarea wire:model="activityContent" id="content" rows="3"
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm transition-all duration-200 hover:border-blue-400"
+                                   placeholder="Örnek: 2 sayfa kelime çalıştım, Listening pratiği yaptım..."></textarea>
+                               @error('activityContent')
+                                   <span class="text-red-500 text-sm flex items-center mt-1"><i
+                                           class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</span>
+                               @enderror
+                           </div>
+
+                           <div class="group">
+                               <label class="block text-sm font-bold text-gray-700 mb-3">
+                                   <i class="fas fa-cloud-upload-alt mr-1 text-indigo-500"></i>
+                                   Çalışmanı Paylaş (İsteğe Bağlı)
+                               </label>
+
+                               <!-- Drag & Drop Area -->
 <div class="relative">
+    <input type="file" wire:model="activityFiles" multiple id="file-upload"
+        class="hidden"
+        x-on:change="uploading = true">
+
+    <label for="file-upload"
+        x-data="{ uploading: false }"
+        class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all duration-300 group-hover:border-blue-400">
+
+        <!-- Yükleniyor Göstergesi -->
+        <div x-show="uploading" 
+            class="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-xl z-10">
+            <div class="flex flex-col items-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-3"></div>
+                <p class="text-blue-600 font-medium">Dosya Yükleniyor...</p>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Upload Icon -->
+            <div
+                class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-cloud-upload-alt text-2xl text-white"></i>
+            </div>
+
+            <!-- Text -->
+            <div>
+                <p class="text-lg font-bold text-gray-700">Dosyaları buraya sürükle</p>
+                <p class="text-sm text-gray-500">veya buraya tıklayarak seç</p>
+            </div>
+
+            <!-- File Types -->
+            <div class="flex justify-center gap-4 text-xs text-gray-400">
+                <span><i class="fas fa-file-pdf text-red-500"></i> PDF</span>
+                <span><i class="fas fa-file-image text-green-500"></i> Resim</span>
+                <span><i class="fas fa-file-word text-blue-500"></i> Word</span>
+            </div>
+        </div>
+    </label>
+</div>
+@error('activityFiles.*')
+    <span class="text-red-500 text-sm flex items-center mt-2">
+        <i class="fas fa-exclamation-triangle mr-1"></i>{{ $message }}
+    </span>
+@enderror
+                           </div>
+                           
+                           <!-- Yüklenen Dosyalar -->
+@if ($activityFiles)
+    <div class="bg-white rounded-lg p-4 shadow-sm">
+        <p class="text-sm font-bold text-gray-700 mb-3">
+            <i class="fas fa-check-circle text-green-500 mr-1"></i>
+            Yüklenen Dosyalar:
+        </p>
+        <div class="space-y-2">
+            @foreach ($activityFiles as $file)
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div
+                            class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            @php
+                                $extension = strtolower(
+                                    $file->getClientOriginalExtension(),
+                                );
+                                $icon = 'fa-file';
+                                $color = 'text-gray-500';
+
+                                if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
+                                    $icon = 'fa-file-image';
+                                    $color = 'text-green-500';
+                                } elseif ($extension == 'pdf') {
+                                    $icon = 'fa-file-pdf';
+                                    $color = 'text-red-500';
+                                } elseif (in_array($extension, ['doc', 'docx'])) {
+                                    $icon = 'fa-file-word';
+                                    $color = 'text-blue-500';
+                                } elseif (in_array($extension, ['mp3', 'wav'])) {
+                                    $icon = 'fa-file-audio';
+                                    $color = 'text-purple-500';
+                                }
+                            @endphp
+                            <i
+                                class="fas {{ $icon }} {{ $color }} text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">
+                                {{ $file->getClientOriginalName() }}</p>
+                            <p class="text-xs text-gray-400">
+                                {{ round($file->getSize() / 1024, 1) }} KB</p>
+                        </div>
+                    </div>
+                    <div class="text-green-500">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div class="flex items-center text-blue-700">
+                <i class="fas fa-info-circle text-blue-500 mr-2 text-lg"></i>
+                <p class="text-sm font-medium">Dosyalarınız seçildi. Lütfen işlemi tamamlamak için aşağıdaki "Çalışmayı Kaydet" düğmesine basmayı unutmayın.</p>
+            </div>
+        </div>
+    </div>
+@endif
+                           <!-- Motivasyon Mesajı -->
+                           <div
+                               class="bg-gradient-to-r from-orange-100 to-yellow-100 rounded-lg p-4 border border-orange-200">
+                               <div class="flex items-center space-x-3">
+                                   <i class="fas fa-rocket text-2xl text-orange-500"></i>
+                                   <p class="text-sm font-medium text-orange-800">
+                                       Harika gidiyorsun! Her gün kaydettiğin çalışmalar seni hedefe yaklaştırıyor. 🚀
+                                   </p>
+                               </div>
+                           </div>
+
+                           <!-- Butonlar -->
+                           <div class="flex justify-end space-x-3 pt-4">
+        <button type="button" wire:click="resetActivityForm"
+            class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex items-center">
+            <i class="fas fa-times mr-2"></i> İptal
+        </button>
+        <button type="button" wire:click="addActivity"
+            class="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center transform hover:scale-105">
+            <i class="fas fa-save mr-2"></i> Çalışmayı Kaydet
+        </button>
+                           </div>
+                       </form>
+                   </div>
+               @endif
+
+               <!-- Bugünün Çalışmaları -->
+               @if (!empty($todayActivities) && $isUserAuthenticated)
+                   <div class="mt-6 bg-white rounded-lg p-4 sm:p-6 border border-gray-200">
+                       <h3 class="text-lg sm:text-xl font-bold text-[#1a2e5a] mb-4">Bugünün Çalışmaları</h3>
+
+                       <div class="space-y-3">
+                           @foreach ($todayActivities as $activity)
+                               <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg" wire:key="activity-{{ $activity->id }}">
+                                   <div class="flex-shrink-0">
+                                       <i class="fas fa-book text-blue-500 text-xl"></i>
+                                   </div>
+                                   <div class="flex-1">
+                                       @if ($activity->content)
+                                           <p class="text-gray-700">{{ $activity->content }}</p>
+                                       @endif
+                                       @if ($activity->file_name)
+                                           <a href="{{ Storage::url($activity->file_path) }}" target="_blank"
+                                               class="text-blue-600 hover:text-blue-800 text-sm mt-1 inline-flex items-center">
+                                               <i class="fas fa-file mr-1"></i> {{ $activity->file_name }}
+                                           </a>
+                                       @endif
+                                       <p class="text-xs text-gray-500 mt-1">
+                                           {{ $activity->created_at->format('H:i') }}</p>
+                                   </div>
+                                   <div class="flex-shrink-0">
+                                       <button wire:click="confirmDeleteActivity({{ $activity->id }})"
+                                           class="text-red-400 hover:text-red-600 transition-colors"
+                                           title="Çalışmayı Sil">
+                                           <i class="fas fa-trash-alt"></i>
+                                       </button>
+                                   </div>
+                               </div>
+                           @endforeach
+                       </div>
+                   </div>
+               @endif
+           </div>
+                <div class="relative">
     <!-- Seviye Göstergesi - İnce ve uzun format -->
     <div class="absolute -left-2 top-0 md:-top-8 z-20 flex flex-col items-center">
         <div class="text-center group">
@@ -545,212 +751,7 @@
                    </div>
                @endif
 
-               <!-- Çalışma Ekleme Formu -->
-               @if ($showActivityForm && $isUserAuthenticated)
-                   <div
-                       class="mt-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 sm:p-8 border border-blue-200 shadow-lg">
-                       <div class="flex items-center justify-between mb-6">
-                           <div>
-                               <h3 class="text-xl sm:text-2xl font-bold text-[#1a2e5a]">Bugünün Başarısını Kaydet! 🎯
-                               </h3>
-                               <p class="text-gray-600 text-sm mt-1">Her çalışma, seni bir adım daha yaklaştırıyor!
-                               </p>
-                           </div>
-                           <div class="hidden sm:block">
-                               <i class="fas fa-fire text-3xl text-orange-500 animate-pulse"></i>
-                           </div>
-                       </div>
 
-            <form class="space-y-6" onsubmit="event.preventDefault();">
-                           <div class="group">
-                               <label for="content" class="block text-sm font-bold text-gray-700 mb-2">
-                                   <i class="fas fa-pencil-alt mr-1 text-blue-500"></i>
-                                   Bugün Ne Başardın?
-                               </label>
-                               <textarea wire:model="activityContent" id="content" rows="3"
-                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm transition-all duration-200 hover:border-blue-400"
-                                   placeholder="Örnek: 2 sayfa kelime çalıştım, Listening pratiği yaptım..."></textarea>
-                               @error('activityContent')
-                                   <span class="text-red-500 text-sm flex items-center mt-1"><i
-                                           class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</span>
-                               @enderror
-                           </div>
-
-                           <div class="group">
-                               <label class="block text-sm font-bold text-gray-700 mb-3">
-                                   <i class="fas fa-cloud-upload-alt mr-1 text-indigo-500"></i>
-                                   Çalışmanı Paylaş (İsteğe Bağlı)
-                               </label>
-
-                               <!-- Drag & Drop Area -->
-<div class="relative">
-    <input type="file" wire:model="activityFiles" multiple id="file-upload"
-        class="hidden"
-        x-on:change="uploading = true">
-
-    <label for="file-upload"
-        x-data="{ uploading: false }"
-        class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all duration-300 group-hover:border-blue-400">
-
-        <!-- Yükleniyor Göstergesi -->
-        <div x-show="uploading" 
-            class="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-xl z-10">
-            <div class="flex flex-col items-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-3"></div>
-                <p class="text-blue-600 font-medium">Dosya Yükleniyor...</p>
-            </div>
-        </div>
-
-        <div class="space-y-4">
-            <!-- Upload Icon -->
-            <div
-                class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-cloud-upload-alt text-2xl text-white"></i>
-            </div>
-
-            <!-- Text -->
-            <div>
-                <p class="text-lg font-bold text-gray-700">Dosyaları buraya sürükle</p>
-                <p class="text-sm text-gray-500">veya buraya tıklayarak seç</p>
-            </div>
-
-            <!-- File Types -->
-            <div class="flex justify-center gap-4 text-xs text-gray-400">
-                <span><i class="fas fa-file-pdf text-red-500"></i> PDF</span>
-                <span><i class="fas fa-file-image text-green-500"></i> Resim</span>
-                <span><i class="fas fa-file-word text-blue-500"></i> Word</span>
-            </div>
-        </div>
-    </label>
-</div>
-@error('activityFiles.*')
-    <span class="text-red-500 text-sm flex items-center mt-2">
-        <i class="fas fa-exclamation-triangle mr-1"></i>{{ $message }}
-    </span>
-@enderror
-                           </div>
-                           
-                           <!-- Yüklenen Dosyalar -->
-@if ($activityFiles)
-    <div class="bg-white rounded-lg p-4 shadow-sm">
-        <p class="text-sm font-bold text-gray-700 mb-3">
-            <i class="fas fa-check-circle text-green-500 mr-1"></i>
-            Yüklenen Dosyalar:
-        </p>
-        <div class="space-y-2">
-            @foreach ($activityFiles as $file)
-                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                    <div class="flex items-center space-x-3">
-                        <div
-                            class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            @php
-                                $extension = strtolower(
-                                    $file->getClientOriginalExtension(),
-                                );
-                                $icon = 'fa-file';
-                                $color = 'text-gray-500';
-
-                                if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
-                                    $icon = 'fa-file-image';
-                                    $color = 'text-green-500';
-                                } elseif ($extension == 'pdf') {
-                                    $icon = 'fa-file-pdf';
-                                    $color = 'text-red-500';
-                                } elseif (in_array($extension, ['doc', 'docx'])) {
-                                    $icon = 'fa-file-word';
-                                    $color = 'text-blue-500';
-                                } elseif (in_array($extension, ['mp3', 'wav'])) {
-                                    $icon = 'fa-file-audio';
-                                    $color = 'text-purple-500';
-                                }
-                            @endphp
-                            <i
-                                class="fas {{ $icon }} {{ $color }} text-xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-700">
-                                {{ $file->getClientOriginalName() }}</p>
-                            <p class="text-xs text-gray-400">
-                                {{ round($file->getSize() / 1024, 1) }} KB</p>
-                        </div>
-                    </div>
-                    <div class="text-green-500">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-        <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div class="flex items-center text-blue-700">
-                <i class="fas fa-info-circle text-blue-500 mr-2 text-lg"></i>
-                <p class="text-sm font-medium">Dosyalarınız seçildi. Lütfen işlemi tamamlamak için aşağıdaki "Çalışmayı Kaydet" düğmesine basmayı unutmayın.</p>
-            </div>
-        </div>
-    </div>
-@endif
-                           <!-- Motivasyon Mesajı -->
-                           <div
-                               class="bg-gradient-to-r from-orange-100 to-yellow-100 rounded-lg p-4 border border-orange-200">
-                               <div class="flex items-center space-x-3">
-                                   <i class="fas fa-rocket text-2xl text-orange-500"></i>
-                                   <p class="text-sm font-medium text-orange-800">
-                                       Harika gidiyorsun! Her gün kaydettiğin çalışmalar seni hedefe yaklaştırıyor. 🚀
-                                   </p>
-                               </div>
-                           </div>
-
-                           <!-- Butonlar -->
-                           <div class="flex justify-end space-x-3 pt-4">
-        <button type="button" wire:click="resetActivityForm"
-            class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex items-center">
-            <i class="fas fa-times mr-2"></i> İptal
-        </button>
-        <button type="button" wire:click="addActivity"
-            class="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center transform hover:scale-105">
-            <i class="fas fa-save mr-2"></i> Çalışmayı Kaydet
-        </button>
-                           </div>
-                       </form>
-                   </div>
-               @endif
-
-               <!-- Bugünün Çalışmaları -->
-               @if (!empty($todayActivities) && $isUserAuthenticated)
-                   <div class="mt-6 bg-white rounded-lg p-4 sm:p-6 border border-gray-200">
-                       <h3 class="text-lg sm:text-xl font-bold text-[#1a2e5a] mb-4">Bugünün Çalışmaları</h3>
-
-                       <div class="space-y-3">
-                           @foreach ($todayActivities as $activity)
-                               <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg" wire:key="activity-{{ $activity->id }}">
-                                   <div class="flex-shrink-0">
-                                       <i class="fas fa-book text-blue-500 text-xl"></i>
-                                   </div>
-                                   <div class="flex-1">
-                                       @if ($activity->content)
-                                           <p class="text-gray-700">{{ $activity->content }}</p>
-                                       @endif
-                                       @if ($activity->file_name)
-                                           <a href="{{ Storage::url($activity->file_path) }}" target="_blank"
-                                               class="text-blue-600 hover:text-blue-800 text-sm mt-1 inline-flex items-center">
-                                               <i class="fas fa-file mr-1"></i> {{ $activity->file_name }}
-                                           </a>
-                                       @endif
-                                       <p class="text-xs text-gray-500 mt-1">
-                                           {{ $activity->created_at->format('H:i') }}</p>
-                                   </div>
-                                   <div class="flex-shrink-0">
-                                       <button wire:click="confirmDeleteActivity({{ $activity->id }})"
-                                           class="text-red-400 hover:text-red-600 transition-colors"
-                                           title="Çalışmayı Sil">
-                                           <i class="fas fa-trash-alt"></i>
-                                       </button>
-                                   </div>
-                               </div>
-                           @endforeach
-                       </div>
-                   </div>
-               @endif
-           </div>
 
            <!-- Seviye Atlama Modal -->
            @if ($showLevelUpModal)
