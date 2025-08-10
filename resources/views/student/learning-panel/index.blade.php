@@ -54,10 +54,12 @@
    </div>
 
    <!-- Kelime Oyunları - Yakında (Turuncu-Kırmızı) -->
+<!-- Kelime Oyunları - Aktif (Turuncu-Kırmızı) -->
+<a href="{{ route('ogrenci.word-match-game') }}" class="block">
    <div class="group bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer">
        <div class="h-36 bg-white/10 backdrop-blur-sm flex items-center justify-center relative">
            <div class="absolute top-3 right-3">
-               <span class="bg-pink-400 text-pink-900 px-2 py-1 rounded-full text-xs font-bold">🎮 Yakında</span>
+               <span class="bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold">🎮 Aktif</span>
            </div>
            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white/80 group-hover:text-white group-hover:scale-110 transition-all" fill="none"
                viewBox="0 0 24 24" stroke="currentColor">
@@ -68,11 +70,11 @@
            </svg>
        </div>
        <div class="p-4">
-           <h3 class="text-lg font-bold text-white mb-1">Kelime Oyunları</h3>
+           <h3 class="text-lg font-bold text-white mb-1">Eşleştir!</h3>
            <p class="text-sm text-white/90">Eğlenceli kelime oyunlarıyla İngilizcenizi geliştirin.</p>
        </div>
    </div>
-
+</a>
    <!-- Sözlük - Yakında (Gri-Siyah) - Unique Color -->
    <div class="group bg-gradient-to-br from-slate-600 to-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer">
        <div class="h-36 bg-white/10 backdrop-blur-sm flex items-center justify-center relative">

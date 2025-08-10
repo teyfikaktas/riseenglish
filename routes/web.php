@@ -510,6 +510,9 @@ Route::post('/ozel-ders-grup/{id}/seans-ekle', [TeacherPrivateLessonController::
 // Öğrenci rotaları
 Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function () {
     Route::prefix('ogrenci')->name('ogrenci.')->group(function () {
+                        Route::get('/kelime-oyunu', function () {
+            return view('student.word-match-game');
+        })->name('word-match-game');
         Route::get('/ayarlar', [App\Http\Controllers\Student\StudentSettingsController::class, 'index'])
         ->name('settings.index');
     Route::post('/ayarlar/profil', [App\Http\Controllers\Student\StudentSettingsController::class, 'updateProfile'])

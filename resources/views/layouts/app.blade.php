@@ -24,12 +24,24 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Alpine.js Çakışma Önleyici -->
+    <script>
+        // Alpine.js çoklu yükleme kontrolü
+        window.alpineLoaded = false;
+        document.addEventListener('alpine:init', () => {
+            if (!window.alpineLoaded) {
+                window.alpineLoaded = true;
+                console.log('✅ Alpine.js tekil yükleme');
+            } else {
+                console.log('⚠️ Alpine.js çoklu yükleme engellendi');
+            }
+        });
+    </script>
+
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @stack('styles')
-
-
 </head>
 <body class="font-sans bg-gray-50 min-h-screen">
     <!-- Kullanıcı rolüne göre topbar gösterimi -->
@@ -59,7 +71,7 @@
         <button id="chat-toggle" class="flex items-center justify-center w-16 h-16 bg-green-500 rounded-full shadow-lg hover:bg-green-600 transition-all duration-300">
             <i class="fab fa-whatsapp text-white text-3xl"></i>
         </button>
-    @endguest
+        @endguest
       
         <!-- Açık durumdaki sohbet kutusu -->
         <div id="chat-box" class="hidden bg-white rounded-lg shadow-xl w-80 mb-4 overflow-hidden">
@@ -80,7 +92,6 @@
             <div class="flex items-center">
               <div class="w-10 h-10 rounded-full bg-white overflow-hidden flex items-center justify-center mr-3">
                 <!-- İlgili öğretmen resmi eklenebilir -->
-                <!--<img id="teacher-img" src="images/hakan-hoca.jpg" alt="Öğretmen" class="w-full h-full object-cover" onerror="this.src='images/default-avatar.png'">-->
               </div>
               <div class="text-white">
                 <p id="teacher-name" class="font-medium">Hakan Hoca</p>
@@ -117,93 +128,99 @@
             </form>
           </div>
         </div>
-      </div>
+    </div>
       
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          const chatToggle = document.getElementById('chat-toggle');
-          const chatBox = document.getElementById('chat-box');
-          const closeChat = document.getElementById('close-chat');
-          const messageForm = document.getElementById('message-form');
-          const messageInput = document.getElementById('message-input');
-          
-          // Sekme butonları
-          const tabHakan = document.getElementById('tab-hakan');
-          const tabRumeysa = document.getElementById('tab-rumeysa');
-          const teacherName = document.getElementById('teacher-name');
-          const teacherRole = document.getElementById('teacher-role');
-          // Eğer resim değiştirmek isterseniz:
-          // const teacherImg = document.getElementById('teacher-img');
-      
-          // Varsayılan öğretmen: Hakan Hoca
-          let currentTeacher = 'hakan'; // "hakan" veya "rumeysa"
-      
-          function activateTab(teacher) {
-            if(teacher === 'hakan'){
-              currentTeacher = 'hakan';
-              teacherName.textContent = 'Hakan Hoca';
-              teacherRole.textContent = 'İngilizce Kursları';
-              tabHakan.classList.replace('bg-gray-200', 'bg-green-500');
-              tabHakan.classList.replace('text-gray-700', 'text-white');
-              tabRumeysa.classList.replace('bg-green-500', 'bg-gray-200');
-              tabRumeysa.classList.replace('text-white', 'text-gray-700');
-              // teacherImg.src = 'images/hakan-hoca.jpg';
-            } else if(teacher === 'rumeysa'){
-              currentTeacher = 'rumeysa';
-              teacherName.textContent = 'Rümeysa Hoca';
-              teacherRole.textContent = 'Eğitim Danışmanı & Öğrenci Koçu';
-              tabRumeysa.classList.replace('bg-gray-200', 'bg-green-500');
-              tabRumeysa.classList.replace('text-gray-700', 'text-white');
-              tabHakan.classList.replace('bg-green-500', 'bg-gray-200');
-              tabHakan.classList.replace('text-white', 'text-gray-700');
-              // teacherImg.src = 'images/rumeysa-hoca.jpg';
-            }
-          }
-          
-          // Sekme tıklamalarını dinle
-          tabHakan.addEventListener('click', function() {
-            activateTab('hakan');
-          });
-          
-          tabRumeysa.addEventListener('click', function() {
-            activateTab('rumeysa');
-          });
-          
-          // Sohbeti aç/kapat
-          chatToggle.addEventListener('click', function() {
-            chatBox.classList.toggle('hidden');
-          });
-          
-          // Sohbeti kapat
-          closeChat.addEventListener('click', function() {
-            chatBox.classList.add('hidden');
-          });
-          
-          // Mesaj gönderme
-          messageForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+    <!-- Livewire Scripts ÖNCE -->
+    @livewireScripts
+    
+    <!-- Chat Widget Script - DOM hazır olduğunda çalışacak -->
+    <script>
+        // Chat widget fonksiyonları - DOM hazır olduğunda çalışacak
+        function initializeChatWidget() {
+            const chatToggle = document.getElementById('chat-toggle');
+            const chatBox = document.getElementById('chat-box');
+            const closeChat = document.getElementById('close-chat');
+            const messageForm = document.getElementById('message-form');
+            const messageInput = document.getElementById('message-input');
             
-            // Mesaj metnini sabit olarak seçime göre belirle
-            let messageText = '';
-            if(currentTeacher === 'hakan'){
-              messageText = "İngilizce Kursları hakkında bilgi almak istiyorum!";
-            } else if(currentTeacher === 'rumeysa'){
-              messageText = "rehberlik hakkında bilgi almak istiyorum!";
+            // Element kontrolü
+            if (!chatToggle || !chatBox || !closeChat || !messageForm || !messageInput) {
+                console.log('Chat widget elementleri bulunamadı');
+                return;
             }
             
-            // Mesaj gönderildikten sonra WhatsApp’a yönlendir
-            const phoneNumber = '905457624498';
-            const encodedMessage = encodeURIComponent(messageText);
-            const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-            window.open(whatsappURL, '_blank');
-            
-            // Input'u temizle (isteğe bağlı, sabit mesaj gönderildiği için input değeri kullanılmayabilir)
-            messageInput.value = '';
-          });
-        });
-      </script>
-          @livewireScripts
-          @stack('scripts')
+            // Sekme butonları
+            const tabHakan = document.getElementById('tab-hakan');
+            const tabRumeysa = document.getElementById('tab-rumeysa');
+            const teacherName = document.getElementById('teacher-name');
+            const teacherRole = document.getElementById('teacher-role');
 
+            // Varsayılan öğretmen: Hakan Hoca
+            let currentTeacher = 'hakan';
+
+            function activateTab(teacher) {
+                if(teacher === 'hakan'){
+                    currentTeacher = 'hakan';
+                    teacherName.textContent = 'Hakan Hoca';
+                    teacherRole.textContent = 'İngilizce Kursları';
+                    tabHakan.classList.replace('bg-gray-200', 'bg-green-500');
+                    tabHakan.classList.replace('text-gray-700', 'text-white');
+                    tabRumeysa.classList.replace('bg-green-500', 'bg-gray-200');
+                    tabRumeysa.classList.replace('text-white', 'text-gray-700');
+                } else if(teacher === 'rumeysa'){
+                    currentTeacher = 'rumeysa';
+                    teacherName.textContent = 'Rümeysa Hoca';
+                    teacherRole.textContent = 'Eğitim Danışmanı & Öğrenci Koçu';
+                    tabRumeysa.classList.replace('bg-gray-200', 'bg-green-500');
+                    tabRumeysa.classList.replace('text-gray-700', 'text-white');
+                    tabHakan.classList.replace('bg-green-500', 'bg-gray-200');
+                    tabHakan.classList.replace('text-white', 'text-gray-700');
+                }
+            }
+            
+            // Event listener'ları ekle
+            tabHakan?.addEventListener('click', () => activateTab('hakan'));
+            tabRumeysa?.addEventListener('click', () => activateTab('rumeysa'));
+            
+            chatToggle?.addEventListener('click', () => {
+                chatBox.classList.toggle('hidden');
+            });
+            
+            closeChat?.addEventListener('click', () => {
+                chatBox.classList.add('hidden');
+            });
+            
+            messageForm?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                let messageText = '';
+                if(currentTeacher === 'hakan'){
+                    messageText = "İngilizce Kursları hakkında bilgi almak istiyorum!";
+                } else if(currentTeacher === 'rumeysa'){
+                    messageText = "rehberlik hakkında bilgi almak istiyorum!";
+                }
+                
+                const phoneNumber = '905457624498';
+                const encodedMessage = encodeURIComponent(messageText);
+                const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                window.open(whatsappURL, '_blank');
+                
+                messageInput.value = '';
+            });
+            
+            console.log('✅ Chat widget başlatıldı');
+        }
+
+        // DOM hazır olduğunda chat widget'ı başlat
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeChatWidget);
+        } else {
+            // DOM zaten hazır
+            setTimeout(initializeChatWidget, 100);
+        }
+    </script>
+    
+    <!-- Diğer scriptler -->
+    @stack('scripts')
 </body>
 </html>
