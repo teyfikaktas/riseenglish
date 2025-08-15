@@ -203,10 +203,23 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @php
-                    // Bu kategori ve alt kategorilerine ait kaynakları filtrele
+                    // Bu ana kategori ve alt kategorilerine ait kaynakları filtrele
                     $categoryResources = $resources->filter(function($resource) use ($category) {
-                        return $resource->category_id == $category->id || 
-                               $resource->category && $resource->category->parent_id == $category->id;
+                        if (!$resource->category) {
+                            return false;
+                        }
+                        
+                        // Kaynak direkt bu ana kategoriye ait mi?
+                        if ($resource->category_id == $category->id) {
+                            return true;
+                        }
+                        
+                        // Kaynak bu kategorinin bir alt kategorisine ait mi?
+                        if ($resource->category->parent_id == $category->id) {
+                            return true;
+                        }
+                        
+                        return false;
                     })->take(8);
                 @endphp
                 
@@ -258,7 +271,7 @@
         {{-- Newsletter --}}
         <div class="max-w-4xl mx-auto bg-gradient-to-r from-[#2c3e7f] to-[#1e3370] 
                     rounded-2xl shadow-xl p-10 mb-16 text-white overflow-hidden relative">
-            <!-- Dekoratif arka plan elementleri (daha belirgin) -->
+            <!-- Dekoratif arka plan elementleri -->
             <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-20 
                         rounded-full -mr-20 -mt-20"></div>
             <div class="absolute bottom-0 left-0 w-40 h-40 bg-white opacity-20 
@@ -266,7 +279,7 @@
             
             <!-- İçerik alanı -->
             <div class="relative z-10">
-                <!-- Başlık ve açıklama metni (daha belirgin) -->
+                <!-- Başlık ve açıklama metni -->
                 <div class="text-center mb-8">
                     <h3 class="text-3xl font-bold mb-3 text-white">Yeni Kaynaklar Eklendiğinde Haberdar Olun</h3>
                     <p class="text-white text-lg max-w-2xl mx-auto">
@@ -274,7 +287,7 @@
                     </p>
                 </div>
                 
-                <!-- Form alanı (daha belirgin) -->
+                <!-- Form alanı -->
                 <div class="flex flex-col md:flex-row gap-4 max-w-xl mx-auto">
                     <input type="email" 
                            placeholder="Email adresinizi giriniz" 
@@ -381,13 +394,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const categoryLinks = document.querySelectorAll('.category-link');
     const filterContainer = document.querySelector('.bg-white.rounded-2xl.shadow-xl.p-6.mb-16');
     
-    // Tüm kaynaklar ve kategori bölümleri - FİLTRELEME KUTUSUNU HARİÇ TUTMA
+    // Tüm kaynaklar ve kategori bölümleri
     const allResources = document.querySelectorAll('.resource-card');
     const resourceCards = document.querySelectorAll('.bg-white.rounded-2xl');
     
     // Kategori containerları - filtreleme kutusunu HARİÇ tutarak
     const categoryContainers = Array.from(document.querySelectorAll('.mb-16')).filter(container => {
-        // Filtreleme kutusunu ve filtered-results bölümünü hariç tut
         return container !== filterContainer && container.id !== 'filtered-results';
     });
     
@@ -398,11 +410,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const categoryId = this.dataset.category;
             const subcategoryId = this.dataset.subcategory;
             
-            // Filtreleri ayarla
             if (mainCategoryFilter) mainCategoryFilter.value = categoryId;
             updateSubCategories(categoryId);
             
-            // Alt kategori seçiliyse onu da ayarla (timeout ile bekleyerek alt kategorilerin yüklenmesini sağla)
             if (subcategoryId && subCategoryFilter) {
                 setTimeout(() => {
                     subCategoryFilter.value = subcategoryId;
@@ -459,12 +469,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Alt kategorileri güncelleme fonksiyonu
     function updateSubCategories(mainCategoryId) {
-        // Alt kategori seçimini temizle
         subCategoryFilter.innerHTML = '<option value="">Alt Kategori</option>';
         
         if (!mainCategoryId) return;
         
-        // Seçilen ana kategorinin alt kategorilerini bul
         const selectedCategory = categoriesData.find(cat => cat.id == mainCategoryId);
         
         if (selectedCategory && selectedCategory.children) {
@@ -517,7 +525,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function performSearch() {
         const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
         if (searchTerm) {
-            // Arama terimini uygula
             filterResources({ searchTerm });
         }
     }
@@ -528,7 +535,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const resourceType = resourceTypeFilter ? resourceTypeFilter.value : '';
         const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
         
-        // Filtreleri uygula
         filterResources({
             mainCategoryId,
             subCategoryId,
@@ -538,7 +544,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function resetFilters() {
-        // Input ve select değerlerini sıfırla
         if (searchInput) {
             searchInput.value = '';
         }
@@ -555,32 +560,26 @@ document.addEventListener('DOMContentLoaded', function() {
             resourceTypeFilter.selectedIndex = 0;
         }
         
-        // Filtreleme sonuçlarını gizle
         if (filteredResultsSection) {
             filteredResultsSection.classList.add('hidden');
         }
         
-        // Tüm kategori bölümlerini göster
         categoryContainers.forEach(section => {
             section.classList.remove('hidden');
         });
         
-        // Popüler kaynaklar bölümünü göster
         if (popularSection) {
             popularSection.classList.remove('hidden');
         }
         
-        // Sayfanın başına scroll
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     
     function filterResources(filters) {
         if (!allResources.length || !filters) return;
         
-        // Filtrelenen kaynakları tutacak dizi
         let filteredResources = [];
         
-        // Tüm kaynakları filtrelerle karşılaştır
         allResources.forEach(resource => {
             const category = resource.dataset.category;
             const parentCategory = resource.dataset.parentCategory;
@@ -595,11 +594,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Ana kategori ve alt kategori kontrolü
             if (filters.mainCategoryId && filters.mainCategoryId !== '') {
                 if (filters.subCategoryId && filters.subCategoryId !== '') {
-                    // Alt kategori seçilmişse, direkt o kategori id'si ile eşleşmeli
                     matchesCategory = (category === filters.subCategoryId);
                 } else {
-                    // Alt kategori seçilmemişse, ana kategori ile eşleşmeli
-                    // veya ana kategorinin bir alt kategorisi olmalı
                     matchesCategory = (category === filters.mainCategoryId || parentCategory === filters.mainCategoryId);
                 }
             }
@@ -614,58 +610,47 @@ document.addEventListener('DOMContentLoaded', function() {
                 matchesSearch = (title.includes(filters.searchTerm) || description.includes(filters.searchTerm));
             }
             
-            // Tüm filtrelere uyuyorsa listeye ekle
             if (matchesCategory && matchesType && matchesSearch) {
                 filteredResources.push(resource);
             }
         });
         
-        // DİĞER KATEGORİLERİ GİZLE - FAKAT FİLTRELEME KUTUSUNU KORUDUĞUMUZDAN EMİN OL
         categoryContainers.forEach(section => {
             section.classList.add('hidden');
         });
         
-        // Popüler kaynaklar bölümünü gizle
         if (popularSection) {
             popularSection.classList.add('hidden');
         }
         
-        // FİLTRELEME KUTUSUNUN GÖRÜNÜR KALDIĞINDAN EMİN OL
         if (filterContainer) {
             filterContainer.classList.remove('hidden');
         }
         
-        // Sonuçları göster
         displayFilteredResults(filteredResources, filters);
     }
     
     function displayFilteredResults(resources, filters) {
         if (!resourcesContainer || !filteredResultsSection || !noResultsMessage) return;
         
-        // Sonuç container'ını temizle
         resourcesContainer.innerHTML = '';
         
-        // Başlığı güncelle
         const filteredTitle = document.querySelector('#filtered-results h2');
         if (filteredTitle) {
             let titleText = 'Arama Sonuçları';
             
-            // Başlığı, filtreleme türüne göre ayarlayalım
             if (filters.searchTerm && filters.searchTerm !== '') {
                 titleText = `"${filters.searchTerm}" için Arama Sonuçları`;
             } else if (filters.mainCategoryId && filters.mainCategoryId !== '') {
-                // Kategori adını alalım
                 const selectedCategory = mainCategoryFilter.options[mainCategoryFilter.selectedIndex].text;
                 
                 if (filters.subCategoryId && filters.subCategoryId !== '') {
-                    // Alt kategori adını alalım
                     const selectedSubCategory = subCategoryFilter.options[subCategoryFilter.selectedIndex].text;
                     titleText = `${selectedSubCategory} Kaynakları`;
                 } else {
                     titleText = `${selectedCategory} Kaynakları`;
                 }
                 
-                // Eğer ayrıca kaynak türü de seçilmişse
                 if (filters.resourceType && filters.resourceType !== '') {
                     const selectedType = resourceTypeFilter.options[resourceTypeFilter.selectedIndex].text;
                     titleText += ` - ${selectedType}`;
@@ -681,32 +666,26 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
         
-        // Kaynak varsa göster, yoksa "bulunamadı" mesajı
         if (resources.length > 0) {
-            // Filtrelenmiş sonuçlar bölümünü göster
             filteredResultsSection.classList.remove('hidden');
             noResultsMessage.classList.add('hidden');
             resourcesContainer.classList.remove('hidden');
             
-            // Her kaynağı container'a ekle
             resources.forEach((resource, index) => {
                 const clone = resource.cloneNode(true);
                 clone.classList.add('slide-up');
-                clone.style.animationDelay = `${index * 0.1}s`; // Her kart için kademeli animasyon
+                clone.style.animationDelay = `${index * 0.1}s`;
                 resourcesContainer.appendChild(clone);
             });
             
-            // Sonuçlara scroll (filtreleme kutusunun altına)
             setTimeout(() => {
                 filteredResultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
         } else {
-            // Sonuç yoksa mesaj göster
             filteredResultsSection.classList.remove('hidden');
             resourcesContainer.classList.add('hidden');
             noResultsMessage.classList.remove('hidden');
             
-            // Mesaja scroll
             setTimeout(() => {
                 noResultsMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 100);

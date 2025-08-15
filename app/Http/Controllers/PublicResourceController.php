@@ -11,85 +11,68 @@ class PublicResourceController extends Controller
 {
     public function index(Request $request)
     {
-        // Filtreleme parametrelerini al
-        $categoryId = $request->input('category');
-        $subcategoryId = $request->input('subcategory');
-        $typeId = $request->input('type');
-        
-        $query = Resource::query()->with(['category', 'type', 'tags']);
-        
-        // Ana kategori seçilmişse
-        if ($categoryId) {
-            // Alt kategori de seçilmişse, sadece o alt kategoriyi filtrele
-            if ($subcategoryId) {
-                $query->where('category_id', $subcategoryId);
-            } else {
-                // Alt kategori seçilmemişse, ana kategori ve tüm alt kategorilerini getir
-                $query->where(function($q) use ($categoryId) {
-                    // Ana kategori ile eşleşenler
-                    $q->where('category_id', $categoryId)
-                      // VEYA ana kategorinin alt kategorilerinden biriyle eşleşenler
-                      ->orWhereHas('category', function($subquery) use ($categoryId) {
-                          $subquery->where('parent_id', $categoryId);
-                      });
-                });
-            }
-        }
-        
-        // Tür filtresi varsa uygula
-        if ($typeId) {
-            $query->where('type_id', $typeId);
-        }
-        
-        // Kaynakları paginate ile getir (sayfalama)
-        $resources = $query->paginate(12);
+        // Tüm kaynakları getir (ücretsiz olanlar)
+        $resources = Resource::where('is_free', true)
+                           ->with(['category', 'type', 'tags'])
+                           ->orderBy('created_at', 'desc')
+                           ->get();
         
         // Popüler kaynakları getir
         $popularResources = Resource::where('is_popular', true)
                                   ->where('is_free', true)
                                   ->with(['category', 'type'])
-                                  ->take(8)
+                                  ->take(10)
                                   ->get();
         
-        // Ana kategorileri getir (dropdown için)
-        $categories = ResourceCategory::whereNull('parent_id')->with('children')->get();
+        // SADECE ANA KATEGORİLERİ getir (parent_id null olanlar)
+        $categories = ResourceCategory::whereNull('parent_id')
+                                    ->with('children')
+                                    ->orderBy('name')
+                                    ->get();
         
         // Kaynak türlerini getir
-        $types = ResourceType::all();
+        $types = ResourceType::orderBy('name')->get();
         
-        // Alt kategorileri için JavaScript ile doldurmak üzere seçilen kategorinin alt kategorilerini getir
-        $subcategories = [];
-        if ($categoryId) {
-            $subcategories = ResourceCategory::where('parent_id', $categoryId)->get();
+        // Debug log'ları
+        \Log::info('=== KAYNAK SAYILARI ===');
+        \Log::info('Toplam ücretsiz kaynak: ' . $resources->count());
+        \Log::info('Popüler kaynak: ' . $popularResources->count());
+        \Log::info('Ana kategori sayısı: ' . $categories->count());
+        
+        foreach($categories as $category) {
+            $directResources = $resources->where('category_id', $category->id)->count();
+            $subCategoryIds = ResourceCategory::where('parent_id', $category->id)->pluck('id');
+            $subResources = $resources->whereIn('category_id', $subCategoryIds)->count();
+            
+            \Log::info("Kategori: {$category->name} - Direkt: {$directResources}, Alt kategoriler: {$subResources}");
         }
         
         return view('public.resources.index', compact(
             'resources',
             'popularResources', 
             'categories',
-            'subcategories',
-            'types',
-            'categoryId',
-            'subcategoryId',
-            'typeId'
+            'types'
         ));
     }
     
     public function show($slug)
     {
-        $resource = Resource::where('slug', $slug)->with(['category', 'type', 'tags'])->firstOrFail();
+        $resource = Resource::where('slug', $slug)
+                          ->where('is_free', true)
+                          ->with(['category', 'type', 'tags'])
+                          ->firstOrFail();
         
-        // İndirme sayısını artır
         $resource->increment('download_count');
         
         return view('public.resources.show', compact('resource'));
     }
     
-    // Alt kategorileri getiren AJAX isteği için (opsiyonel)
     public function getSubcategories(Request $request)
     {
         $categoryId = $request->input('category_id');
-        $subcategories = ResourceCategory::where('parent_id', $categoryId)->get();
+        $subcategories = ResourceCategory::where('parent_id', $categoryId)
+                                       ->orderBy('name')
+                                       ->get();
         
         return response()->json($subcategories);
     }
