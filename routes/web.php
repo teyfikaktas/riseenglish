@@ -15,7 +15,7 @@ use App\Http\Controllers\Admin\TestDashboardController;
 use App\Http\Controllers\Admin\TestCategoryController as AdminTestCategoryController;
 use App\Http\Controllers\Admin\TestController as AdminTestController;
 use App\Http\Controllers\Admin\QuestionController;
-
+use App\Http\Controllers\UsefulResourceController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CourseTypeController;
@@ -296,7 +296,17 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
 });
 
 // routes/web.php dosyasına eklenecek route tanımlamaları
-
+// routes/web.php
+Route::prefix('useful-resources')->name('useful-resources.')->group(function () {
+    Route::get('/', [UsefulResourceController::class, 'index'])->name('index');
+    Route::get('/popular', [UsefulResourceController::class, 'popular'])->name('popular');
+    Route::get('/most-viewed', [UsefulResourceController::class, 'mostViewed'])->name('most-viewed');
+    Route::get('/search', [UsefulResourceController::class, 'search'])->name('search');
+    Route::get('/category/{category}', [UsefulResourceController::class, 'category'])->name('category');
+    Route::get('/{slug}', [UsefulResourceController::class, 'show'])->name('show');
+    Route::get('/{slug}/download', [UsefulResourceController::class, 'download'])->name('download');
+});
+Route::get('/api/useful-resources', [UsefulResourceController::class, 'api']);
 Route::middleware(['auth', 'role:ogretmen', 'verified.phone'])->group(function () {
     Route::prefix('ogretmen')->name('ogretmen.')->group(function () {
         // Öğretmen ana sayfası/dashboard
