@@ -127,15 +127,18 @@
                 <div id="popular-resources-slider" class="flex space-x-6 pb-4 overflow-x-auto hide-scrollbar scroll-smooth">
                     @foreach($popularResources as $resource)
                     <div class="resource-card flex-shrink-0 w-80 bg-white rounded-2xl shadow-lg overflow-hidden transition duration-300 hover:shadow-xl border border-gray-100">
-                        <div class="h-40 bg-gradient-to-r from-blue-200 to-indigo-100 relative overflow-hidden">
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-white opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
+                        <div class="h-40 bg-gradient-to-r from-blue-200 to-indigo-100 relative overflow-hidden flex items-center justify-center">
+                            <!-- Logo -->
+                            <img src="{{ asset('images/imgt.jpg') }}" 
+                                 alt="Logo" 
+                                 class="center object-contain opacity-80"">
+                            
+                            <!-- Kategori Badge -->
                             <div class="absolute top-3 right-3">
                                 <span class="px-3 py-1 bg-[#2c3e7f] text-white text-xs font-bold rounded-full">{{ ucfirst($resource->category) }}</span>
                             </div>
+                            
+                            <!-- Popüler Badge -->
                             @if($resource->is_popular)
                             <div class="absolute top-3 left-3">
                                 <span class="px-2 py-1 bg-[#e43546] text-white text-xs font-bold rounded-full">Popüler</span>
@@ -196,15 +199,18 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @foreach($resources as $resource)
                 <div class="resource-card bg-white rounded-2xl shadow-lg overflow-hidden transition duration-300 hover:shadow-xl border border-gray-100 animate-fade-in">
-                    <div class="h-40 bg-gradient-to-r from-blue-200 to-indigo-100 relative overflow-hidden">
-                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                        </div>
+                    <div class="h-40 bg-gradient-to-r from-blue-200 to-indigo-100 relative overflow-hidden flex items-center justify-center">
+                        <!-- Logo -->
+                        <img src="{{ asset('images/imgt.jpg') }}" 
+                             alt="Logo" 
+                             class=" center object-contain opacity-80">
+                        
+                        <!-- Kategori Badge -->
                         <div class="absolute top-3 right-3">
                             <span class="px-3 py-1 bg-[#2c3e7f] text-white text-xs font-bold rounded-full">{{ ucfirst($resource->category) }}</span>
                         </div>
+                        
+                        <!-- Popüler Badge -->
                         @if($resource->is_popular)
                         <div class="absolute top-3 left-3">
                             <span class="px-2 py-1 bg-[#e43546] text-white text-xs font-bold rounded-full">Popüler</span>
@@ -248,9 +254,9 @@
             
             @else
             <div class="bg-white rounded-2xl shadow-lg p-10 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <img src="{{ asset('images/imgt.jpg') }}" 
+                     alt="Logo" 
+                     class="center object-contain opacity-80"">
                 <h3 class="text-2xl font-bold text-gray-700 mb-2">Kaynak Bulunamadı</h3>
                 <p class="text-gray-500 mb-6">Arama kriterlerinizle eşleşen kaynak bulunamadı. Lütfen farklı anahtar kelimeler deneyin.</p>
                 <a href="{{ route('useful-resources.index') }}" class="px-6 py-3 bg-[#2c3e7f] text-white font-medium rounded-xl shadow-md hover:bg-[#1e3370] transition duration-300">

@@ -23,9 +23,10 @@
             <div class="md:flex">
                 <div class="md:flex-shrink-0 relative">
                     <div class="h-full w-full object-cover md:w-72 bg-gradient-to-r from-blue-200 to-indigo-100 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-white opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                        <!-- Ana Logo -->
+                        <img src="{{ asset('images/imgt.jpg') }}" 
+                             alt="Logo" 
+                             class="w-full h-full object-contain opacity-80">
                     </div>
                     <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-[#2c3e7f]/30 to-transparent"></div>
                     @if($resource->is_popular)
@@ -170,9 +171,10 @@
                     @foreach($relatedResources as $relatedResource)
                         <div class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition duration-300">
                             <div class="h-36 bg-gradient-to-r from-blue-200 to-indigo-100 flex items-center justify-center relative">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
+                                <!-- Logo -->
+                                <img src="{{ asset('images/imgt.jpg') }}" 
+                                     alt="Logo" 
+                                     class="h-12 w-auto object-contain opacity-80">
                                 <div class="absolute top-2 right-2">
                                     <span class="px-2 py-1 bg-[#2c3e7f] text-white text-xs font-bold rounded">{{ ucfirst($relatedResource->category) }}</span>
                                 </div>
