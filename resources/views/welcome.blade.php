@@ -2,7 +2,407 @@
 @extends('layouts.app')
 
 @section('content')
-    <!-- Demo Ders Modal - Başlangıçta açık -->
+<div id="fortuneWheelModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4" style="display: none;">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        .fortune-wheel-container {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+        }
+        
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(230, 57, 70, 0.3);
+            transition: transform 4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .wheel-segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 11px;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        
+        .wheel-segment:nth-child(1) {
+            background: linear-gradient(45deg, #e63946, #ff4757);
+            transform: rotate(0deg);
+        }
+        
+        .wheel-segment:nth-child(2) {
+            background: linear-gradient(45deg, #1a2e5a, #2c3e50);
+            transform: rotate(45deg);
+        }
+        
+        .wheel-segment:nth-child(3) {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            transform: rotate(90deg);
+        }
+        
+        .wheel-segment:nth-child(4) {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            transform: rotate(135deg);
+        }
+        
+        .wheel-segment:nth-child(5) {
+            background: linear-gradient(45deg, #8e44ad, #9b59b6);
+            transform: rotate(180deg);
+        }
+        
+        .wheel-segment:nth-child(6) {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            transform: rotate(225deg);
+        }
+        
+        .wheel-segment:nth-child(7) {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            transform: rotate(270deg);
+        }
+        
+        .wheel-segment:nth-child(8) {
+            background: linear-gradient(45deg, #16a085, #1abc9c);
+            transform: rotate(315deg);
+        }
+        
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 20px solid #e63946;
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(45deg, #1a2e5a, #2c3e50);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            z-index: 5;
+            border: 4px solid white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+            font-size: 12px;
+        }
+        
+        .spin-button {
+            background: linear-gradient(135deg, #e63946, #d63031);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
+            margin-top: 20px;
+        }
+        
+        .spin-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(230, 57, 70, 0.6);
+        }
+        
+        .spin-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .code-display {
+            background: linear-gradient(135deg, #1a2e5a, #2c3e50);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-align: center;
+            margin: 15px 0;
+            border: 2px dashed #e63946;
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: #e63946;
+            animation: confetti-fall 3s linear infinite;
+            z-index: 9999;
+        }
+        
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .close-button:hover {
+            background: white;
+            transform: rotate(90deg);
+        }
+    </style>
+    
+    <!-- Ana Modal Container -->
+    <div class="fortune-wheel-container bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative overflow-hidden">
+        <!-- Kapatma Butonu -->
+        <button id="closeFortuneWheel" class="close-button">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        
+        <!-- Dekoratif arka plan -->
+        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-red-100 to-blue-100 rounded-full -translate-y-12 translate-x-12 opacity-50"></div>
+        <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-blue-100 to-red-100 rounded-full translate-y-10 -translate-x-10 opacity-50"></div>
+        
+        <!-- Başlık -->
+        <div class="relative z-10 mb-4">
+            <h2 class="text-2xl font-bold text-gray-800 mb-1">ŞANS ÇARKI</h2>
+            <p class="text-sm text-gray-600">Şansını dene, hediyeni kazan!</p>
+            <div class="w-16 h-1 bg-gradient-to-r from-red-500 to-blue-600 mx-auto mt-2 rounded-full"></div>
+        </div>
+        
+        <!-- Çark Konteyneri -->
+        <div class="wheel-container relative z-10">
+            <div class="wheel-pointer"></div>
+            <div id="fortuneWheel" class="wheel">
+                <!-- SVG Çark -->
+                <svg width="100%" height="100%" viewBox="0 0 400 400" class="transform transition-transform duration-[4s] ease-out">
+                    <!-- Segment 1: %20 İNDİRİM -->
+                    <g>
+                        <path d="M 200,200 L 200,0 A 200,200 0 0,1 341.42,58.58 z" fill="url(#grad1)" stroke="#fff" stroke-width="2"/>
+                        <text x="270" y="80" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(22.5 270 80)">
+                            <tspan x="270" dy="0">%20</tspan>
+                            <tspan x="270" dy="16">İNDİRİM</tspan>
+                        </text>
+                    </g>
+                    
+                    <!-- Segment 2: TEKRAR DENE -->
+                    <g>
+                        <path d="M 200,200 L 341.42,58.58 A 200,200 0 0,1 400,200 z" fill="url(#grad2)" stroke="#fff" stroke-width="2"/>
+                        <text x="320" y="140" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(67.5 320 140)">
+                            <tspan x="320" dy="0">TEKRAR</tspan>
+                            <tspan x="320" dy="16">DENE</tspan>
+                        </text>
+                    </g>
+                    
+                    <!-- Segment 3: %30 İNDİRİM -->
+                    <g>
+                        <path d="M 200,200 L 400,200 A 200,200 0 0,1 341.42,341.42 z" fill="url(#grad3)" stroke="#fff" stroke-width="2"/>
+                        <text x="320" y="280" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(112.5 320 280)">
+                            <tspan x="320" dy="0">%30</tspan>
+                            <tspan x="320" dy="16">İNDİRİM</tspan>
+                        </text>
+                    </g>
+                    
+                    <!-- Segment 4: 1 ÖZEL DERS -->
+                    <g>
+                        <path d="M 200,200 L 341.42,341.42 A 200,200 0 0,1 200,400 z" fill="url(#grad4)" stroke="#fff" stroke-width="2"/>
+                        <text x="270" y="340" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(157.5 270 340)">
+                            <tspan x="270" dy="0">1 ÖZEL</tspan>
+                            <tspan x="270" dy="16">DERS</tspan>
+                        </text>
+                    </g>
+                    
+                    <!-- Segment 5: %40 İNDİRİM -->
+                    <g>
+                        <path d="M 200,200 L 200,400 A 200,200 0 0,1 58.58,341.42 z" fill="url(#grad5)" stroke="#fff" stroke-width="2"/>
+                        <text x="130" y="340" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(202.5 130 340)">
+                            <tspan x="130" dy="0">%40</tspan>
+                            <tspan x="130" dy="16">İNDİRİM</tspan>
+                        </text>
+                    </g>
+                    
+                    <!-- Segment 6: TEKRAR DENE -->
+                    <g>
+                        <path d="M 200,200 L 58.58,341.42 A 200,200 0 0,1 0,200 z" fill="url(#grad6)" stroke="#fff" stroke-width="2"/>
+                        <text x="80" y="280" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(247.5 80 280)">
+                            <tspan x="80" dy="0">TEKRAR</tspan>
+                            <tspan x="80" dy="16">DENE</tspan>
+                        </text>
+                    </g>
+                    
+                    <!-- Segment 7: %50 İNDİRİM -->
+                    <g>
+                        <path d="M 200,200 L 0,200 A 200,200 0 0,1 58.58,58.58 z" fill="url(#grad7)" stroke="#fff" stroke-width="2"/>
+                        <text x="80" y="140" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(292.5 80 140)">
+                            <tspan x="80" dy="0">%50</tspan>
+                            <tspan x="80" dy="16">İNDİRİM</tspan>
+                        </text>
+                    </g>
+                    
+                    <!-- Segment 8: 1 ÖZEL DERS -->
+                    <g>
+                        <path d="M 200,200 L 58.58,58.58 A 200,200 0 0,1 200,0 z" fill="url(#grad8)" stroke="#fff" stroke-width="2"/>
+                        <text x="130" y="80" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(337.5 130 80)">
+                            <tspan x="130" dy="0">1 ÖZEL</tspan>
+                            <tspan x="130" dy="16">DERS</tspan>
+                        </text>
+                    </g>
+                    
+                    <!-- Gradients -->
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#e63946;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#ff4757;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a2e5a;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#f39c12;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#e67e22;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#27ae60;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#2ecc71;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#8e44ad;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#9b59b6;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad6" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#c0392b;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad7" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#34495e;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="grad8" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#16a085;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#1abc9c;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <div class="wheel-center">SPIN</div>
+        </div>
+        
+        <!-- Çevirme Butonu -->
+        <button id="fortuneSpinButton" class="spin-button pulse-animation">
+            ÇARKı ÇEVİR
+        </button>
+        
+        <!-- Bilgi Metni -->
+        <p class="text-xs text-gray-500 mt-3">
+            Çarkı çevir ve özel fırsatları yakala!
+        </p>
+    </div>
+</div>
+
+<!-- Sonuç Modalı -->
+<div id="fortuneResultModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4" style="display: none;">
+    <div class="fortune-wheel-container bg-white rounded-2xl p-6 max-w-sm w-full text-center relative overflow-hidden">
+        <!-- Dekoratif arka plan -->
+        <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-yellow-200 to-red-200 rounded-full -translate-y-8 translate-x-8 opacity-70"></div>
+        
+        <div class="relative z-10">
+            <!-- Kazanma Durumu -->
+            <div id="fortuneWinContent" class="hidden">
+                <div class="text-5xl mb-3">🎉</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-3">TEBRİKLER!</h3>
+                <div id="fortunePrizeText" class="text-lg font-semibold text-red-600 mb-3"></div>
+                <div class="code-display">
+                    <div class="text-xs text-gray-300 mb-1">Kodunuz:</div>
+                    <div id="fortunePrizeCode"></div>
+                </div>
+                <p class="text-xs text-gray-600 mb-4">
+                    Bu kodu WhatsApp'tan göndererek hediyenizi talep edebilirsiniz!
+                </p>
+                <button id="fortuneWhatsappButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 mb-2 text-sm">
+                    🎁 HEDİYEMİ TALEP ET
+                </button>
+            </div>
+            
+            <!-- Tekrar Deneme Durumu -->
+            <div id="fortuneRetryContent" class="hidden">
+                <div class="text-5xl mb-3">😊</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-3">Bu Sefer Olmadı!</h3>
+                <p class="text-sm text-gray-600 mb-4">
+                    Üzülme! Bir kez daha şansını deneyebilirsin.
+                </p>
+                <button id="fortuneRetryButton" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 mb-2 text-sm">
+                    🎯 TEKRAR DENE
+                </button>
+            </div>
+            
+            <button id="closeFortuneResult" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 text-sm">
+                KAPAT
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Sonuç Modalı -->
+
 <div id="demoModal" class="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4" style="background: rgba(0, 0, 0, 0.3);">
         <!-- Modal Container -->
         <div class="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl transform transition-all duration-300 scale-100 relative">
@@ -1148,124 +1548,98 @@ document.addEventListener('DOMContentLoaded', function() {
     initModalFunctionality();
 
     // ===== MODAL FUNCTIONS - YENİ EKLENEN =====
-    function initModalFunctionality() {
-        console.log('DOM yüklendi, modal event listener\'ları ekleniyor...');
-        
-        // Modal elementlerini seç
-        const demoModal = document.getElementById('demoModal');
-        const closeModalBtn = document.getElementById('closeModal');
-        const whatsappBtn = document.getElementById('whatsappBtn');
-        
-        console.log('Modal elementleri:', {
-            demoModal: demoModal,
-            closeModalBtn: closeModalBtn,
-            whatsappBtn: whatsappBtn
-        });
-        
-        // Kapama butonu event listener'ı
-        if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Kapama butonu tıklandı');
-                
-                if (demoModal) {
-                    // Modal'ı kapat
-                    demoModal.style.display = 'none';
-                    console.log('Modal kapatıldı');
-                }
-            });
-            console.log('Kapama butonu event listener\'ı eklendi');
-        } else {
-            console.error('Kapama butonu bulunamadı!');
-        }
-        
-        // WhatsApp butonu event listener'ı
-        if (whatsappBtn) {
-            whatsappBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('WhatsApp butonu tıklandı');
-                
-                // WhatsApp numarası ve mesaj
-                const phoneNumber = '905541383539'; // Ülke kodu ile birlikte
-                const message = encodeURIComponent('Merhaba, ücretsiz demo ders hakkında bilgi almak istiyorum.');
-                
-                // WhatsApp linkini oluştur
-                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
-                
-                // Yeni sekmede WhatsApp'ı aç
-                window.open(whatsappUrl, '_blank');
-                
+   function initModalFunctionality() {
+    console.log('DOM yüklendi, modal event listener\'ları ekleniyor...');
+    
+    // Modal elementlerini seç
+    const demoModal = document.getElementById('demoModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const whatsappBtn = document.getElementById('whatsappBtn');
+    
+    console.log('Modal elementleri:', {
+        demoModal: demoModal,
+        closeModalBtn: closeModalBtn,
+        whatsappBtn: whatsappBtn
+    });
+    
+    // Şans çarkını gecikme ile gösterme fonksiyonu
+    function showFortuneWheelAfterDelay() {
+        setTimeout(() => {
+            showFortuneWheel();
+        }, 1500); // 1.5 saniye gecikme
+    }
+    
+    // Kapama butonu event listener'ı
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Kapama butonu tıklandı');
+            
+            if (demoModal) {
                 // Modal'ı kapat
-                if (demoModal) {
-                    demoModal.style.display = 'none';
-                    console.log('WhatsApp yönlendirmesi sonrası modal kapatıldı');
-                }
-            });
-            console.log('WhatsApp butonu event listener\'ı eklendi');
-        } else {
-            console.error('WhatsApp butonu bulunamadı!');
-        }
-        
-        // Modal dışı tıklama ile kapama
-        if (demoModal) {
-            demoModal.addEventListener('click', function(e) {
-                // Eğer modal'ın kendisine (arka plana) tıklanırsa kapat
-                if (e.target === demoModal) {
-                    console.log('Modal dışına tıklandı, modal kapatılıyor');
-                    demoModal.style.display = 'none';
-                }
-            });
-            console.log('Modal dışı tıklama event listener\'ı eklendi');
-        }
-        
-        // ESC tuşu ile kapama
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && demoModal && demoModal.style.display !== 'none') {
-                console.log('ESC tuşuna basıldı, modal kapatılıyor');
                 demoModal.style.display = 'none';
+                console.log('Modal kapatıldı');
+                
+                // Şans çarkını göster
+                showFortuneWheelAfterDelay();
             }
         });
-        console.log('ESC tuşu event listener\'ı eklendi');
-        
-        // Debugging için modal'ın mevcut durumunu kontrol et
-        if (demoModal) {
-            console.log('Modal mevcut display style:', demoModal.style.display);
-            console.log('Modal computed style:', window.getComputedStyle(demoModal).display);
-            console.log('Modal classList:', demoModal.classList.toString());
-        }
+        console.log('Kapama butonu event listener\'ı eklendi');
     }
-
-    // ===== SUCCESS MESSAGE FUNCTIONS =====
-    function initSuccessMessage() {
-        const successMessage = document.getElementById('successMessage');
-        const progressBar = document.getElementById('successMessageProgress');
-
-        if (successMessage && progressBar) {
-            // Start the progress bar animation
-            progressBar.style.transition = 'width 5s linear';
-            progressBar.style.width = '0';
-
-            // Set a timeout to remove the message
-            setTimeout(function() {
-                successMessage.classList.add('translate-x-full');
-                setTimeout(function() {
-                    successMessage.remove();
-                }, 300);
-            }, 5000);
-        }
-
-        // Function to close the success message manually (global function)
-        window.closeSuccessMessage = function() {
-            const successMessage = document.getElementById('successMessage');
-            if (successMessage) {
-                successMessage.classList.add('translate-x-full');
-                setTimeout(function() {
-                    successMessage.remove();
-                }, 300);
+    
+    // WhatsApp butonu event listener'ı
+    if (whatsappBtn) {
+        whatsappBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('WhatsApp butonu tıklandı');
+            
+            // WhatsApp numarası ve mesaj
+            const phoneNumber = '905541383539';
+            const message = encodeURIComponent('Merhaba, ücretsiz demo ders hakkında bilgi almak istiyorum.');
+            
+            // WhatsApp linkini oluştur
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+            
+            // Yeni sekmede WhatsApp'ı aç
+            window.open(whatsappUrl, '_blank');
+            
+            // Modal'ı kapat
+            if (demoModal) {
+                demoModal.style.display = 'none';
+                console.log('WhatsApp yönlendirmesi sonrası modal kapatıldı');
+                
+                // Şans çarkını göster
+                showFortuneWheelAfterDelay();
             }
-        };
+        });
     }
+    
+    // Modal dışı tıklama ile kapama
+    if (demoModal) {
+        demoModal.addEventListener('click', function(e) {
+            // Eğer modal'ın kendisine (arka plana) tıklanırsa kapat
+            if (e.target === demoModal) {
+                console.log('Modal dışına tıklandı, modal kapatılıyor');
+                demoModal.style.display = 'none';
+                
+                // Şans çarkını göster
+                showFortuneWheelAfterDelay();
+            }
+        });
+    }
+    
+    // ESC tuşu ile kapama
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && demoModal && demoModal.style.display !== 'none') {
+            console.log('ESC tuşuna basıldı, modal kapatılıyor');
+            demoModal.style.display = 'none';
+            
+            // Şans çarkını göster
+            showFortuneWheelAfterDelay();
+        }
+    });
+}
 
     // ===== FLOATING PANEL FUNCTIONS =====
     function initFloatingPanel() {
@@ -1942,9 +2316,50 @@ function closeModal() {
     if (modal) {
         modal.style.display = 'none';
         console.log('Modal global fonksiyon ile kapatıldı');
+        
+        // 1.5 saniye sonra şans çarkını göster
+        setTimeout(() => {
+            showFortuneWheel();
+        }, 1500);
     }
 }
+// ===== SUCCESS MESSAGE FUNCTIONS =====
+function initSuccessMessage() {
+    // DOM'dan başarı mesajı elementlerini seç
+    const successMessage = document.getElementById('successMessage');
+    const progressBar = document.getElementById('successMessageProgress');
 
+    // Eğer başarı mesajı ve progress bar varsa
+    if (successMessage && progressBar) {
+        // Progress bar animasyonunu başlat
+        progressBar.style.transition = 'width 5s linear'; // 5 saniye doğrusal geçiş
+        progressBar.style.width = '0'; // Genişliği 0'a ayarla (animasyon için)
+
+        // 5 saniye sonra mesajı otomatik kaldır
+        setTimeout(function() {
+            // Mesajı sağa kaydırarak gizle
+            successMessage.classList.add('translate-x-full');
+            
+            // Kaydırma animasyonu bitince elementi tamamen kaldır
+            setTimeout(function() {
+                successMessage.remove(); // DOM'dan elementi sil
+            }, 300); // 300ms kaydırma animasyonu süresi
+        }, 5000); // 5000ms = 5 saniye bekleme
+    }
+
+    // Manuel kapama fonksiyonunu global olarak tanımla
+    // Bu fonksiyon HTML'den çağrılabilir (onclick="closeSuccessMessage()")
+    window.closeSuccessMessage = function() {
+        const successMessage = document.getElementById('successMessage');
+        if (successMessage) {
+            // Aynı kaydırma animasyonunu uygula
+            successMessage.classList.add('translate-x-full');
+            setTimeout(function() {
+                successMessage.remove();
+            }, 300);
+        }
+    };
+}
 function openWhatsApp() {
     console.log('Global openWhatsApp fonksiyonu çağrıldı');
     const phoneNumber = '905541383539';
@@ -1960,5 +2375,254 @@ function openWhatsApp() {
         console.log('WhatsApp yönlendirmesi sonrası modal kapatıldı');
     }
 }
+class FortuneWheelPopup {
+    constructor() {
+        this.modal = document.getElementById('fortuneWheelModal');
+        this.wheel = document.getElementById('fortuneWheel');
+        this.spinButton = document.getElementById('fortuneSpinButton');
+        this.resultModal = document.getElementById('fortuneResultModal');
+        this.winContent = document.getElementById('fortuneWinContent');
+        this.retryContent = document.getElementById('fortuneRetryContent');
+        this.prizeText = document.getElementById('fortunePrizeText');
+        this.prizeCode = document.getElementById('fortunePrizeCode');
+        this.whatsappButton = document.getElementById('fortuneWhatsappButton');
+        this.retryButton = document.getElementById('fortuneRetryButton');
+        this.closeWheelBtn = document.getElementById('closeFortuneWheel');
+        this.closeResultBtn = document.getElementById('closeFortuneResult');
+        
+        this.isSpinning = false;
+        this.hasSpun = false;
+        this.retryCount = 0;
+        this.maxRetries = 1;
+        
+        // Ödüller tanımlaması (1 yıllık abonelik asla gelmeyecek)
+        this.prizes = [
+            { name: '%20 İNDİRİM', type: 'discount', value: 20, weight: 25 },
+            { name: 'TEKRAR DENE', type: 'retry', value: null, weight: 20 },
+            { name: '%30 İNDİRİM', type: 'discount', value: 30, weight: 20 },
+            { name: '1 ÖZEL DERS', type: 'lesson', value: 1, weight: 15 },
+            { name: '%40 İNDİRİM', type: 'discount', value: 40, weight: 10 },
+            { name: 'TEKRAR DENE', type: 'retry', value: null, weight: 5 },
+            { name: '%50 İNDİRİM', type: 'discount', value: 50, weight: 4 },
+            { name: '1 ÖZEL DERS', type: 'lesson', value: 1, weight: 1 }
+        ];
+        
+        this.init();
+    }
+    
+    init() {
+        // Event listeners
+        this.spinButton.addEventListener('click', () => this.spin());
+        this.retryButton.addEventListener('click', () => this.retry());
+        this.closeWheelBtn.addEventListener('click', () => this.close());
+        this.closeResultBtn.addEventListener('click', () => this.closeResult());
+        this.whatsappButton.addEventListener('click', () => this.claimPrize());
+        
+        // Modal dışı tıklama ile kapama
+        this.modal.addEventListener('click', (e) => {
+            if (e.target === this.modal) this.close();
+        });
+        
+        this.resultModal.addEventListener('click', (e) => {
+            if (e.target === this.resultModal) this.closeResult();
+        });
+        
+        // ESC tuşu ile kapama
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (this.resultModal.style.display !== 'none') {
+                    this.closeResult();
+                } else if (this.modal.style.display !== 'none') {
+                    this.close();
+                }
+            }
+        });
+    }
+    
+    // Popup'ı aç
+    show() {
+        this.modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Arka planın kaydırılmasını engelle
+    }
+    
+    // Popup'ı kapat
+    close() {
+        this.modal.style.display = 'none';
+        document.body.style.overflow = ''; // Kaydırmayı geri getir
+    }
+    
+    // Sonuç modalını kapat
+// Sonuç modalını kapat
+closeResult() {
+    this.resultModal.style.display = 'none';
+    
+    // Ana çark modalını da kapat
+    this.close();
+    
+    // Buton durumunu güncelle
+    if (!this.hasSpun || this.retryCount >= this.maxRetries) {
+        this.spinButton.textContent = 'ÇEVRİLDİ';
+        this.spinButton.disabled = true;
+        this.spinButton.classList.remove('pulse-animation');
+    }
+}
+    
+    generatePrizeCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = 'RISE';
+        for (let i = 0; i < 4; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+    }
+    
+    selectPrize() {
+        // Ağırlıklı rastgele seçim
+        const totalWeight = this.prizes.reduce((sum, prize) => sum + prize.weight, 0);
+        let random = Math.random() * totalWeight;
+        
+        for (let i = 0; i < this.prizes.length; i++) {
+            random -= this.prizes[i].weight;
+            if (random <= 0) {
+                return { ...this.prizes[i], index: i };
+            }
+        }
+        
+        // Fallback
+        return { ...this.prizes[1], index: 1 }; // Tekrar dene
+    }
+    
+    spin() {
+        if (this.isSpinning) return;
+        
+        this.isSpinning = true;
+        this.spinButton.disabled = true;
+        this.spinButton.textContent = 'ÇEVRİLİYOR...';
+        this.spinButton.classList.remove('pulse-animation');
+        
+        // Ödül seçimi
+        const selectedPrize = this.selectPrize();
+        
+        // Çark animasyonu hesaplaması
+        const segmentAngle = 360 / 8; // 8 segment
+        const targetAngle = (selectedPrize.index * segmentAngle) + (segmentAngle / 2);
+        const spinRotations = 5; // Kaç tur dönsün
+        const finalAngle = (spinRotations * 360) + (360 - targetAngle);
+        
+        // Çarkı çevir
+        this.wheel.style.transform = `rotate(${finalAngle}deg)`;
+        
+        // Konfeti efekti
+        this.createConfetti();
+        
+        // Sonucu göster
+        setTimeout(() => {
+            this.showResult(selectedPrize);
+            this.isSpinning = false;
+            this.hasSpun = true;
+        }, 4000);
+    }
+    
+    retry() {
+        if (this.retryCount >= this.maxRetries) return;
+        
+        this.retryCount++;
+        this.closeResult(); // Bu artık ana modalı da kapatacak
+        
+        // Çarkı reset et ve yeniden aç
+        this.wheel.style.transform = 'rotate(0deg)';
+        this.spinButton.disabled = false;
+        this.spinButton.textContent = 'SON ŞANS!';
+        this.spinButton.classList.add('pulse-animation');
+        this.hasSpun = false;
+        
+        // Ana modalı tekrar aç
+        this.show();
+    }
+    
+    showResult(prize) {
+        if (prize.type === 'retry') {
+            if (this.retryCount < this.maxRetries) {
+                this.showRetryModal();
+            } else {
+                // Son şans da tekrar dene gelirse, otomatik olarak en düşük ödülü ver
+                const fallbackPrize = { name: '%20 İNDİRİM', type: 'discount', value: 20 };
+                this.showWinModal(fallbackPrize);
+            }
+        } else {
+            this.showWinModal(prize);
+        }
+    }
+    
+    showWinModal(prize) {
+        const code = this.generatePrizeCode();
+        this.prizeText.textContent = prize.name;
+        this.prizeCode.textContent = code;
+        
+        // WhatsApp mesajını hazırla
+        this.currentPrizeCode = code;
+        this.currentPrizeName = prize.name;
+        
+        this.winContent.classList.remove('hidden');
+        this.retryContent.classList.add('hidden');
+        this.resultModal.style.display = 'flex';
+    }
+    
+    showRetryModal() {
+        this.winContent.classList.add('hidden');
+        this.retryContent.classList.remove('hidden');
+        this.resultModal.style.display = 'flex';
+    }
+    
+    claimPrize() {
+        const phoneNumber = '905541383539';
+        const message = encodeURIComponent(
+            `Merhaba! Rise English şans çarkından "${this.currentPrizeName}" kazandım. Kod: ${this.currentPrizeCode}`
+        );
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+        
+        window.open(whatsappUrl, '_blank');
+        this.closeResult();
+        this.close();
+    }
+    
+    createConfetti() {
+        const colors = ['#e63946', '#1a2e5a', '#f39c12', '#27ae60', '#8e44ad'];
+        
+        for (let i = 0; i < 30; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }, i * 50);
+        }
+    }
+}
+
+// Global fortune wheel instance
+let fortuneWheelInstance = null;
+
+// Popup'ı açmak için global fonksiyon
+function showFortuneWheel() {
+    if (!fortuneWheelInstance) {
+        fortuneWheelInstance = new FortuneWheelPopup();
+    }
+    fortuneWheelInstance.show();
+}
+
+// DOM yüklendiğinde instance'ı hazırla
+document.addEventListener('DOMContentLoaded', function() {
+    if (!fortuneWheelInstance) {
+        fortuneWheelInstance = new FortuneWheelPopup();
+    }
+});
 </script>
 @endsection
