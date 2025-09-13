@@ -2,19 +2,62 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Şans Çarkı Modal - Güncellenmiş Büyük Turuncu Versiyon -->
 <div id="fortuneWheelModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4" style="display: none;">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap');
         
+        /* Modal arka plan - Turuncu gradient */
+        #fortuneWheelModal {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.95), rgba(247, 147, 30, 0.95)) !important;
+        }
+        #demoModal {
+    z-index: 9999 !important;
+}
+
+#demoModal .fortune-wheel-container {
+    position: relative;
+    z-index: 10000 !important;
+}
+
+/* Dekoratif elementlerin z-index'ini düşür */
+.fortune-wheel-container::before,
+.fortune-wheel-container::after {
+    z-index: -1 !important;
+}
         .fortune-wheel-container {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Roboto', 'Inter', sans-serif;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border: 4px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.25),
+                0 0 120px rgba(255, 107, 53, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
         
+        /* Çark konteyneri - ÇOK BÜYÜK */
         .wheel-container {
             position: relative;
-            width: 300px;
-            height: 300px;
+            width: 700px !important;
+            height: 700px !important;
             margin: 0 auto;
+        }
+        
+        /* Mobil responsive */
+        @media (max-width: 768px) {
+            .wheel-container {
+                width: 450px !important;
+                height: 450px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .wheel-container {
+                width: 350px !important;
+                height: 350px !important;
+            }
         }
         
         .wheel {
@@ -23,8 +66,12 @@
             border-radius: 50%;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(230, 57, 70, 0.3);
-            transition: transform 4s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 
+                0 0 60px rgba(255, 107, 53, 0.4),
+                0 0 120px rgba(247, 147, 30, 0.2),
+                inset 0 0 40px rgba(255, 255, 255, 0.1);
+            transition: transform 6s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 10px solid rgba(255, 255, 255, 0.9);
         }
         
         .wheel-segment {
@@ -35,66 +82,61 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
-            font-size: 11px;
+            font-weight: 700;
+            font-size: 12px !important;
             color: white;
             text-align: center;
-            padding: 8px;
+            padding: 12px;
             box-sizing: border-box;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
         }
         
+        /* Turuncu tonlarında segmentler */
         .wheel-segment:nth-child(1) {
-            background: linear-gradient(45deg, #e63946, #ff4757);
-            transform: rotate(0deg);
+            background: linear-gradient(45deg, #ff6b35, #e55039);
         }
         
         .wheel-segment:nth-child(2) {
-            background: linear-gradient(45deg, #1a2e5a, #2c3e50);
-            transform: rotate(45deg);
+            background: linear-gradient(45deg, #f7931e, #f39c12);
         }
         
         .wheel-segment:nth-child(3) {
-            background: linear-gradient(45deg, #f39c12, #e67e22);
-            transform: rotate(90deg);
+            background: linear-gradient(45deg, #ff8c42, #ff7675);
         }
         
         .wheel-segment:nth-child(4) {
-            background: linear-gradient(45deg, #27ae60, #2ecc71);
-            transform: rotate(135deg);
+            background: linear-gradient(45deg, #fd9644, #fdcb6e);
         }
         
         .wheel-segment:nth-child(5) {
-            background: linear-gradient(45deg, #8e44ad, #9b59b6);
-            transform: rotate(180deg);
+            background: linear-gradient(45deg, #e17055, #d63031);
         }
         
         .wheel-segment:nth-child(6) {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
-            transform: rotate(225deg);
+            background: linear-gradient(45deg, #ff9ff3, #fd79a8);
         }
         
         .wheel-segment:nth-child(7) {
-            background: linear-gradient(45deg, #34495e, #2c3e50);
-            transform: rotate(270deg);
+            background: linear-gradient(45deg, #00b894, #00cec9);
         }
         
         .wheel-segment:nth-child(8) {
-            background: linear-gradient(45deg, #16a085, #1abc9c);
-            transform: rotate(315deg);
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
         }
         
         .wheel-pointer {
             position: absolute;
-            top: -10px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 12px solid transparent;
-            border-right: 12px solid transparent;
-            border-top: 20px solid #e63946;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 35px solid #ff6b35;
             z-index: 10;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
         }
         
         .wheel-center {
@@ -102,374 +144,414 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 65px;
-            height: 65px;
-            background: linear-gradient(45deg, #1a2e5a, #2c3e50);
+            width: 120px !important;
+            height: 120px !important;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 800;
             color: white;
             z-index: 5;
-            border: 4px solid white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.4);
-            font-size: 12px;
+            border: 8px solid white;
+            box-shadow: 
+                0 0 40px rgba(0,0,0,0.4),
+                0 0 80px rgba(255, 107, 53, 0.3);
+            font-size: 20px !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+        }
+        
+        /* SVG çark için turuncu tonları */
+        .wheel svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* SVG text düzeltmeleri */
+        .wheel svg text {
+            font-family: 'Roboto', 'Arial', sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 16px !important;
+            text-rendering: optimizeLegibility;
+            -webkit-font-feature-settings: "liga", "kern";
+            font-feature-settings: "liga", "kern";
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
+        }
+        
+        @media (max-width: 768px) {
+            .wheel svg text {
+                font-size: 14px !important;
+            }
+            .wheel-center {
+                width: 100px !important;
+                height: 100px !important;
+                font-size: 16px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .wheel svg text {
+                font-size: 10px !important;
+            }
+            .wheel-center {
+                width: 80px !important;
+                height: 80px !important;
+                font-size: 12px !important;
+            }
+            .wheel-segment {
+                font-size: 12px !important;
+            }
         }
         
         .spin-button {
-            background: linear-gradient(135deg, #e63946, #d63031);
+            background: linear-gradient(135deg, #ff6b35, #f7931e) !important;
             border: none;
             color: white;
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: 700;
+            padding: 18px 35px !important;
+            font-size: 20px !important;
+            font-weight: 800;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
-            margin-top: 20px;
+            box-shadow: 
+                0 8px 25px rgba(255, 107, 53, 0.4),
+                0 0 30px rgba(247, 147, 30, 0.3);
+            margin-top: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
         
         .spin-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(230, 57, 70, 0.6);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 
+                0 12px 35px rgba(255, 107, 53, 0.6),
+                0 0 40px rgba(247, 147, 30, 0.5);
         }
         
         .spin-button:disabled {
-            background: #bdc3c7;
+            background: linear-gradient(135deg, #bdc3c7, #95a5a6) !important;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
         
         .code-display {
-            background: linear-gradient(135deg, #1a2e5a, #2c3e50);
+            background: linear-gradient(135deg, #ff6b35, #f7931e) !important;
             color: white;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 20px;
+            border-radius: 12px;
             font-family: 'Courier New', monospace;
-            font-size: 20px;
+            font-size: 24px !important;
             font-weight: bold;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-align: center;
-            margin: 15px 0;
-            border: 2px dashed #e63946;
+            margin: 20px 0;
+            border: 3px dashed white;
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
         
         .confetti {
             position: fixed;
-            width: 8px;
-            height: 8px;
-            background: #e63946;
+            width: 12px;
+            height: 12px;
+            background: #ff6b35;
             animation: confetti-fall 3s linear infinite;
             z-index: 9999;
         }
         
         @keyframes confetti-fall {
-            to {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
                 transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
             }
         }
         
         .pulse-animation {
-            animation: pulse 2s infinite;
+            animation: orangePulse 2s infinite;
         }
         
-        @keyframes pulse {
+        @keyframes orangePulse {
             0%, 100% {
                 transform: scale(1);
+                box-shadow: 
+                    0 8px 25px rgba(255, 107, 53, 0.4),
+                    0 0 30px rgba(247, 147, 30, 0.3);
             }
             50% {
-                transform: scale(1.05);
+                transform: scale(1.08);
+                box-shadow: 
+                    0 12px 35px rgba(255, 107, 53, 0.7),
+                    0 0 50px rgba(247, 147, 30, 0.6);
             }
         }
         
         .close-button {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
             border: none;
             border-radius: 50%;
-            width: 35px;
-            height: 35px;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
             z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         
         .close-button:hover {
             background: white;
-            transform: rotate(90deg);
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Başlık stilleri */
+        .fortune-wheel-container h2 {
+            font-size: 2rem !important;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff6b35, #d63031);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .fortune-wheel-container p {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Dekoratif elementler */
+        .fortune-wheel-container::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
+        }
+
+        .fortune-wheel-container::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            right: -15px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #f7931e, #ff6b35);
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(247, 147, 30, 0.5);
         }
     </style>
     
     <!-- Ana Modal Container -->
-    <div class="fortune-wheel-container bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative overflow-hidden">
-        <!-- Kapatma Butonu -->
+    <div class="fortune-wheel-container bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full text-center relative overflow-hidden">
         <button id="closeFortuneWheel" class="close-button">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
         
-        <!-- Dekoratif arka plan -->
-        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-red-100 to-blue-100 rounded-full -translate-y-12 translate-x-12 opacity-50"></div>
-        <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-blue-100 to-red-100 rounded-full translate-y-10 -translate-x-10 opacity-50"></div>
-        
-        <!-- Başlık -->
-        <div class="relative z-10 mb-4">
-            <h2 class="text-2xl font-bold text-gray-800 mb-1">ŞANS ÇARKI</h2>
-            <p class="text-sm text-gray-600">Şansını dene, hediyeni kazan!</p>
-            <div class="w-16 h-1 bg-gradient-to-r from-red-500 to-blue-600 mx-auto mt-2 rounded-full"></div>
+        <div class="relative z-10 mb-6">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">ŞANS ÇARKI</h2>
+            <p class="text-lg text-gray-600">Şansını dene, büyük hediyeni kazan!</p>
+            <div class="w-24 h-1 bg-gradient-to-r from-orange-500 to-red-500 mx-auto mt-3 rounded-full"></div>
         </div>
         
-        <!-- Çark Konteyneri -->
         <div class="wheel-container relative z-10">
             <div class="wheel-pointer"></div>
             <div id="fortuneWheel" class="wheel">
-                <!-- SVG Çark -->
-                <svg width="100%" height="100%" viewBox="0 0 400 400" class="transform transition-transform duration-[4s] ease-out">
-                    <!-- Segment 1: %20 İNDİRİM -->
-                    <g>
-                        <path d="M 200,200 L 200,0 A 200,200 0 0,1 341.42,58.58 z" fill="url(#grad1)" stroke="#fff" stroke-width="2"/>
-                        <text x="270" y="80" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(22.5 270 80)">
-                            <tspan x="270" dy="0">%20</tspan>
-                            <tspan x="270" dy="16">İNDİRİM</tspan>
-                        </text>
-                    </g>
-                    
-                    <!-- Segment 2: TEKRAR DENE -->
-                    <g>
-                        <path d="M 200,200 L 341.42,58.58 A 200,200 0 0,1 400,200 z" fill="url(#grad2)" stroke="#fff" stroke-width="2"/>
-                        <text x="320" y="140" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(67.5 320 140)">
-                            <tspan x="320" dy="0">TEKRAR</tspan>
-                            <tspan x="320" dy="16">DENE</tspan>
-                        </text>
-                    </g>
-                    
-                    <!-- Segment 3: %30 İNDİRİM -->
-                    <g>
-                        <path d="M 200,200 L 400,200 A 200,200 0 0,1 341.42,341.42 z" fill="url(#grad3)" stroke="#fff" stroke-width="2"/>
-                        <text x="320" y="280" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(112.5 320 280)">
-                            <tspan x="320" dy="0">%30</tspan>
-                            <tspan x="320" dy="16">İNDİRİM</tspan>
-                        </text>
-                    </g>
-                    
-                    <!-- Segment 4: 1 ÖZEL DERS -->
-                    <g>
-                        <path d="M 200,200 L 341.42,341.42 A 200,200 0 0,1 200,400 z" fill="url(#grad4)" stroke="#fff" stroke-width="2"/>
-                        <text x="270" y="340" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(157.5 270 340)">
-                            <tspan x="270" dy="0">1 ÖZEL</tspan>
-                            <tspan x="270" dy="16">DERS</tspan>
-                        </text>
-                    </g>
-                    
-                    <!-- Segment 5: %40 İNDİRİM -->
-                    <g>
-                        <path d="M 200,200 L 200,400 A 200,200 0 0,1 58.58,341.42 z" fill="url(#grad5)" stroke="#fff" stroke-width="2"/>
-                        <text x="130" y="340" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(202.5 130 340)">
-                            <tspan x="130" dy="0">%40</tspan>
-                            <tspan x="130" dy="16">İNDİRİM</tspan>
-                        </text>
-                    </g>
-                    
-                    <!-- Segment 6: TEKRAR DENE -->
-                    <g>
-                        <path d="M 200,200 L 58.58,341.42 A 200,200 0 0,1 0,200 z" fill="url(#grad6)" stroke="#fff" stroke-width="2"/>
-                        <text x="80" y="280" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(247.5 80 280)">
-                            <tspan x="80" dy="0">TEKRAR</tspan>
-                            <tspan x="80" dy="16">DENE</tspan>
-                        </text>
-                    </g>
-                    
-                    <!-- Segment 7: %50 İNDİRİM -->
-                    <g>
-                        <path d="M 200,200 L 0,200 A 200,200 0 0,1 58.58,58.58 z" fill="url(#grad7)" stroke="#fff" stroke-width="2"/>
-                        <text x="80" y="140" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(292.5 80 140)">
-                            <tspan x="80" dy="0">%50</tspan>
-                            <tspan x="80" dy="16">İNDİRİM</tspan>
-                        </text>
-                    </g>
-                    
-                    <!-- Segment 8: 1 ÖZEL DERS -->
-                    <g>
-                        <path d="M 200,200 L 58.58,58.58 A 200,200 0 0,1 200,0 z" fill="url(#grad8)" stroke="#fff" stroke-width="2"/>
-                        <text x="130" y="80" fill="white" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(337.5 130 80)">
-                            <tspan x="130" dy="0">1 ÖZEL</tspan>
-                            <tspan x="130" dy="16">DERS</tspan>
-                        </text>
-                    </g>
-                    
-                    <!-- Gradients -->
-                    <defs>
-                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#e63946;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#ff4757;stop-opacity:1" />
-                        </linearGradient>
-                        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#1a2e5a;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:1" />
-                        </linearGradient>
-                        <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#f39c12;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#e67e22;stop-opacity:1" />
-                        </linearGradient>
-                        <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#27ae60;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#2ecc71;stop-opacity:1" />
-                        </linearGradient>
-                        <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#8e44ad;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#9b59b6;stop-opacity:1" />
-                        </linearGradient>
-                        <linearGradient id="grad6" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#c0392b;stop-opacity:1" />
-                        </linearGradient>
-                        <linearGradient id="grad7" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#34495e;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:1" />
-                        </linearGradient>
-                        <linearGradient id="grad8" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#16a085;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#1abc9c;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                </svg>
+
+<svg width="100%" height="100%" viewBox="0 0 400 400" class="transform transition-transform duration-[6s] ease-out">
+    <!-- Segment 1: %20 İNDİRİM -->
+    <g>
+        <path d="M 200,200 L 200,0 A 200,200 0 0,1 341.42,58.58 z" fill="#ff6b35" stroke="#fff" stroke-width="4"/>
+        <text x="250" y="65" fill="white" font-size="8" font-weight="800" text-anchor="middle" transform="rotate(22.5 250 65)">
+            %20 
+        </text>
+    </g>
+    
+    <!-- Segment 2: TEKRAR DENE -->
+    <g>
+        <path d="M 200,200 L 341.42,58.58 A 200,200 0 0,1 400,200 z" fill="#f7931e" stroke="#fff" stroke-width="4"/>
+        <text x="325" y="125" fill="white" font-size="7" font-weight="800" text-anchor="middle" transform="rotate(67.5 300 125)">
+            TEKRAR 
+        </text>
+    </g>
+    
+    <!-- Segment 3: %30 İNDİRİM -->
+    <g>
+        <path d="M 200,200 L 400,200 A 200,200 0 0,1 341.42,341.42 z" fill="#ff8c42" stroke="#fff" stroke-width="4"/>
+        <text x="275" y="275" fill="white" font-size="10" font-weight="800" text-anchor="middle" transform="rotate(112.5 300 275)">
+            %30 
+        </text>
+    </g>
+    
+    <!-- Segment 4: 1 ÖZEL DERS -->
+    <g>
+        <path d="M 200,200 L 341.42,341.42 A 200,200 0 0,1 200,400 z" fill="#fd9644" stroke="#fff" stroke-width="4"/>
+        <text x="250" y="335" fill="white" font-size="10" font-weight="800" text-anchor="middle" transform="rotate(157.5 250 335)">
+          ÖZEL DERS
+        </text>
+    </g>
+    
+    <!-- Segment 5: %40 İNDİRİM -->
+    <g>
+        <path d="M 200,200 L 200,400 A 200,200 0 0,1 58.58,341.42 z" fill="#e17055" stroke="#fff" stroke-width="4"/>
+        <text x="150" y="335" fill="white" font-size="8" font-weight="800" text-anchor="middle" transform="rotate(202.5 150 335)">
+            %40 
+        </text>
+    </g>
+    
+    <!-- Segment 6: TEKRAR DENE -->
+    <g>
+        <path d="M 200,200 L 58.58,341.42 A 200,200 0 0,1 0,200 z" fill="#ff9ff3" stroke="#fff" stroke-width="4"/>
+        <text x="125" y="275" fill="white" font-size="6" font-weight="800" text-anchor="middle" transform="rotate(247.5 100 275)">
+            TEKRAR 
+        </text>
+    </g>
+    
+    <!-- Segment 7: %50 İNDİRİM -->
+    <g>
+        <path d="M 200,200 L 0,200 A 200,200 0 0,1 58.58,58.58 z" fill="#00b894" stroke="#fff" stroke-width="4"/>
+        <text x="75" y="125" fill="white" font-size="8" font-weight="800" text-anchor="middle" transform="rotate(292.5 100 125)">
+            %50 
+        </text>
+    </g>
+    
+    <!-- Segment 8: 1 ÖZEL DERS -->
+    <g>
+        <path d="M 200,200 L 58.58,58.58 A 200,200 0 0,1 200,0 z" fill="#6c5ce7" stroke="#fff" stroke-width="4"/>
+        <text x="150" y="65" fill="white" font-size="7" font-weight="800" text-anchor="middle" transform="rotate(337.5 150 65)">
+            ÖZEL DERS
+        </text>
+    </g>
+</svg>
             </div>
-            <div class="wheel-center">SPIN</div>
+            <div class="wheel-center">ÇEVİR</div>
         </div>
         
-        <!-- Çevirme Butonu -->
         <button id="fortuneSpinButton" class="spin-button pulse-animation">
-            ÇARKı ÇEVİR
+            ÇARKI ÇEVİR
         </button>
         
-        <!-- Bilgi Metni -->
-        <p class="text-xs text-gray-500 mt-3">
-            Çarkı çevir ve özel fırsatları yakala!
+        <p class="text-sm text-gray-500 mt-4">
+            Çarkı çevir ve özel fırsatları yakala! Büyük hediyeler seni bekliyor.
         </p>
     </div>
 </div>
 
-<!-- Sonuç Modalı -->
-<div id="fortuneResultModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4" style="display: none;">
-    <div class="fortune-wheel-container bg-white rounded-2xl p-6 max-w-sm w-full text-center relative overflow-hidden">
+<div id="fortuneResultModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4" style="display: none;">
+    <div class="fortune-wheel-container bg-white rounded-2xl p-8 max-w-lg w-full text-center relative overflow-hidden">
         <!-- Dekoratif arka plan -->
-        <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-yellow-200 to-red-200 rounded-full -translate-y-8 translate-x-8 opacity-70"></div>
+        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-orange-200 to-red-200 rounded-full -translate-y-10 translate-x-10 opacity-70"></div>
         
         <div class="relative z-10">
             <!-- Kazanma Durumu -->
             <div id="fortuneWinContent" class="hidden">
-                <div class="text-5xl mb-3">🎉</div>
-                <h3 class="text-xl font-bold text-gray-800 mb-3">TEBRİKLER!</h3>
-                <div id="fortunePrizeText" class="text-lg font-semibold text-red-600 mb-3"></div>
+                <div class="text-6xl mb-4">🎉</div>
+                <h3 class="text-2xl font-bold text-orange-600 mb-4">TEBRİKLER!</h3>
+                <div id="fortunePrizeText" class="text-xl font-semibold text-gray-800 mb-4"></div>
                 <div class="code-display">
-                    <div class="text-xs text-gray-300 mb-1">Kodunuz:</div>
+                    <div class="text-sm text-gray-200 mb-2">Kodunuz:</div>
                     <div id="fortunePrizeCode"></div>
                 </div>
-                <p class="text-xs text-gray-600 mb-4">
+                <p class="text-sm text-gray-600 mb-6">
                     Bu kodu WhatsApp'tan göndererek hediyenizi talep edebilirsiniz!
                 </p>
-                <button id="fortuneWhatsappButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 mb-2 text-sm">
+                <button id="fortuneWhatsappButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg transition-colors duration-300 mb-3 text-lg">
                     🎁 HEDİYEMİ TALEP ET
                 </button>
             </div>
             
             <!-- Tekrar Deneme Durumu -->
             <div id="fortuneRetryContent" class="hidden">
-                <div class="text-5xl mb-3">😊</div>
-                <h3 class="text-xl font-bold text-gray-800 mb-3">Bu Sefer Olmadı!</h3>
-                <p class="text-sm text-gray-600 mb-4">
+                <div class="text-6xl mb-4">😊</div>
+                <h3 class="text-2xl font-bold text-orange-600 mb-4">Bu Sefer Olmadı!</h3>
+                <p class="text-lg text-gray-600 mb-6">
                     Üzülme! Bir kez daha şansını deneyebilirsin.
                 </p>
-                <button id="fortuneRetryButton" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 mb-2 text-sm">
+                <button id="fortuneRetryButton" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg transition-colors duration-300 mb-3 text-lg">
                     🎯 TEKRAR DENE
                 </button>
             </div>
             
-            <button id="closeFortuneResult" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300 text-sm">
+            <button id="closeFortuneResult" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-300">
                 KAPAT
             </button>
         </div>
     </div>
 </div>
 
-<!-- Sonuç Modalı -->
 
 <div id="demoModal" class="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4" style="background: rgba(0, 0, 0, 0.3);">
-        <!-- Modal Container -->
-        <div class="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl transform transition-all duration-300 scale-100 relative">
-            <!-- Close Button -->
-            <button id="closeModal" class="absolute top-4 right-4 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-2 transition-all duration-200 hover:rotate-90 z-10">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+    <div class="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl transform transition-all duration-300 scale-100 relative">
+<button id="closeModal" class="absolute top-4 right-4 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-2 transition-all duration-200 hover:rotate-90 z-10">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
 
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-[#e63946] to-red-500 px-6 py-8 text-center relative overflow-hidden">
-                <!-- Decorative elements -->
-                <div class="absolute top-0 left-0 w-full h-full opacity-10">
-                    <div class="absolute top-4 left-4 w-8 h-8 bg-white rounded-full"></div>
-                    <div class="absolute top-8 right-8 w-4 h-4 bg-white rounded-full"></div>
-                    <div class="absolute bottom-4 left-8 w-6 h-6 bg-white rounded-full"></div>
+        <div class="bg-gradient-to-r from-[#e63946] to-red-500 px-6 py-8 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full opacity-10">
+                <div class="absolute top-4 left-4 w-8 h-8 bg-white rounded-full"></div>
+                <div class="absolute top-8 right-8 w-4 h-4 bg-white rounded-full"></div>
+                <div class="absolute bottom-4 left-8 w-6 h-6 bg-white rounded-full"></div>
+            </div>
+            
+            <div class="relative z-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full mb-4">
+                    <span class="text-3xl">🎓</span>
                 </div>
-                
-                <div class="relative z-10">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full mb-4">
-                        <span class="text-3xl">🎓</span>
-                    </div>
-                    <h2 class="text-2xl font-bold text-white mb-2">Ücretsiz Demo Ders</h2>
-                    <p class="text-white text-opacity-90">Kurucu Hocamızdan</p>
+                <h2 class="text-2xl font-bold text-white mb-2">Ücretsiz Demo Ders</h2>
+                <p class="text-white text-opacity-90">Kurucu Hocamızdan</p>
+            </div>
+        </div>
+
+        <div class="p-6 text-center">
+            <div class="mb-6">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+                    <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
                 </div>
+                <h3 class="text-xl font-bold text-[#1a2e5a] mb-3">Bizimle İletişime Geçebilirsin</h3>
+                <p class="text-gray-600 mb-6">Kurucu Hocamızdan ücretsiz Demo ders randevusu al! Hemen WhatsApp'tan iletişime geç.</p>
             </div>
 
-            <!-- Body -->
-            <div class="p-6 text-center">
-                <div class="mb-6">
-                    <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
-                        <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-[#1a2e5a] mb-3">Bizimle İletişime Geçebilirsin</h3>
-                    <p class="text-gray-600 mb-6">Kurucu Hocamızdan ücretsiz Demo ders randevusu al! Hemen WhatsApp'tan iletişime geç.</p>
-                </div>
+            <button id="whatsappBtn" class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center space-x-3">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.594z"/>
+                </svg>
+                <span>WhatsApp ile İletişime Geç</span>
+            </button>
 
-                <!-- WhatsApp Button -->
-                <button id="whatsappBtn" class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center space-x-3">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.594z"/>
-                    </svg>
-                    <span>WhatsApp ile İletişime Geç</span>
-                </button>
-
-                <!-- Additional Info -->
-                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-600">
-                        <span class="font-semibold text-[#e63946]">Ücretsiz Demo Ders</span> almak için hemen mesaj atın!
-                    </p>
-                </div>
+            <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                <p class="text-sm text-gray-600">
+                    <span class="font-semibold text-[#e63946]">Ücretsiz Demo Ders</span> almak için hemen mesaj atın!
+                </p>
             </div>
         </div>
     </div>
-
-    {{-- <form action="{{ route('send-otp') }}" method="POST">
-    @csrf
-   <input type="hidden" name="no" value="5541383539">
-   <input type="hidden" name="message" value="Alooooo">
-   <button type="submit" class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300">
-       <i class="fas fa-sms mr-2"></i>SMS Gönder
-   </button>
-</form> --}}
-    <!-- Başarı mesajı için ekleme yapıyoruz -->
+</div>
 
     @if (session('success'))
         <div id="successMessage"
@@ -488,12 +570,10 @@
                     </svg>
                 </button>
             </div>
-            <!-- Progress bar for auto-dismiss -->
             <div id="successMessageProgress" class="h-1 bg-green-500 mt-2 w-full transform origin-left"></div>
         </div>
     @endif
     <div class="relative overflow-hidden">
-        <!-- Dekoratif arka plan desenleri -->
         <div class="absolute inset-0 opacity-10">
             <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                 <defs>
@@ -504,22 +584,16 @@
                 <rect width="100" height="100" fill="url(#grid)" />
             </svg>
         </div>
-        <!-- Öğrenci Videoları Slider Bölümü - Komple Düzeltilmiş Versiyon -->
 
 <div class="relative py-20 overflow-hidden"
          style="background-image: url('{{ asset('images/free.jpg') }}'); background-size: cover; background-position: center; background-blend-mode: multiply;">
-        <!-- Dekoratif arka plan desenleri -->
 
 
-        <!-- Resim üzerinde koyu overlay (okunabilirlik için) -->
         <div class="absolute inset-0 bg-black opacity-30"></div>
 
-        <!-- İçerik kısmı -->
         <div class="container mx-auto px-6 relative z-10">
             <div class="flex flex-col md:flex-row items-center md:space-x-12"> <!-- space-x eklendi -->
-                <!-- Sol taraf (metin ve video) -->
                 <div class="w-full md:w-1/2 text-center md:text-left mb-12 md:mb-0">
-                    <!-- Metin Bölümü - Üstte -->
                     @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
                         <div class="mb-6"> <!-- mb-4 -> mb-6 artırıldı -->
                             <span
@@ -544,15 +618,12 @@
                         </p>
                     @endif
 
-                    <!-- Video Bölümü - Ortada -->
                     <div class="relative rounded-xl overflow-hidden shadow-xl mb-8 mt-8"> <!-- mt-8 eklendi -->
                         <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
                             <div class="video-thumbnail absolute inset-0" data-video-id="VRqM2zyqJeI">
-                                <!-- Video Thumbnail -->
                                 <img src="https://i.ytimg.com/vi/VRqM2zyqJeI/hqdefault.jpg" alt="Rise English Tanıtım"
                                     class="w-full h-full object-cover">
 
-                                <!-- Play Butonu -->
                                 <div
                                     class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-[#e63946] flex items-center justify-center z-10 shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none"
@@ -564,13 +635,11 @@
                                     </svg>
                                 </div>
 
-                                <!-- Koyu Overlay - Kontrastı Artırmak İçin -->
                                 <div class="absolute inset-0  bg-opacity-30"></div>
                             </div>
                             <div class="video-iframe-container absolute inset-0 hidden"></div>
                         </div>
 
-                        <!-- Video Üzerindeki Etiket/Badge -->
                         <div class="absolute top-4 right-4">
                             <div class="bg-[#e63946] text-white text-sm font-bold py-1 px-3 rounded-full shadow-lg">
                                 <i class="fas fa-play-circle mr-1"></i> Tanıtım Videosu
@@ -623,7 +692,6 @@
                     @endif
                 </div>
 
-                <!-- Sağ taraf (görsel) - İdiom bölümü (HER KULLANICI İÇİN) -->
                 <div class="w-full md:w-1/2">
                     <div class="relative">
                         <!-- Tüm kullanıcılar için İdiom görsel -->
@@ -725,7 +793,6 @@
         </div>
     </div>
         <div class="relative bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] py-16 overflow-hidden">
-            <!-- Dekoratif arka plan desenleri -->
             <div class="absolute inset-0 opacity-10">
                 <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <defs>
@@ -738,16 +805,13 @@
             </div>
 
             <div class="container mx-auto px-4 relative z-10">
-                <!-- Başlık Bölümü - Orijinal hali korundu -->
                 <div class="text-center mb-12">
                     <h2 class="text-3xl font-bold text-white mb-2">Öğrencilerimiz Ne Dedi?</h2>
                     <div class="w-20 h-1 bg-[#e63946] mx-auto"></div>
                     <p class="mt-4 text-blue-100 max-w-2xl mx-auto">Başarı hikayelerini öğrencilerimizden dinleyin.</p>
                 </div>
 
-                <!-- Düzeltilmiş Video Slider HTML -->
                 <div class="student-videos-slider relative">
-                    <!-- Slider Navigation Controls -->
                     <div class="slider-controls">
                         <button id="prevVideo"
                             class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-5 bg-white p-3 rounded-full shadow-lg z-10 text-[#1a2e5a]">
@@ -766,21 +830,17 @@
                         </button>
                     </div>
 
-                    <!-- Video Slides Wrapper -->
                     <div class="video-slides-container overflow-hidden">
                         <div id="videoSlidesWrapper" class="flex transition-transform duration-500 ease-in-out">
 
-                            <!-- Video 1 - Düzeltilmiş Thumbnail Yapısı -->
                             <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
                                 <div
                                     class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                                     <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
                                         <div class="video-thumbnail absolute inset-0" data-video-id="Kw0ezq06ruU">
-                                            <!-- Sadece thumbnail resmi -->
                                             <img src="https://i.ytimg.com/vi/Kw0ezq06ruU/hqdefault.jpg"
                                                 alt="Video thumbnail" class="w-full h-full object-cover">
 
-                                            <!-- Play butonu üstte -->
                                             <div
                                                 class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
@@ -800,17 +860,14 @@
                                 </div>
                             </div>
 
-                            <!-- Video 2 - Düzeltilmiş Thumbnail Yapısı -->
                             <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
                                 <div
                                     class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                                     <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
                                         <div class="video-thumbnail absolute inset-0" data-video-id="WMfARGd1fkQ">
-                                            <!-- Sadece thumbnail resmi -->
                                             <img src="https://i.ytimg.com/vi/WMfARGd1fkQ/hqdefault.jpg"
                                                 alt="Video thumbnail" class="w-full h-full object-cover">
 
-                                            <!-- Play butonu üstte -->
                                             <div
                                                 class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
@@ -830,17 +887,14 @@
                                 </div>
                             </div>
 
-                            <!-- Video 3 - Düzeltilmiş Thumbnail Yapısı -->
                             <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
                                 <div
                                     class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                                     <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
                                         <div class="video-thumbnail absolute inset-0" data-video-id="cVPIqxeLPWI">
-                                            <!-- Sadece thumbnail resmi -->
                                             <img src="https://i.ytimg.com/vi/cVPIqxeLPWI/hqdefault.jpg"
                                                 alt="Video thumbnail" class="w-full h-full object-cover">
 
-                                            <!-- Play butonu üstte -->
                                             <div
                                                 class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
@@ -860,17 +914,14 @@
                                 </div>
                             </div>
 
-                            <!-- Video 4 - Düzeltilmiş Thumbnail Yapısı -->
                             <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
                                 <div
                                     class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                                     <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
                                         <div class="video-thumbnail absolute inset-0" data-video-id="js-iBirRIJU">
-                                            <!-- Sadece thumbnail resmi -->
                                             <img src="https://i.ytimg.com/vi/js-iBirRIJU/hqdefault.jpg"
                                                 alt="Video thumbnail" class="w-full h-full object-cover">
 
-                                            <!-- Play butonu üstte -->
                                             <div
                                                 class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
@@ -890,17 +941,14 @@
                                 </div>
                             </div>
 
-                            <!-- Video 5 - Düzeltilmiş Thumbnail Yapısı -->
                             <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
                                 <div
                                     class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                                     <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
                                         <div class="video-thumbnail absolute inset-0" data-video-id="GBxGfpVM5E8">
-                                            <!-- Sadece thumbnail resmi -->
                                             <img src="https://i.ytimg.com/vi/GBxGfpVM5E8/hqdefault.jpg"
                                                 alt="Video thumbnail" class="w-full h-full object-cover">
 
-                                            <!-- Play butonu üstte -->
                                             <div
                                                 class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
@@ -920,17 +968,15 @@
                                 </div>
                             </div>
 
-                            <!-- Video 6 - Düzeltilmiş Thumbnail Yapısı -->
                             <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
                                 <div
                                     class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                                     <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
                                         <div class="video-thumbnail absolute inset-0" data-video-id="cVPIqxeLPWI">
-                                            <!-- Sadece thumbnail resmi -->
                                             <img src="https://i.ytimg.com/vi/cVPIqxeLPWI/hqdefault.jpg"
                                                 alt="Video thumbnail" class="w-full h-full object-cover">
 
-                                            <!-- Play butonu üstte -->
+           
                                             <div
                                                 class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
@@ -952,7 +998,7 @@
                         </div>
                     </div>
 
-                    <!-- Dots Navigation (Mobil için) -->
+
                     <div class="flex justify-center mt-6">
                         <div id="videoSliderDots" class="flex space-x-2">
                             <!-- Dots will be added with JS -->
@@ -966,13 +1012,13 @@
     <div class="bg-white py-16">
         <div class="container mx-auto px-6">
             <div class="flex flex-col md:flex-row items-center gap-12">
-                <!-- Teacher image section (takes up the entire left side) -->
+
                 <div class="w-full md:w-2/5 flex justify-center mb-8 md:mb-0">
                     <img src="{{ asset('images/teacherwelcome.jpg') }}" alt="English Teacher"
                         class="rounded-lg shadow-lg w-full h-auto object-cover">
                 </div>
 
-                <!-- Founder's message area -->
+
                 <div class="w-full md:w-3/5">
                     <h2 class="text-3xl font-bold text-[#1a2e5a] mb-6">Welcome to Rise English!</h2>
                     <div class="mb-8 text-gray-700">
@@ -1018,9 +1064,9 @@
                 güncel içeriklerle kariyer hedeflerinize bir adım daha yaklaşın.</p>
         </div>
 
-        <!-- Slider Ana Container -->
+
         <div class="relative">
-            <!-- Slider Controls - Mobilde Gizli (md boyutundan itibaren göster) -->
+ 
             <div class="hidden md:block">
                 <button id="prevButton"
                     class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-5 bg-white p-3 rounded-full shadow-lg z-10 text-[#1a2e5a]">
@@ -1038,11 +1084,11 @@
                 </button>
             </div>
 
-            <!-- Slider/Carousel -->
+ 
             <div class="slider-container overflow-hidden">
                 <div id="slidesWrapper" class="flex transition-transform duration-500 ease-in-out">
                     @forelse($featuredCourses as $course)
-                        <!-- Eğitim Kartı - Slider Item -->
+             
                         <div class="slider-item flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
                             <div
                                 class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-2 group h-full">
@@ -1068,7 +1114,7 @@
                                         </div>
                                     @endif
 
-                                    <!-- Başlangıç durumu etiketi -->
+                         
                                     @php
                                         $today = \Carbon\Carbon::today();
                                         $startDate = \Carbon\Carbon::parse($course->start_date);
@@ -1098,7 +1144,7 @@
                                         </div>
                                     @endif
 
-                                    <!-- Kurs tipi ve seviye etiketi -->
+                  
                                     <div class="absolute bottom-2 left-2 flex space-x-2">
                                         @if ($course->courseType)
                                             <span
@@ -1116,7 +1162,6 @@
                                     <p class="text-gray-600 mb-4 text-sm h-12 overflow-hidden">
                                         {{ Str::limit($course->description, 100) }}</p>
 
-                                    <!-- Eğitim Tarihleri Bölümü -->
                                     <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                                         <div class="flex items-center mb-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-[#1a2e5a]"
@@ -1282,9 +1327,7 @@
                 </div>
             </div>
 
-            <!-- Slider Pagination/Dots - Mobil için -->
             <div class="flex justify-center mt-6 md:hidden">
-                <!-- Mobil Ok Tuşları - Dots üzerinde -->
                 <div class="flex justify-between items-center w-full max-w-xs mb-3">
                     <button id="mobilePrevButton"
                         class="bg-white p-3 rounded-full shadow-lg text-[#1a2e5a] focus:outline-none">
@@ -1317,7 +1360,6 @@
         </div>
     </div>
 
-    <!-- Eğer kullanıcı öğrenci rolünde giriş yapmışsa kurslarım bölümünü göster -->
     @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
         <div class="container mx-auto px-4 py-16 bg-gray-100">
             <div class="text-center mb-12">
@@ -1342,7 +1384,6 @@
                     </a>
                 </div>
 
-                <!-- Basit Kurslarım Listesi -->
                 <div class="space-y-4">
                     @php
                         // Sadece aktif ve onaylanmış kayıtları getir
@@ -1414,7 +1455,7 @@
                 <h2 class="text-3xl font-bold text-center mb-12">Ücretsiz İçerikler</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Özellik 1 -->
+
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <div
                             class="w-12 h-12 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center mb-4">
@@ -1424,7 +1465,6 @@
                         <p class="text-gray-600">Alanında uzman, deneyimli eğitmenlerden öğrenin.</p>
                     </div>
 
-                    <!-- Özellik 2 -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <div
                             class="w-12 h-12 bg-green-100 text-green-800 rounded-full flex items-center justify-center mb-4">
@@ -1434,7 +1474,6 @@
                         <p class="text-gray-600">İstediğiniz zaman, istediğiniz yerden eğitimlerimize erişin.</p>
                     </div>
 
-                    <!-- Özellik 3 -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <div
                             class="w-12 h-12 bg-purple-100 text-purple-800 rounded-full flex items-center justify-center mb-4">
@@ -1448,10 +1487,10 @@
         </div>
     @endif
 
-    <!-- Animasyonlu Sabit Kayıt Paneli -->
+
     <div id="floatingSignupPanel"
         class="fixed left-4 bottom-4 md:left-8 md:bottom-8 z-50 w-72 md:w-80 bg-[#1a2e5a] rounded-lg overflow-visible shadow-2xl transform transition-all duration-500 hover:scale-105 group">
-        <!-- Animasyon efekti için ekstra div -->
+
         <div class="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500">
             <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                 <defs>
@@ -1464,14 +1503,14 @@
         </div>
 
         @if (!auth()->check() || !auth()->user()->hasRole('ogrenci'))
-            <!-- İndirim etiketi - Öğrenci DEĞİLSE göster -->
+           
             <div
                 class="absolute -top-4 -left-4 z-10 bg-[#e63946] text-white px-3 py-1 rounded-lg transform -rotate-12 shadow-md font-bold text-sm">
                 %40 İNDİRİM
             </div>
         @endif
 
-        <!-- İçerik -->
+
         <div class="p-6 text-white relative">
             <div class="absolute top-2 right-2">
                 <button id="closeFloatingPanel" class="text-white opacity-70 hover:opacity-100 transition-opacity">
@@ -1548,99 +1587,130 @@ document.addEventListener('DOMContentLoaded', function() {
     initModalFunctionality();
 
     // ===== MODAL FUNCTIONS - YENİ EKLENEN =====
-   function initModalFunctionality() {
-    console.log('DOM yüklendi, modal event listener\'ları ekleniyor...');
-    
-    // Modal elementlerini seç
+// Demo modal kapatma işlevselliğini düzelten JavaScript kodu
+
+// MODAL FUNCTIONALİTY - Düzeltilmiş versiyon
+function initModalFunctionality() {
     const demoModal = document.getElementById('demoModal');
     const closeModalBtn = document.getElementById('closeModal');
     const whatsappBtn = document.getElementById('whatsappBtn');
+    const modalContent = demoModal?.querySelector('.bg-white.rounded-2xl');
     
-    console.log('Modal elementleri:', {
-        demoModal: demoModal,
-        closeModalBtn: closeModalBtn,
-        whatsappBtn: whatsappBtn
-    });
+    console.log('Modal elementleri:', { demoModal, closeModalBtn, whatsappBtn, modalContent });
     
-    // Şans çarkını gecikme ile gösterme fonksiyonu
-    function showFortuneWheelAfterDelay() {
-        setTimeout(() => {
-            showFortuneWheel();
-        }, 1500); // 1.5 saniye gecikme
-    }
-    
-    // Kapama butonu event listener'ı
+    // Kapama butonu event listener
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             console.log('Kapama butonu tıklandı');
-            
-            if (demoModal) {
-                // Modal'ı kapat
-                demoModal.style.display = 'none';
-                console.log('Modal kapatıldı');
-                
-                // Şans çarkını göster
-                showFortuneWheelAfterDelay();
-            }
+            closeModal();
         });
-        console.log('Kapama butonu event listener\'ı eklendi');
     }
     
-    // WhatsApp butonu event listener'ı
+    // WhatsApp butonu event listener
     if (whatsappBtn) {
         whatsappBtn.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             console.log('WhatsApp butonu tıklandı');
-            
-            // WhatsApp numarası ve mesaj
-            const phoneNumber = '905541383539';
-            const message = encodeURIComponent('Merhaba, ücretsiz demo ders hakkında bilgi almak istiyorum.');
-            
-            // WhatsApp linkini oluştur
-            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
-            
-            // Yeni sekmede WhatsApp'ı aç
-            window.open(whatsappUrl, '_blank');
-            
-            // Modal'ı kapat
-            if (demoModal) {
-                demoModal.style.display = 'none';
-                console.log('WhatsApp yönlendirmesi sonrası modal kapatıldı');
-                
-                // Şans çarkını göster
-                showFortuneWheelAfterDelay();
+            openWhatsApp();
+        });
+    }
+    
+    // Modal backdrop (arka plan) tıklama event listener
+    if (demoModal) {
+        demoModal.addEventListener('click', function(e) {
+            console.log('Modal backdrop tıklandı');
+            // Sadece modal'ın kendisine (backdrop) tıklanırsa kapat
+            if (e.target === demoModal) {
+                closeModal();
             }
         });
     }
     
-    // Modal dışı tıklama ile kapama
-    if (demoModal) {
-        demoModal.addEventListener('click', function(e) {
-            // Eğer modal'ın kendisine (arka plana) tıklanırsa kapat
-            if (e.target === demoModal) {
-                console.log('Modal dışına tıklandı, modal kapatılıyor');
-                demoModal.style.display = 'none';
-                
-                // Şans çarkını göster
-                showFortuneWheelAfterDelay();
-            }
+    // Modal içeriğine tıklamanın modal'ı kapatmasını engelle
+    if (modalContent) {
+        modalContent.addEventListener('click', function(e) {
+            e.stopPropagation();
         });
     }
     
     // ESC tuşu ile kapama
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && demoModal && demoModal.style.display !== 'none') {
-            console.log('ESC tuşuna basıldı, modal kapatılıyor');
-            demoModal.style.display = 'none';
-            
-            // Şans çarkını göster
-            showFortuneWheelAfterDelay();
+            console.log('ESC tuşu ile modal kapatılıyor');
+            closeModal();
         }
     });
 }
 
+// Global modal kapatma fonksiyonu - Düzeltilmiş
+function closeModal() {
+    console.log('closeModal fonksiyonu çağrıldı');
+    const modal = document.getElementById('demoModal');
+    if (modal) {
+        modal.style.display = 'none';
+        console.log('Modal kapatıldı');
+        
+        // Body scroll'unu geri getir
+        document.body.style.overflow = '';
+        
+        // 1.5 saniye sonra şans çarkını göster
+        setTimeout(() => {
+            if (typeof showFortuneWheel === 'function') {
+                showFortuneWheel();
+            }
+        }, 1500);
+    } else {
+        console.error('Modal elementi bulunamadı');
+    }
+}
+
+// Global WhatsApp fonksiyonu - Düzeltilmiş
+function openWhatsApp() {
+    console.log('openWhatsApp fonksiyonu çağrıldı');
+    const phoneNumber = '905541383539';
+    const message = encodeURIComponent('Merhaba, ücretsiz demo ders hakkında bilgi almak istiyorum.');
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+    
+    // WhatsApp'ı yeni sekmede aç
+    window.open(whatsappUrl, '_blank');
+    
+    // Modal'ı kapat
+    closeModal();
+}
+
+// Demo modal kapatma - Basit çözüm
+document.addEventListener('DOMContentLoaded', function() {
+    const demoModal = document.getElementById('demoModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const whatsappBtn = document.getElementById('whatsappBtn');
+    
+    // X butonu ile kapat
+    if (closeModalBtn) {
+        closeModalBtn.onclick = function() {
+            demoModal.style.display = 'none';
+        };
+    }
+    
+    // WhatsApp butonu
+    if (whatsappBtn) {
+        whatsappBtn.onclick = function() {
+            const phoneNumber = '905541383539';
+            const message = encodeURIComponent('Merhaba, ücretsiz demo ders hakkında bilgi almak istiyorum.');
+            window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+            demoModal.style.display = 'none';
+        };
+    }
+    
+    // Modal dışına tıklayınca kapat
+    demoModal.onclick = function(e) {
+        if (e.target === demoModal) {
+            demoModal.style.display = 'none';
+        }
+    };
+});
     // ===== FLOATING PANEL FUNCTIONS =====
     function initFloatingPanel() {
         const closeFloatingPanelButton = document.getElementById('closeFloatingPanel');

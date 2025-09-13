@@ -22,7 +22,7 @@
         <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 transition duration-300 hover:shadow-2xl">
             <div class="md:flex">
                 <div class="md:flex-shrink-0 relative">
-                    <div class="h-full w-full object-cover md:w-72 bg-gradient-to-r from-blue-200 to-indigo-100 flex items-center justify-center">
+                    <div class="h-full w-full object-cover md:w-36 bg-gradient-to-r from-blue-200 to-indigo-100 flex items-center justify-center">
                         <!-- Ana Logo -->
                         <img src="{{ asset('images/imgt.jpg') }}" 
                              alt="Logo" 
