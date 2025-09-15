@@ -21,12 +21,13 @@
 
         <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 transition duration-300 hover:shadow-2xl">
             <div class="md:flex">
+                {{-- Responsive Logo/Image Area --}}
                 <div class="md:flex-shrink-0 relative">
-                    <div class="h-full w-full object-cover md:w-36 bg-gradient-to-r from-blue-200 to-indigo-100 flex items-center justify-center">
-                        <!-- Ana Logo -->
+                    <div class="h-48 md:h-full w-full md:w-32 lg:w-36 xl:w-40 bg-gradient-to-r from-blue-200 to-indigo-100 flex items-center justify-center">
+                        <!-- Responsive Logo -->
                         <img src="{{ asset('images/imgt.jpg') }}" 
                              alt="Logo" 
-                             class="w-full h-full object-contain opacity-80">
+                             class="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-contain opacity-80">
                     </div>
                     <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-[#2c3e7f]/30 to-transparent"></div>
                     @if($resource->is_popular)
@@ -41,17 +42,17 @@
                     @endif
                 </div>
                 
-                <div class="p-8 w-full">
+                <div class="p-6 md:p-8 w-full">
                     <div class="flex flex-col md:flex-row md:items-start justify-between mb-6">
                         <div class="flex-1">
                             <div class="uppercase tracking-wide text-sm text-[#2c3e7f] font-bold flex items-center mb-2">
                                 <span class="w-2 h-2 bg-[#e43546] rounded-full mr-2"></span>
                                 {{ ucfirst(str_replace('-', ' ', $resource->category)) }}
                             </div>
-                            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ $resource->title }}</h1>
+                            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{{ $resource->title }}</h1>
                             
                             {{-- İstatistikler --}}
-                            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
+                            <div class="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-600 mb-6">
                                 <div class="flex items-center">
                                     <svg class="w-4 h-4 mr-1 text-[#2c3e7f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -91,7 +92,7 @@
                     </div>
                     
                     {{-- Açıklama --}}
-                    <div class="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-100">
+                    <div class="mb-8 p-4 md:p-6 bg-gray-50 rounded-xl border border-gray-100">
                         <h3 class="text-lg font-bold text-[#2c3e7f] flex items-center mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -102,17 +103,17 @@
                     </div>
                     
                     {{-- Dosya Bilgileri --}}
-                    <div class="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-100">
+                    <div class="mb-8 p-4 md:p-6 bg-blue-50 rounded-xl border border-blue-100">
                         <h3 class="text-lg font-bold text-[#2c3e7f] flex items-center mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             Dosya Bilgileri
                         </h3>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <span class="text-sm text-gray-600">Dosya Adı:</span>
-                                <p class="font-medium text-gray-900">{{ $resource->file_name }}</p>
+                                <p class="font-medium text-gray-900 break-words">{{ $resource->file_name }}</p>
                             </div>
                             <div>
                                 <span class="text-sm text-gray-600">Dosya Türü:</span>
@@ -147,11 +148,12 @@
                             </button>
                             
                             <a href="{{ route('useful-resources.download', $resource->slug) }}" 
-                               class="px-6 py-3 bg-gradient-to-r from-[#2c3e7f] to-[#264285] text-white font-medium rounded-xl shadow-md hover:from-[#264285] hover:to-[#1e3370] transition duration-300 transform hover:scale-105 flex items-center gap-2">
+                               class="px-4 md:px-6 py-3 bg-gradient-to-r from-[#2c3e7f] to-[#264285] text-white font-medium rounded-xl shadow-md hover:from-[#264285] hover:to-[#1e3370] transition duration-300 transform hover:scale-105 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                 </svg>
-                                Kaynağı İndir
+                                <span class="hidden sm:inline">Kaynağı İndir</span>
+                                <span class="sm:hidden">İndir</span>
                             </a>
                         </div>
                     </div>
@@ -160,7 +162,7 @@
             
             {{-- İlgili Kaynaklar --}}
             @if($relatedResources->count() > 0)
-            <div class="border-t border-gray-200 p-8">
+            <div class="border-t border-gray-200 p-6 md:p-8">
                 <h3 class="text-xl font-bold text-[#2c3e7f] mb-6 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -170,11 +172,11 @@
                 <div class="flex overflow-x-auto pb-4 hide-scrollbar gap-4">
                     @foreach($relatedResources as $relatedResource)
                         <div class="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition duration-300">
-                            <div class="h-36 bg-gradient-to-r from-blue-200 to-indigo-100 flex items-center justify-center relative">
+                            <div class="h-32 bg-gradient-to-r from-blue-200 to-indigo-100 flex items-center justify-center relative">
                                 <!-- Logo -->
                                 <img src="{{ asset('images/imgt.jpg') }}" 
                                      alt="Logo" 
-                                     class="h-12 w-auto object-contain opacity-80">
+                                     class="h-10 w-auto object-contain opacity-80">
                                 <div class="absolute top-2 right-2">
                                     <span class="px-2 py-1 bg-[#2c3e7f] text-white text-xs font-bold rounded">{{ ucfirst($relatedResource->category) }}</span>
                                 </div>
@@ -205,13 +207,13 @@
         
         @if($categoryResources->count() > 0)
         <div class="mt-12 max-w-5xl mx-auto">
-            <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                <h3 class="text-2xl font-bold text-[#2c3e7f] mb-6 flex items-center">
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100">
+                <h3 class="text-xl md:text-2xl font-bold text-[#2c3e7f] mb-6 flex items-center">
                     <div class="w-6 h-1 bg-[#e43546] rounded-full mr-3"></div>
                     {{ ucfirst(str_replace('-', ' ', $resource->category)) }} Kategorisindeki Diğer Kaynaklar
                 </h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     @foreach($categoryResources as $categoryResource)
                     <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:shadow-md transition duration-300">
                         <h4 class="font-semibold text-gray-900 mb-2 line-clamp-2">{{ $categoryResource->title }}</h4>
@@ -256,6 +258,20 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* Responsive image container */
+@media (max-width: 768px) {
+    .resource-image-container {
+        height: 200px;
+    }
+}
+
+@media (min-width: 769px) {
+    .resource-image-container {
+        height: 100%;
+        min-height: 400px;
+    }
 }
 </style>
 
