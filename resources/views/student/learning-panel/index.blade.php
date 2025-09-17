@@ -75,24 +75,43 @@
        </div>
    </div>
 </a>
-   <!-- Sözlük - Yakında (Gri-Siyah) - Unique Color -->
-   <div class="group bg-gradient-to-br from-slate-600 to-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer">
-       <div class="h-36 bg-white/10 backdrop-blur-sm flex items-center justify-center relative">
-           <div class="absolute top-3 right-3">
-               <span class="bg-slate-300 text-slate-800 px-2 py-1 rounded-full text-xs font-bold">📖 Yakında</span>
-           </div>
-           <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white/80 group-hover:text-white group-hover:scale-110 transition-all" fill="none"
-               viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-           </svg>
-       </div>
-       <div class="p-4">
-           <h3 class="text-lg font-bold text-white mb-1">Kişisel Sözlük</h3>
-           <p class="text-sm text-white/90">Öğrendiğiniz kelimeleri kaydedin ve tekrar edin.</p>
-       </div>
-   </div>
-
+   <!-- Kelimelerim - Auth Kontrolü ile -->
+<!-- Kelimelerim - Auth Kontrolü ile -->
+@auth
+<a href="{{ route('word-sets.index') }}" class="group bg-gradient-to-br from-slate-600 to-gray-800 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer">
+    <div class="h-36 bg-white/10 backdrop-blur-sm flex items-center justify-center relative">
+        <div class="absolute top-3 right-3">
+            <span class="bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold">📚 Aktif</span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white group-hover:scale-110 transition-all" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+    </div>
+    <div class="p-4">
+        <h3 class="text-lg font-bold text-white mb-1">Kelimelerim</h3>
+        <p class="text-sm text-white/90">Öğrendiğiniz kelimeleri kaydedin ve tekrar edin.</p>
+    </div>
+</a>
+@else
+<a href="{{ route('register') }}" class="group bg-gradient-to-br from-slate-600 to-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer">
+    <div class="h-36 bg-white/10 backdrop-blur-sm flex items-center justify-center relative">
+        <div class="absolute top-3 right-3">
+            <span class="bg-orange-400 text-orange-900 px-2 py-1 rounded-full text-xs font-bold">🔒 Üye Ol</span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white/60 group-hover:text-white/80 group-hover:scale-110 transition-all" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+    </div>
+    <div class="p-4">
+        <h3 class="text-lg font-bold text-white mb-1">Kelimelerim</h3>
+        <p class="text-sm text-white/90">Bu özelliği kullanmak için üye olmanız gerekiyor.</p>
+    </div>
+</a>
+@endauth
    <!-- Gramer Rehberi - Yakında (Pembe-Fuşya) -->
 <a href="{{ route('useful-resources.index') }}" class="block group bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer">        
     <div class="h-36 bg-white/10 backdrop-blur-sm flex items-center justify-center relative">            

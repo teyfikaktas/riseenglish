@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\CustomRegisterController;
 use App\Http\Controllers\Auth\ContactController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\WordSetsController;
 use App\Http\Controllers\Admin\PrivateLessonController;
 use App\Http\Controllers\Ogrenci\TestCategoryController;
 use App\Http\Controllers\Ogrenci\TestController;
@@ -101,7 +102,19 @@ Route::middleware(['auth'])->group(function () {
     
     Route::post('/telefon-dogrulama/otp', [App\Http\Controllers\OtpController::class, 'verify'])
         ->name('verification.phone.verify');
+            Route::prefix('kelimelerim')->name('word-sets.')->group(function () {
+        Route::get('/', [WordSetsController::class, 'index'])->name('index');
+        Route::get('/yeni', [WordSetsController::class, 'create'])->name('create');
+        Route::post('/', [WordSetsController::class, 'store'])->name('store');
+        Route::get('/{wordSet}', [WordSetsController::class, 'show'])->name('show');
+        Route::get('/{wordSet}/duzenle', [WordSetsController::class, 'edit'])->name('edit');
+        Route::put('/{wordSet}', [WordSetsController::class, 'update'])->name('update');
+        Route::delete('/{wordSet}', [WordSetsController::class, 'destroy'])->name('destroy');
         
+        // Kelime işlemleri
+        Route::post('/{wordSet}/kelime-ekle', [WordSetsController::class, 'addWord'])->name('add-word');
+        Route::delete('/{wordSet}/kelime/{word}', [WordSetsController::class, 'deleteWord'])->name('delete-word');
+    });
     // OTP gönderme route'u
     Route::post('/telefon-dogrulama/send', [App\Http\Controllers\OtpController::class, 'sendOtp'])
         ->name('verification.phone.send');
