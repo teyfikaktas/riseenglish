@@ -30,8 +30,15 @@ class SessionTopicsController extends Controller
         ->orderBy('order')
         ->get();
         
-        // Get the count of each topic for this session
-        $topicCounts = SessionTopic::where('session_id', $sessionId)
+        // ⭐ DEĞİŞTİRİLEN KISIM - TÜM DERSİN SEANSLARINI DAHIL ET ⭐
+        // Bu derse ait tüm seansları bul
+        $allSessionIds = PrivateLessonSession::where('private_lesson_id', $session->private_lesson_id)
+            ->where('teacher_id', Auth::id())
+            ->pluck('id')
+            ->toArray();
+        
+        // Tüm dersin seanslarındaki konuları say
+        $topicCounts = SessionTopic::whereIn('session_id', $allSessionIds)
             ->selectRaw('topic_id, COUNT(*) as count')
             ->groupBy('topic_id')
             ->pluck('count', 'topic_id')
