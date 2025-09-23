@@ -994,9 +994,6 @@ private function transliterateText($text)
     
     return str_replace($turkishChars, $latinChars, $text);
 }
-    /**
- * Dersin tüm seanslarını göster (Lesson bazlı)
- */
 public function showLesson($lessonId)
 {
     $teacherId = Auth::id();
@@ -1014,7 +1011,45 @@ public function showLesson($lessonId)
     // Öğrenci bilgisini ilk seanstan al
     $student = $sessions->first()->student ?? null;
     
-    return view('teacher.private-lessons.lesson', compact('lesson', 'sessions', 'student'));
+    // ⭐ EKSİK OLAN KISIM - KONU SAYILARINI HESAPLA ⭐
+    $sessionIds = $sessions->pluck('id')->toArray();
+    
+    // Bu dersin tüm seanslarında işlenen konuları getir
+    $sessionTopics = \App\Models\SessionTopic::with(['topic.category', 'session'])
+        ->whereIn('session_id', $sessionIds)
+        ->get();
+    
+    // Konuları kategorilere göre gruplandır ve sayıları hesapla
+    $topicCounts = [];
+    $topicsByCategory = [];
+    $totalTopicsCount = 0;
+    
+    foreach ($sessionTopics as $sessionTopic) {
+        $totalTopicsCount++;
+        $topicId = $sessionTopic->topic_id;
+        $categoryId = $sessionTopic->topic->category->id;
+        $categoryName = $sessionTopic->topic->category->name;
+        
+        if (!isset($topicCounts[$topicId])) {
+            $topicCounts[$topicId] = 0;
+            
+            if (!isset($topicsByCategory[$categoryId])) {
+                $topicsByCategory[$categoryId] = [
+                    'name' => $categoryName,
+                    'topics' => []
+                ];
+            }
+            
+            if (!in_array($sessionTopic->topic, $topicsByCategory[$categoryId]['topics'])) {
+                $topicsByCategory[$categoryId]['topics'][] = $sessionTopic->topic;
+            }
+        }
+        
+        $topicCounts[$topicId]++;
+    }
+    
+    // View'e $topicCounts'u da gönder
+    return view('teacher.private-lessons.lesson', compact('lesson', 'sessions', 'student', 'topicCounts', 'topicsByCategory', 'totalTopicsCount'));
 }
 /**
  * Show the form for adding homework to a lesson
