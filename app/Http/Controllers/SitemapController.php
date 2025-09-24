@@ -7,6 +7,7 @@ use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
 use App\Models\Course;
 use App\Models\ResourceCategory;
+use App\Models\UsefulResource;
 use Carbon\Carbon;
 
 class SitemapController extends Controller
@@ -68,7 +69,24 @@ class SitemapController extends Controller
                     ->setPriority(0.7)
             );
         }
+// Useful resources ana sayfası
+        $sitemap->add(
+            Url::create('/useful-resources') // ucretsiz-kaynaklar yerine useful-resources
+                ->setLastModificationDate(Carbon::yesterday())
+                ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
+                ->setPriority(0.8)
+        );
 
+        // Useful resources sayfalarını ekle
+        $resources = \App\Models\UsefulResource::all();
+        foreach ($resources as $resource) {
+            $sitemap->add(
+                Url::create("/useful-resources/{$resource->slug}") // URL yapısını düzeltin
+                    ->setLastModificationDate($resource->updated_at)
+                    ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)
+                    ->setPriority(0.7)
+            );
+        }
         // Kaynak kategorileri (varsa)
         try {
             $resourceCategories = ResourceCategory::all();
