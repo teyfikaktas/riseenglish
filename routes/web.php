@@ -51,6 +51,7 @@ Route::get('robots.txt', function () {
     $content .= "Allow: /egitimler\n";
     $content .= "Allow: /iletisim\n";
     $content .= "Allow: /ucretsiz-kaynaklar\n";
+    $content .= "Allow: /useful-resources\n";
     $content .= "Sitemap: " . url('sitemap.xml');
     
     return response($content, 200)
