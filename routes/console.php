@@ -346,6 +346,7 @@ Artisan::command('chain:daily-study-reminder', function () {
 })->purpose('Son 24 saat içinde çalışma yapmayan öğrencilerin velilerine hatırlatma SMS gönder');
 // SMS hatırlatma sistemini zamanla
 Schedule::command('lessons:send-reminders')->everyFiveMinutes();
+Schedule::command('chain:daily-study-reminder')->everyFiveMinutes();
 
 // Diğer zamanlanmış görevler buraya eklenebilir
 // Schedule::call(function () {
