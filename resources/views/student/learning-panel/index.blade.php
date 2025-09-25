@@ -116,7 +116,7 @@
 <a href="{{ route('useful-resources.index') }}" class="block group bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer">        
     <div class="h-36 bg-white/10 backdrop-blur-sm flex items-center justify-center relative">            
         <div class="absolute top-3 right-3">                
-            <span class="bg-purple-400 text-purple-900 px-2 py-1 rounded-full text-xs font-bold">✏️ Gramer</span>            
+            <span class="bg-purple-400 text-purple-900 px-2 py-1 rounded-full text-xs font-bold">✏️ Grammar</span>            
         </div>            
         <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white/80 group-hover:text-white group-hover:scale-110 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">                
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />            
@@ -124,7 +124,7 @@
     </div>        
     <div class="p-4">            
         <h3 class="text-lg font-bold text-white mb-1">Faydalı Kaynaklar</h3>            
-        <p class="text-sm text-white/90">İngilizce gramer kuralları, alıştırmalar ve kaynaklara ulaşın.</p>        
+        <p class="text-sm text-white/90">İngilizce Grammar kuralları, alıştırmalar ve kaynaklara ulaşın.</p>        
     </div>    
 </a>
 

@@ -532,7 +532,7 @@ Route::post('/ozel-ders-grup/{id}/seans-ekle', [TeacherPrivateLessonController::
             ->name('ogrenci.learning-panel.index');
             
 // Öğrenci rotaları
-Route::middleware(['auth', 'role:ogrenci', 'verified.phone'])->group(function () {
+Route::middleware(['auth', 'role:ogrenci|ogretmen', 'verified.phone'])->group(function () {
     Route::prefix('ogrenci')->name('ogrenci.')->group(function () {
         Route::get('/word-match-game', function () {
             return view('game');

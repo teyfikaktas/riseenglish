@@ -200,7 +200,150 @@ Artisan::command('lessons:send-reminders', function () {
     
     $this->comment("Toplam {$remindersSent} adet hatırlatma SMS'i gönderildi.");
 })->purpose('Dersleri başlamadan 30 dakika önce öğrencilere SMS hatırlatması gönder - Her öğrenci için sadece son ders');
-
+Artisan::command('chain:daily-study-reminder', function () {
+    /** @var ClosureCommand $this */
+    $this->comment('Günlük çalışma hatırlatma SMS\'leri kontrol ediliyor...');
+    
+    $now = Carbon::now();
+    $today = $now->format('Y-m-d');
+    $last24Hours = $now->copy()->subHours(24);
+    
+    $this->info("Kontrol zamanı: {$now->format('Y-m-d H:i:s')}");
+    $this->info("Son 24 saat kontrolü: {$last24Hours->format('Y-m-d H:i:s')} - {$now->format('Y-m-d H:i:s')}");
+    
+    // Veli telefon numarası olan öğrencileri getir
+    $students = User::whereHas('roles', function($query) {
+            $query->where('name', 'student');
+        })
+        ->where(function($query) {
+            $query->whereNotNull('parent_phone_number')
+                  ->orWhereNotNull('parent_phone_number_2');
+        })
+        ->get();
+    
+    $this->comment("Toplam {$students->count()} öğrenci kontrol edilecek.");
+    
+    $remindersSent = 0;
+    $studentsWithActivity = 0;
+    $studentsWithoutActivity = 0;
+    
+    foreach ($students as $student) {
+        $this->line("Kontrol ediliyor: {$student->name} (ID: {$student->id})");
+        
+        // Son 24 saat içinde çalışma var mı?
+        $hasRecentActivity = ChainActivity::where('user_id', $student->id)
+            ->where('created_at', '>=', $last24Hours)
+            ->exists();
+        
+        if ($hasRecentActivity) {
+            $studentsWithActivity++;
+            $this->comment("✅ {$student->name} - Son 24 saatte çalışma var");
+            continue;
+        }
+        
+        $studentsWithoutActivity++;
+        $this->warn("❌ {$student->name} - Son 24 saatte çalışma YOK");
+        
+        // Bugün zaten SMS gönderildi mi?
+        $cacheKey = "daily_reminder_{$student->id}_{$today}";
+        
+        if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+            $this->comment("   → Bugün zaten SMS gönderilmiş, atlanıyor.");
+            continue;
+        }
+        
+        // Veli numaralarını topla
+        $parentPhones = collect();
+        
+        if ($student->parent_phone_number) {
+            $parentPhones->push([
+                'number' => $student->parent_phone_number,
+                'type' => '1. Veli'
+            ]);
+        }
+        
+        if ($student->parent_phone_number_2) {
+            $parentPhones->push([
+                'number' => $student->parent_phone_number_2,
+                'type' => '2. Veli'
+            ]);
+        }
+        
+        if ($parentPhones->isEmpty()) {
+            $this->error("   → Veli telefon numarası bulunamadı!");
+            continue;
+        }
+        
+        // SMS gönder
+        $sentToParent = 0;
+        $smsContent = "Sayın Veli, {$student->name} adlı öğrenciniz için son 24 saat içinde günlük çalışması kaydedilmemiştir. Lütfen kontrol ediniz. Risenglish";
+        
+        foreach ($parentPhones as $phone) {
+            try {
+                $result = \App\Services\SmsService::sendSms($phone['number'], $smsContent);
+                
+                if ($result) {
+                    $this->info("   ✅ SMS gönderildi: {$phone['type']} - {$phone['number']}");
+                    $sentToParent++;
+                    
+                    // Log kaydet
+                    Log::info('Günlük çalışma hatırlatma SMS gönderildi', [
+                        'student_id' => $student->id,
+                        'student_name' => $student->name,
+                        'parent_type' => $phone['type'],
+                        'parent_phone' => $phone['number'],
+                        'sent_at' => $now->toDateTimeString(),
+                        'last_24h_start' => $last24Hours->toDateTimeString()
+                    ]);
+                } else {
+                    $this->error("   ❌ SMS gönderilemedi: {$phone['type']} - {$phone['number']}");
+                    
+                    Log::error('Günlük çalışma hatırlatma SMS gönderilemedi', [
+                        'student_id' => $student->id,
+                        'student_name' => $student->name,
+                        'parent_type' => $phone['type'],
+                        'parent_phone' => $phone['number'],
+                        'sent_at' => $now->toDateTimeString()
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $this->error("   💥 SMS hata: {$e->getMessage()}");
+                
+                Log::error('Günlük çalışma hatırlatma SMS hatası', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'parent_type' => $phone['type'],
+                    'parent_phone' => $phone['number'],
+                    'error' => $e->getMessage(),
+                    'sent_at' => $now->toDateTimeString()
+                ]);
+            }
+        }
+        
+        // En az bir SMS gönderildiyse cache'e kaydet
+        if ($sentToParent > 0) {
+            \Illuminate\Support\Facades\Cache::put($cacheKey, true, 86400); // 24 saat
+            $remindersSent += $sentToParent;
+            $this->comment("   📝 Cache kaydedildi: {$cacheKey}");
+        }
+    }
+    
+    // Özet
+    $this->info('');
+    $this->info('📊 ÖZET RAPOR:');
+    $this->info("   • Toplam öğrenci: {$students->count()}");
+    $this->info("   • Çalışma yapan: {$studentsWithActivity}");
+    $this->info("   • Çalışma yapmayan: {$studentsWithoutActivity}");
+    $this->info("   • Gönderilen SMS: {$remindersSent}");
+    $this->info('');
+    
+    if ($remindersSent > 0) {
+        $this->comment("✅ Toplam {$remindersSent} adet hatırlatma SMS'i başarıyla gönderildi.");
+    } else {
+        $this->comment("ℹ️  Gönderilecek SMS bulunamadı.");
+    }
+    
+})->purpose('Son 24 saat içinde çalışma yapmayan öğrencilerin velilerine hatırlatma SMS gönder');
 // SMS hatırlatma sistemini zamanla
 Schedule::command('lessons:send-reminders')->everyFiveMinutes();
 
