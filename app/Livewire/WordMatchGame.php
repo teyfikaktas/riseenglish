@@ -3,9 +3,17 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\Word;
 
 class WordMatchGame extends Component
 {
+    // Dil ve zorluk seçimi
+    public $languageSelected = false;
+    public $difficultySelected = false;
+    public $selectedLanguage = '';
+    public $selectedDifficulty = '';
+    public $availableDifficulties = [];
+
     // Main game state
     public $gameWords = [];
     public $currentWord = null;
@@ -35,10 +43,95 @@ class WordMatchGame extends Component
 
     public function mount()
     {
-        $this->initializeWords();
+        // Mount'da sadece temel durumu ayarla
+        $this->resetSelections();
     }
 
-    public function initializeWords()
+    // DİL SEÇİMİ
+    public function selectLanguage($language)
+    {
+        $this->selectedLanguage = $language;
+        $this->languageSelected = true;
+        
+        // Bu dil için mevcut zorluk seviyelerini getir
+        $this->availableDifficulties = Word::getDifficultyLevels($language)->toArray();
+        
+        $this->dispatch('language-selected', [
+            'language' => $language,
+            'difficulties' => $this->availableDifficulties
+        ]);
+    }
+
+    // ZORLUK SEÇİMİ
+    public function selectDifficulty($difficulty)
+    {
+        $this->selectedDifficulty = $difficulty;
+        $this->difficultySelected = true;
+        
+        $this->dispatch('difficulty-selected', [
+            'difficulty' => $difficulty
+        ]);
+    }
+
+    // GERİ DÖNÜŞ BUTONLARI
+    public function goBackToLanguage()
+    {
+        $this->languageSelected = false;
+        $this->difficultySelected = false;
+        $this->selectedLanguage = '';
+        $this->selectedDifficulty = '';
+        $this->availableDifficulties = [];
+    }
+
+    public function resetSelections()
+    {
+        $this->languageSelected = false;
+        $this->difficultySelected = false;
+        $this->selectedLanguage = '';
+        $this->selectedDifficulty = '';
+        $this->availableDifficulties = [];
+    }
+
+    // VERİTABANINDAN KELİME YÜKLEME
+    private function loadWords()
+    {
+        if (!$this->selectedLanguage) {
+            // Fallback - varsayılan kelimeler
+            $this->initializeFallbackWords();
+            return;
+        }
+        
+        if ($this->selectedDifficulty === 'all') {
+            // Tüm zorluk seviyelerinden karışık kelimeler
+            $words = Word::getQuizWords($this->selectedLanguage, null, 20);
+        } else {
+            // Belirli zorluk seviyesinden kelimeler
+            $words = Word::getQuizWords($this->selectedLanguage, $this->selectedDifficulty, 20);
+        }
+        
+        // Eğer yeterli kelime yoksa, tüm kelimelerden seç
+        if ($words->count() < 20) {
+            $words = Word::getQuizWords($this->selectedLanguage, null, 20);
+        }
+        
+        // Format çevir
+        $this->gameWords = $words->map(function($word) {
+            return [
+                'english' => $word->word,
+                'turkish' => $word->definition,
+                'difficulty' => $word->difficulty,
+                'id' => $word->id
+            ];
+        })->toArray();
+        
+        // Yeterli kelime var mı kontrol et
+        if (empty($this->gameWords)) {
+            $this->initializeFallbackWords();
+        }
+    }
+
+    // FALLBACK KELİMELER
+    public function initializeFallbackWords()
     {
         $this->gameWords = [
             ['english' => 'Apple', 'turkish' => 'Elma'],
@@ -59,8 +152,22 @@ class WordMatchGame extends Component
         ];
     }
 
+    // OYUN BAŞLATMA
     public function startGame()
     {
+        if (!$this->languageSelected || !$this->difficultySelected) {
+            return; // Henüz seçim yapılmamış
+        }
+        
+        // Kelimeleri yükle
+        $this->loadWords();
+        
+        if (empty($this->gameWords)) {
+            // Hata durumu - kelime bulunamadı
+            session()->flash('error', 'Seçilen dil ve zorluk için kelime bulunamadı.');
+            return;
+        }
+        
         // Reset everything
         $this->gameStarted = true;
         $this->gameFinished = false;
@@ -80,6 +187,9 @@ class WordMatchGame extends Component
         
         // Log başlangıç
         \Log::info('🎮 Oyun başlatıldı', [
+            'language' => $this->selectedLanguage,
+            'difficulty' => $this->selectedDifficulty,
+            'wordCount' => count($this->gameWords),
             'timeLeft' => $this->timeLeft,
             'gameStarted' => $this->gameStarted
         ]);
@@ -251,16 +361,24 @@ class WordMatchGame extends Component
         }
         
         \Log::info('🏁 Oyun bitti', [
+            'language' => $this->selectedLanguage,
+            'difficulty' => $this->selectedDifficulty,
             'finalScore' => $this->score,
             'correctAnswers' => $this->correctAnswers,
             'totalQuestions' => $this->totalQuestions
         ]);
     }
 
+    // RESET OYUN
     public function resetGame()
     {
         $this->gameStarted = false;
         $this->gameFinished = false;
+        $this->languageSelected = false;
+        $this->difficultySelected = false;
+        $this->selectedLanguage = '';
+        $this->selectedDifficulty = '';
+        $this->availableDifficulties = [];
         $this->timeLeft = 60;
         $this->score = 0;
         $this->streak = 0;
@@ -271,6 +389,7 @@ class WordMatchGame extends Component
         $this->currentOptions = [];
         $this->showResult = false;
         $this->nextWordDelay = false;
+        $this->gameWords = [];
     }
 
     public function getAccuracy()

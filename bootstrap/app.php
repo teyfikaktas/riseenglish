@@ -17,6 +17,7 @@ return Application::configure(
     */
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
+        api: __DIR__ . '/../routes/api.php',  // Bu satırı ekleyin
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )

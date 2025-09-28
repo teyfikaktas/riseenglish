@@ -51,20 +51,141 @@
             </div>
         </div>
 
-        <!-- Start Screen -->
-        @if(! $gameStarted && ! $gameFinished)
+        <!-- Dil Seçim Ekranı -->
+        @if(! $gameStarted && ! $gameFinished && ! $languageSelected)
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center bg-slate-900/30 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-2xl max-w-md">
+                    <div class="mb-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl">🌍</span>
+                        </div>
+                        <h2 class="text-3xl font-light text-white mb-2">Dil Seçin</h2>
+                        <p class="text-white/70">Hangi dilde kelime öğrenmek istiyorsunuz?</p>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <button wire:click="selectLanguage('en')" 
+                                class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700
+                                       text-white px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300
+                                       transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3">
+                            <span class="text-2xl">🇬🇧</span>
+                            <span>İngilizce</span>
+                        </button>
+                        
+                        <button wire:click="selectLanguage('de')" 
+                                class="w-full bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700
+                                       text-white px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300
+                                       transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3">
+                            <span class="text-2xl">🇩🇪</span>
+                            <span>Almanca</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Zorluk Seçim Ekranı -->
+        @if(! $gameStarted && ! $gameFinished && $languageSelected && ! $difficultySelected)
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center bg-slate-900/30 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-2xl max-w-md">
+                    <div class="mb-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl">🎯</span>
+                        </div>
+                        <h2 class="text-3xl font-light text-white mb-2">Zorluk Seviyesi</h2>
+                        <p class="text-white/70">{{ $selectedLanguage == 'en' ? 'İngilizce' : 'Almanca' }} için seviyenizi seçin</p>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        @if(in_array('beginner', $availableDifficulties))
+                            <button wire:click="selectDifficulty('beginner')" 
+                                    class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700
+                                           text-white px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300
+                                           transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3">
+                                <span class="text-2xl">🌱</span>
+                                <div class="text-left">
+                                    <div>Başlangıç</div>
+                                    <div class="text-sm opacity-80">Temel kelimeler</div>
+                                </div>
+                            </button>
+                        @endif
+                        
+                        @if(in_array('intermediate', $availableDifficulties))
+                            <button wire:click="selectDifficulty('intermediate')" 
+                                    class="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700
+                                           text-white px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300
+                                           transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3">
+                                <span class="text-2xl">⚡</span>
+                                <div class="text-left">
+                                    <div>Orta</div>
+                                    <div class="text-sm opacity-80">Orta seviye kelimeler</div>
+                                </div>
+                            </button>
+                        @endif
+                        
+                        @if(in_array('advanced', $availableDifficulties))
+                            <button wire:click="selectDifficulty('advanced')" 
+                                    class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700
+                                           text-white px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300
+                                           transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3">
+                                <span class="text-2xl">🏆</span>
+                                <div class="text-left">
+                                    <div>İleri</div>
+                                    <div class="text-sm opacity-80">Zor kelimeler</div>
+                                </div>
+                            </button>
+                        @endif
+                        
+                        <button wire:click="selectDifficulty('all')" 
+                                class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700
+                                       text-white px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300
+                                       transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3">
+                            <span class="text-2xl">🎲</span>
+                            <div class="text-left">
+                                <div>Karışık</div>
+                                <div class="text-sm opacity-80">Tüm seviyeler</div>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <button wire:click="goBackToLanguage" 
+                            class="mt-4 text-white/60 hover:text-white text-sm transition-colors duration-300">
+                        ← Dil seçimine dön
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        <!-- Oyun Başlangıç Ekranı -->
+        @if(! $gameStarted && ! $gameFinished && $languageSelected && $difficultySelected)
             <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center">
                     <h1 class="text-5xl font-light mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
                         Kelime Blast
                     </h1>
-                    <p class="text-white/70 text-lg mb-8">İngilizce kelimelerin Türkçe karşılıklarını bul!</p>
+                    <div class="mb-4 text-white/70">
+                        <div class="text-lg mb-2">
+                            {{ $selectedLanguage == 'en' ? '🇬🇧 İngilizce' : '🇩🇪 Almanca' }} - 
+                            @if($selectedDifficulty == 'beginner') 🌱 Başlangıç
+                            @elseif($selectedDifficulty == 'intermediate') ⚡ Orta
+                            @elseif($selectedDifficulty == 'advanced') 🏆 İleri
+                            @else 🎲 Karışık
+                            @endif
+                        </div>
+                        <div class="text-sm opacity-60">Veritabanından rastgele kelimeler ile yarış!</div>
+                    </div>
                     <button wire:click="startGame" 
                             class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700
                                    text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300
                                    transform hover:scale-105 shadow-lg hover:shadow-xl">
                         Oyunu Başlat
                     </button>
+                    <div class="mt-4">
+                        <button wire:click="resetSelections" 
+                                class="text-white/60 hover:text-white text-sm transition-colors duration-300">
+                            ← Seçimleri değiştir
+                        </button>
+                    </div>
                 </div>
             </div>
         @endif
@@ -74,6 +195,15 @@
             <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center bg-slate-900/30 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-2xl">
                     <h2 class="text-3xl font-light text-white mb-6">Oyun Bitti</h2>
+                    
+                    <div class="mb-4 text-white/70 text-sm">
+                        {{ $selectedLanguage == 'en' ? '🇬🇧 İngilizce' : '🇩🇪 Almanca' }} - 
+                        @if($selectedDifficulty == 'beginner') 🌱 Başlangıç
+                        @elseif($selectedDifficulty == 'intermediate') ⚡ Orta  
+                        @elseif($selectedDifficulty == 'advanced') 🏆 İleri
+                        @else 🎲 Karışık
+                        @endif
+                    </div>
                     
                     <div class="grid grid-cols-2 gap-4 mb-6 text-white text-sm">
                         <div class="bg-white/5 rounded-lg p-4 backdrop-blur-sm">

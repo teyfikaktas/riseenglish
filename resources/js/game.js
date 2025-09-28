@@ -1,33 +1,240 @@
 // resources/js/game.js - Kelime Blast Phaser Oyunu (Tamamen Yeniden)
 
 // Kelime verileri
-window.WordData = [
-    { english: 'Apple', turkish: 'Elma' },
-    { english: 'Book', turkish: 'Kitap' },
-    { english: 'Car', turkish: 'Araba' },
-    { english: 'Dog', turkish: 'Köpek' },
-    { english: 'House', turkish: 'Ev' },
-    { english: 'Water', turkish: 'Su' },
-    { english: 'Phone', turkish: 'Telefon' },
-    { english: 'School', turkish: 'Okul' },
-    { english: 'Friend', turkish: 'Arkadaş' },
-    { english: 'Happy', turkish: 'Mutlu' },
-    { english: 'Beautiful', turkish: 'Güzel' },
-    { english: 'Food', turkish: 'Yemek' },
-    { english: 'Music', turkish: 'Müzik' },
-    { english: 'Love', turkish: 'Aşk' },
-    { english: 'Time', turkish: 'Zaman' },
-    { english: 'Money', turkish: 'Para' },
-    { english: 'Work', turkish: 'İş' },
-    { english: 'Family', turkish: 'Aile' },
-    { english: 'World', turkish: 'Dünya' },
-    { english: 'Life', turkish: 'Hayat' },
-    { english: 'Green', turkish: 'Yeşil' },
-    { english: 'Blue', turkish: 'Mavi' },
-    { english: 'Red', turkish: 'Kırmızı' },
-    { english: 'Yellow', turkish: 'Sarı' },
-    { english: 'Black', turkish: 'Siyah' }
-];
+window.WordData = []; // Boş başlat
+
+// Dil Seçim Sahnesi
+class LanguageSelectionScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'LanguageSelectionScene' });
+    }
+    
+    async create() {
+        const { width, height } = this.scale;
+        
+        this.add.rectangle(width/2, height/2, width, height, 0x1e1b4b);
+        this.createStars();
+        
+        this.add.text(width/2, height * 0.25, 'Dil Seçin', {
+            fontSize: '48px',
+            fill: '#a855f7',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        const loadingText = this.add.text(width/2, height/2, 'Diller yükleniyor...', {
+            fontSize: '24px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+        
+        const languages = await WordAPI.getLanguages();
+        loadingText.destroy();
+        
+        this.createLanguageButtons(languages);
+    }
+    
+    createLanguageButtons(languages) {
+        const { width, height } = this.scale;
+        
+        const languageNames = {
+            'en': 'İngilizce',
+            'de': 'Almanca',
+            'tr': 'Türkçe'
+        };
+        
+        languages.forEach((lang, index) => {
+            const x = width/2;
+            const y = height * 0.4 + (index * 80);
+            
+            const button = this.add.rectangle(x, y, 300, 60, 0x6366f1)
+                .setStrokeStyle(3, 0xffffff)
+                .setInteractive({ useHandCursor: true });
+            
+            const buttonText = this.add.text(x, y, languageNames[lang] || lang, {
+                fontSize: '24px',
+                fill: '#ffffff',
+                fontFamily: 'Arial',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            
+            button.on('pointerdown', () => {
+                this.scene.start('DifficultySelectionScene', { selectedLanguage: lang });
+            });
+        });
+    }
+    
+    createStars() {
+        for (let i = 0; i < 50; i++) {
+            const x = Phaser.Math.Between(0, this.scale.width);
+            const y = Phaser.Math.Between(0, this.scale.height);
+            const star = this.add.circle(x, y, Phaser.Math.Between(1, 3), 0xa855f7, 0.7);
+            
+            this.tweens.add({
+                targets: star,
+                alpha: 0.2,
+                duration: Phaser.Math.Between(2000, 4000),
+                yoyo: true,
+                repeat: -1
+            });
+        }
+    }
+}
+
+// Zorluk Seçim Sahnesi
+class DifficultySelectionScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'DifficultySelectionScene' });
+    }
+    
+    init(data) {
+        this.selectedLanguage = data.selectedLanguage;
+    }
+    
+    async create() {
+        const { width, height } = this.scale;
+        
+        this.add.rectangle(width/2, height/2, width, height, 0x1e1b4b);
+        this.createStars();
+        
+        this.add.text(width/2, height * 0.25, 'Zorluk Seviyesi', {
+            fontSize: '36px',
+            fill: '#a855f7',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        const loadingText = this.add.text(width/2, height/2, 'Yükleniyor...', {
+            fontSize: '20px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+        
+        const difficulties = await WordAPI.getDifficulties(this.selectedLanguage);
+        loadingText.destroy();
+        
+        const allDifficulties = ['all', ...difficulties];
+        this.createDifficultyButtons(allDifficulties);
+        this.createBackButton();
+    }
+    
+createDifficultyButtons(difficulties) {
+    const { width, height } = this.scale;
+    
+    const difficultyNames = {
+        'all': 'Tümü (Karışık)',
+        'beginner': 'Başlangıç',
+        'intermediate': 'Orta'
+        // 'advanced' satırını kaldırın çünkü veritabanınızda yok
+    };
+    
+    difficulties.forEach((difficulty, index) => {
+        const x = width/2;
+        const y = height * 0.4 + (index * 70);
+        
+        const button = this.add.rectangle(x, y, 300, 55, 0x10b981)
+            .setStrokeStyle(3, 0xffffff)
+            .setInteractive({ useHandCursor: true });
+        
+        const buttonText = this.add.text(x, y, difficultyNames[difficulty] || difficulty, {
+            fontSize: '20px',
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        button.on('pointerdown', async () => {
+            const loadingOverlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.8);
+            const loadingMsg = this.add.text(width/2, height/2, 'Kelimeler yükleniyor...', {
+                fontSize: '32px',
+                fill: '#ffffff',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5);
+            
+            const words = await WordAPI.getWords(this.selectedLanguage, difficulty === 'all' ? null : difficulty);
+            window.WordData = words;
+            
+            this.scene.start('MenuScene');
+        });
+    });
+}
+    
+    createBackButton() {
+        const backButton = this.add.text(50, 50, '← Geri', {
+            fontSize: '24px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setInteractive({ useHandCursor: true });
+        
+        backButton.on('pointerdown', () => {
+            this.scene.start('LanguageSelectionScene');
+        });
+    }
+    
+    createStars() {
+        for (let i = 0; i < 30; i++) {
+            const x = Phaser.Math.Between(0, this.scale.width);
+            const y = Phaser.Math.Between(0, this.scale.height);
+            const star = this.add.circle(x, y, 1, 0x6366f1, 0.5);
+            
+            this.tweens.add({
+                targets: star,
+                alpha: 0.1,
+                duration: Phaser.Math.Between(3000, 6000),
+                yoyo: true,
+                repeat: -1
+            });
+        }
+    }
+}
+class WordAPI {
+    static async getLanguages() {
+        try {
+            const response = await fetch('/api/languages');
+            return await response.json();
+        } catch (error) {
+            console.error('Diller yüklenemedi:', error);
+            return ['en'];
+        }
+    }
+    
+    static async getDifficulties(lang) {
+        try {
+            const response = await fetch(`/api/difficulties/${lang}`);
+            return await response.json();
+        } catch (error) {
+            console.error('Zorluk seviyeleri yüklenemedi:', error);
+            return ['beginner'];
+        }
+    }
+    
+    static async getWords(lang = 'en', difficulty = null) {
+        try {
+            const url = difficulty ? 
+                `/api/words/${lang}/${difficulty}` : 
+                `/api/words/${lang}`;
+            
+            const response = await fetch(url);
+            const words = await response.json();
+            
+            if (words.length === 0) {
+                throw new Error('Kelime bulunamadı');
+            }
+            
+            return words;
+        } catch (error) {
+            console.error('Kelimeler yüklenemedi:', error);
+            // Fallback - mevcut kelimeleriniz
+            return [
+                { english: 'Apple', turkish: 'Elma' },
+                { english: 'Book', turkish: 'Kitap' },
+                { english: 'Car', turkish: 'Araba' },
+                { english: 'Dog', turkish: 'Köpek' },
+                { english: 'House', turkish: 'Ev' }
+            ];
+        }
+    }
+}
 
 // Ana Menü Sahnesi
 class MenuScene extends Phaser.Scene {
@@ -1328,26 +1535,15 @@ window.GameConfig = {
     scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        min: {
-            width: 320,
-            height: 480
-        },
-        max: {
-            width: 1920,
-            height: 1080
-        }
+        min: { width: 320, height: 480 },
+        max: { width: 1920, height: 1080 }
     },
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 0 },
-            debug: false
-        }
-    },
-    scene: [MenuScene, GameScene, GameOverScene]
+    scene: [LanguageSelectionScene, DifficultySelectionScene, MenuScene, GameScene, GameOverScene] // Sıra önemli
 };
 
 // Global olarak sınıfları tanımla
+window.LanguageSelectionScene = LanguageSelectionScene;
+window.DifficultySelectionScene = DifficultySelectionScene;
 window.MenuScene = MenuScene;
 window.GameScene = GameScene;
 window.GameOverScene = GameOverScene;
