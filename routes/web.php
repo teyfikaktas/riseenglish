@@ -115,7 +115,8 @@ Route::prefix('kelimelerim')->name('word-sets.')->group(function () {
     // Kelime işlemleri
     Route::post('/{wordSet}/kelime-ekle', [WordSetsController::class, 'addWord'])->name('add-word');
     Route::delete('/{wordSet}/kelime/{userWord}', [WordSetsController::class, 'deleteWord'])->name('delete-word'); // ← BURASI DEĞİŞTİ
-        
+        });
+
     // OTP gönderme route'u
     Route::post('/telefon-dogrulama/send', [App\Http\Controllers\OtpController::class, 'sendOtp'])
         ->name('verification.phone.send');
