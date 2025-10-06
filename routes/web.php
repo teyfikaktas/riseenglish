@@ -103,14 +103,19 @@ Route::middleware(['auth'])->group(function () {
     
     Route::post('/telefon-dogrulama/otp', [App\Http\Controllers\OtpController::class, 'verify'])
         ->name('verification.phone.verify');
-            Route::prefix('kelimelerim')->name('word-sets.')->group(function () {
-        Route::get('/', [WordSetsController::class, 'index'])->name('index');
-        Route::get('/yeni', [WordSetsController::class, 'create'])->name('create');
-        Route::post('/', [WordSetsController::class, 'store'])->name('store');
-        Route::get('/{wordSet}', [WordSetsController::class, 'show'])->name('show');
-        Route::get('/{wordSet}/duzenle', [WordSetsController::class, 'edit'])->name('edit');
-        Route::put('/{wordSet}', [WordSetsController::class, 'update'])->name('update');
-        Route::delete('/{wordSet}', [WordSetsController::class, 'destroy'])->name('destroy');
+Route::prefix('kelimelerim')->name('word-sets.')->group(function () {
+    Route::get('/', [WordSetsController::class, 'index'])->name('index');
+    Route::get('/yeni', [WordSetsController::class, 'create'])->name('create');
+    Route::post('/', [WordSetsController::class, 'store'])->name('store');
+    Route::get('/{wordSet}', [WordSetsController::class, 'show'])->name('show');
+    Route::get('/{wordSet}/duzenle', [WordSetsController::class, 'edit'])->name('edit');
+    Route::put('/{wordSet}', [WordSetsController::class, 'update'])->name('update');
+    Route::delete('/{wordSet}', [WordSetsController::class, 'destroy'])->name('destroy');
+    
+    // Kelime işlemleri
+    Route::post('/{wordSet}/kelime-ekle', [WordSetsController::class, 'addWord'])->name('add-word');
+    Route::delete('/{wordSet}/kelime/{userWord}', [WordSetsController::class, 'deleteWord'])->name('delete-word'); // ← BURASI DEĞİŞTİ
+});
         
         // Kelime işlemleri
         Route::post('/{wordSet}/kelime-ekle', [WordSetsController::class, 'addWord'])->name('add-word');

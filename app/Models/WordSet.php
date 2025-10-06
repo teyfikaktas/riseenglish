@@ -28,9 +28,15 @@ class WordSet extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Kelimeler ilişkisi
+    // ESKI: words() yerine userWords() kullanıyoruz
+    public function userWords()
+    {
+        return $this->hasMany(UserWord::class);
+    }
+
+    // VEYA geriye uyumluluk için words() metodunu userWords'e yönlendirebilirsiniz
     public function words()
     {
-        return $this->hasMany(Word::class);
+        return $this->hasMany(UserWord::class);
     }
 }

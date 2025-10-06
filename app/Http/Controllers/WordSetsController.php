@@ -3,19 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\WordSet;
-use App\Models\Word;
+use App\Models\UserWord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WordSetsController extends Controller
 {
-    
-
     // Ana sayfa - Kelime setlerini listele
     public function index()
     {
         $wordSets = WordSet::where('user_id', Auth::id())
-            ->withCount('words')
+            ->withCount('userWords')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -105,7 +103,7 @@ class WordSetsController extends Controller
             abort(403);
         }
 
-        $words = $wordSet->words()->orderBy('created_at', 'desc')->get();
+        $words = $wordSet->userWords()->orderBy('created_at', 'desc')->get();
 
         return view('word-sets.show', compact('wordSet', 'words'));
     }
@@ -125,34 +123,34 @@ class WordSetsController extends Controller
         ]);
 
         // Aynı kelime var mı kontrol et
-        if ($wordSet->words()->where('english_word', $request->english_word)->exists()) {
+        if ($wordSet->userWords()->where('english_word', $request->english_word)->exists()) {
             return back()->withErrors(['english_word' => 'Bu kelime zaten bu sette mevcut!']);
         }
 
-        $wordSet->words()->create([
+        $wordSet->userWords()->create([
             'english_word' => $request->english_word,
             'turkish_meaning' => $request->turkish_meaning,
             'word_type' => $request->word_type,
         ]);
 
         // Word count'u güncelle
-        $wordSet->update(['word_count' => $wordSet->words()->count()]);
+        $wordSet->update(['word_count' => $wordSet->userWords()->count()]);
 
         return back()->with('success', 'Kelime başarıyla eklendi!');
     }
 
     // Kelime silme
-    public function deleteWord(WordSet $wordSet, Word $word)
+    public function deleteWord(WordSet $wordSet, UserWord $userWord)
     {
         // Kullanıcının kendi seti mi kontrol et
-        if ($wordSet->user_id !== Auth::id() || $word->word_set_id !== $wordSet->id) {
+        if ($wordSet->user_id !== Auth::id() || $userWord->word_set_id !== $wordSet->id) {
             abort(403);
         }
 
-        $word->delete();
+        $userWord->delete();
 
         // Word count'u güncelle
-        $wordSet->update(['word_count' => $wordSet->words()->count()]);
+        $wordSet->update(['word_count' => $wordSet->userWords()->count()]);
 
         return back()->with('success', 'Kelime başarıyla silindi!');
     }
