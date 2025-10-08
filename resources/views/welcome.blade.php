@@ -75,7 +75,7 @@
                         0 0 60px rgba(255, 107, 53, 0.4),
                         0 0 120px rgba(247, 147, 30, 0.2),
                         inset 0 0 40px rgba(255, 255, 255, 0.1);
-                    transition: transform 6s cubic-bezier(0.23, 1, 0.32, 1);
+                        transition: transform 6s cubic-bezier(0, 0, 0.2, 1); /* ⬅️ DEĞİŞTİRİLDİ: İlk 5 sn hızlı, son 1 sn yavaş */
                     border: 10px solid rgba(255, 255, 255, 0.9);
                 }
 
@@ -2733,14 +2733,33 @@
                     this.spinButton.textContent = 'ÇEVRİLİYOR...';
                     this.spinButton.classList.remove('pulse-animation');
 
+                    // 🔊 SES EKLE - Son 1 saniyede yavaşlayacak
+                    const spinSound = new Audio('/sounds/spinning.mp3');
+                    spinSound.volume = 0.5;
+                    spinSound.preservesPitch = false;
+                    spinSound.play().catch(e => console.log('Ses çalınamadı:', e));
+
+                    // 5 saniye sonra sesi yavaşlat
+                    setTimeout(() => {
+                        let playbackRate = 1.0;
+                        const slowdownInterval = setInterval(() => {
+                            playbackRate -= 0.15; // Hızlı yavaşlama
+                            if (playbackRate < 0.3) {
+                                playbackRate = 0.3;
+                                clearInterval(slowdownInterval);
+                            }
+                            spinSound.playbackRate = playbackRate;
+                        }, 100);
+                    }, 5000); // ⬅️ 5 saniye sonra başla
+
                     // Ödül seçimi
                     const selectedPrize = this.selectPrize();
                     if (!selectedPrize) return;
 
                     // Çark animasyonu hesaplaması
-                    const segmentAngle = 360 / 8; // 8 segment
+                    const segmentAngle = 360 / 8;
                     const targetAngle = (selectedPrize.index * segmentAngle) + (segmentAngle / 2);
-                    const spinRotations = 5; // Kaç tur dönsün
+                    const spinRotations = 5;
                     const finalAngle = (spinRotations * 360) + (360 - targetAngle);
 
                     // Çarkı çevir
@@ -2756,7 +2775,7 @@
                         this.showResult(selectedPrize);
                         this.isSpinning = false;
                         this.hasSpun = true;
-                    }, 4000);
+                    }, 6000);
                 @endif
             }
 
