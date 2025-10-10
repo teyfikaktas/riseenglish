@@ -174,7 +174,6 @@ class CategorySelectionScene extends Phaser.Scene {
         
         // SCROLL KONTROLÜ
         let isDragging = false;
-        let startY = 0;
         let currentScrollY = 0;
         
         // Max scroll limiti
