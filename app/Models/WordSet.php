@@ -22,21 +22,40 @@ class WordSet extends Model
         'is_active' => 'boolean'
     ];
 
-    // Kullanıcı ilişkisi
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // ESKI: words() yerine userWords() kullanıyoruz
-    public function userWords()
-    {
-        return $this->hasMany(UserWord::class);
-    }
-
-    // VEYA geriye uyumluluk için words() metodunu userWords'e yönlendirebilirsiniz
+    // İlişki düzeltmesi - words tablosu ile
     public function words()
     {
-        return $this->hasMany(UserWord::class);
+        return $this->hasMany(Word::class, 'category', 'id');
+    }
+
+    // 50'li gruplar halinde getir
+    public function getWordsInChunks($chunkSize = 50)
+    {
+        return $this->words()
+            ->orderBy('id')
+            ->get()
+            ->chunk($chunkSize);
+    }
+
+    // Belirli bir sayfayı getir
+    public function getChunkByPage($page = 1, $perPage = 50)
+    {
+        return $this->words()
+            ->orderBy('id')
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+    }
+
+    // Toplam sayfa sayısı
+    public function getTotalChunks($perPage = 50)
+    {
+        $totalWords = $this->words()->count();
+        return $totalWords > 0 ? ceil($totalWords / $perPage) : 0;
     }
 }

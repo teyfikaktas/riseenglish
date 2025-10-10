@@ -59,7 +59,7 @@ class LanguageSelectionScene extends Phaser.Scene {
             }).setOrigin(0.5);
             
             button.on('pointerdown', () => {
-                this.scene.start('DifficultySelectionScene', { selectedLanguage: lang });
+                this.scene.start('CategorySelectionScene', { selectedLanguage: lang });
             });
         });
     }
@@ -80,7 +80,200 @@ class LanguageSelectionScene extends Phaser.Scene {
         }
     }
 }
+class CategorySelectionScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'CategorySelectionScene' });
+    }
+    
+    init(data) {
+        this.selectedLanguage = data.selectedLanguage;
+    }
+    
+    async create() {
+        const { width, height } = this.scale;
+        
+        this.add.rectangle(width/2, height/2, width, height, 0x1e1b4b);
+        this.createStars();
+        
+        this.add.text(width/2, height * 0.15, 'Kategori Seçin', {
+            fontSize: '42px',
+            fill: '#a855f7',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        const loadingText = this.add.text(width/2, height/2, 'Kategoriler yükleniyor...', {
+            fontSize: '24px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+        
+        const categories = await WordAPI.getCategories(this.selectedLanguage);
+        loadingText.destroy();
+        
+        this.createCategoryButtons(categories);
+        this.createBackButton();
+    }
+    
+    createCategoryButtons(categories) {
+        const { width, height } = this.scale;
+        const startY = height * 0.3;
+        
+        categories.forEach((category, index) => {
+            const y = startY + (index * 80);
+            
+            const button = this.add.rectangle(width/2, y, 400, 70, parseInt(category.color.replace('#', '0x')))
+                .setStrokeStyle(3, 0xffffff)
+                .setInteractive({ useHandCursor: true });
+            
+            const nameText = this.add.text(width/2 - 150, y, category.name, {
+                fontSize: '22px',
+                fill: '#ffffff',
+                fontFamily: 'Arial',
+                fontStyle: 'bold'
+            }).setOrigin(0, 0.5);
+            
+            const setCountText = this.add.text(width/2 + 150, y, `${category.total_sets} Set`, {
+                fontSize: '18px',
+                fill: '#ffffff',
+                fontFamily: 'Arial'
+            }).setOrigin(1, 0.5);
+            
+            button.on('pointerdown', () => {
+                this.scene.start('SetSelectionScene', { 
+                    selectedLanguage: this.selectedLanguage,
+                    category: category
+                });
+            });
+        });
+    }
+    
+    createBackButton() {
+        const backButton = this.add.text(50, 50, '← Geri', {
+            fontSize: '24px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setInteractive({ useHandCursor: true });
+        
+        backButton.on('pointerdown', () => {
+            this.scene.start('LanguageSelectionScene');
+        });
+    }
+    
+    createStars() {
+        for (let i = 0; i < 30; i++) {
+            const x = Phaser.Math.Between(0, this.scale.width);
+            const y = Phaser.Math.Between(0, this.scale.height);
+            const star = this.add.circle(x, y, 1, 0x6366f1, 0.5);
+            
+            this.tweens.add({
+                targets: star,
+                alpha: 0.1,
+                duration: Phaser.Math.Between(3000, 6000),
+                yoyo: true,
+                repeat: -1
+            });
+        }
+    }
+}
 
+// Set Seçim Sahnesi
+class SetSelectionScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'SetSelectionScene' });
+    }
+    
+    init(data) {
+        this.selectedLanguage = data.selectedLanguage;
+        this.category = data.category;
+    }
+    
+    create() {
+        const { width, height } = this.scale;
+        
+        this.add.rectangle(width/2, height/2, width, height, 0x1e1b4b);
+        this.createStars();
+        
+        this.add.text(width/2, height * 0.15, this.category.name, {
+            fontSize: '36px',
+            fill: '#a855f7',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.add.text(width/2, height * 0.22, 'Set Seçin (50 kelime)', {
+            fontSize: '20px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
+        
+        this.createSetButtons();
+        this.createBackButton();
+    }
+    
+    createSetButtons() {
+        const { width, height } = this.scale;
+        const totalSets = this.category.total_sets;
+        const startY = height * 0.35;
+        
+        for (let i = 1; i <= totalSets; i++) {
+            const y = startY + ((i - 1) * 70);
+            
+            const button = this.add.rectangle(width/2, y, 300, 60, 0x10b981)
+                .setStrokeStyle(3, 0xffffff)
+                .setInteractive({ useHandCursor: true });
+            
+            const buttonText = this.add.text(width/2, y, `Set ${i} (1-50)`, {
+                fontSize: '22px',
+                fill: '#ffffff',
+                fontFamily: 'Arial',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            
+            button.on('pointerdown', async () => {
+                const loadingOverlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.8);
+                const loadingMsg = this.add.text(width/2, height/2, 'Kelimeler yükleniyor...', {
+                    fontSize: '32px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial'
+                }).setOrigin(0.5);
+                
+                const words = await WordAPI.getWordsBySet(this.category.id, i);
+                window.WordData = words;
+                
+                this.scene.start('MenuScene');
+            });
+        }
+    }
+    
+    createBackButton() {
+        const backButton = this.add.text(50, 50, '← Geri', {
+            fontSize: '24px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setInteractive({ useHandCursor: true });
+        
+        backButton.on('pointerdown', () => {
+            this.scene.start('CategorySelectionScene', { selectedLanguage: this.selectedLanguage });
+        });
+    }
+    
+    createStars() {
+        for (let i = 0; i < 30; i++) {
+            const x = Phaser.Math.Between(0, this.scale.width);
+            const y = Phaser.Math.Between(0, this.scale.height);
+            const star = this.add.circle(x, y, 1, 0x6366f1, 0.5);
+            
+            this.tweens.add({
+                targets: star,
+                alpha: 0.1,
+                duration: Phaser.Math.Between(3000, 6000),
+                yoyo: true,
+                repeat: -1
+            });
+        }
+    }
+}
 // Zorluk Seçim Sahnesi
 class DifficultySelectionScene extends Phaser.Scene {
     constructor() {
@@ -198,39 +391,31 @@ class WordAPI {
         }
     }
     
-    static async getDifficulties(lang) {
+    static async getCategories(lang) {
         try {
-            const response = await fetch(`/api/difficulties/${lang}`);
+            const response = await fetch(`/api/categories/${lang}`);
             return await response.json();
         } catch (error) {
-            console.error('Zorluk seviyeleri yüklenemedi:', error);
-            return ['beginner'];
+            console.error('Kategoriler yüklenemedi:', error);
+            return [];
         }
     }
     
-    static async getWords(lang = 'en', difficulty = null) {
+    static async getWordsBySet(categoryId, page = 1) {
         try {
-            const url = difficulty ? 
-                `/api/words/${lang}/${difficulty}` : 
-                `/api/words/${lang}`;
+            const response = await fetch(`/api/words/${categoryId}/${page}`);
+            const data = await response.json();
             
-            const response = await fetch(url);
-            const words = await response.json();
-            
-            if (words.length === 0) {
+            if (data.words.length === 0) {
                 throw new Error('Kelime bulunamadı');
             }
             
-            return words;
+            return data.words;
         } catch (error) {
             console.error('Kelimeler yüklenemedi:', error);
-            // Fallback - mevcut kelimeleriniz
             return [
                 { english: 'Apple', turkish: 'Elma' },
-                { english: 'Book', turkish: 'Kitap' },
-                { english: 'Car', turkish: 'Araba' },
-                { english: 'Dog', turkish: 'Köpek' },
-                { english: 'House', turkish: 'Ev' }
+                { english: 'Book', turkish: 'Kitap' }
             ];
         }
     }
@@ -1527,6 +1712,7 @@ class GameOverScene extends Phaser.Scene {
 }
 
 // Oyun Konfigürasyonu
+// Scene config'i güncelle
 window.GameConfig = {
     type: Phaser.AUTO,
     width: window.innerWidth,
@@ -1538,12 +1724,15 @@ window.GameConfig = {
         min: { width: 320, height: 480 },
         max: { width: 1920, height: 1080 }
     },
-    scene: [LanguageSelectionScene, DifficultySelectionScene, MenuScene, GameScene, GameOverScene] // Sıra önemli
+    scene: [LanguageSelectionScene, CategorySelectionScene, SetSelectionScene, MenuScene, GameScene, GameOverScene]
 };
+
+// Global tanımlamalar
+window.CategorySelectionScene = CategorySelectionScene;
+window.SetSelectionScene = SetSelectionScene;
 
 // Global olarak sınıfları tanımla
 window.LanguageSelectionScene = LanguageSelectionScene;
-window.DifficultySelectionScene = DifficultySelectionScene;
 window.MenuScene = MenuScene;
 window.GameScene = GameScene;
 window.GameOverScene = GameOverScene;

@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OtpController;
 use App\Models\Word;
+use App\Models\WordSet;
+
 // API route for OTP SMS without middleware
 Route::post('/send-otp', [OtpController::class, 'sendOtp']);
 
@@ -17,35 +19,72 @@ Route::get('/languages', function() {
     }
 });
 
-Route::get('/difficulties/{lang}', function($lang) {
+Route::get('/categories/{lang}', function($lang) {
     try {
-        $difficulties = Word::getDifficultyLevels($lang);
-        return response()->json($difficulties);
+        $categories = WordSet::where('user_id', 1)
+            ->where('is_active', 1)
+            ->whereHas('words', function($query) use ($lang) {
+                $query->where('lang', $lang);
+            })
+            ->select('id', 'name', 'description', 'color', 'word_count')
+            ->get()
+            ->map(function($category) use ($lang) {
+                // Sadece bu dildeki kelime sayısına göre set sayısını hesapla
+                $wordCount = $category->words()->where('lang', $lang)->count();
+                $totalChunks = $wordCount > 0 ? ceil($wordCount / 50) : 0;
+                $category->total_sets = $totalChunks;
+                return $category;
+            });
+        
+        return response()->json($categories);
     } catch (\Exception $e) {
-        \Log::error('Difficulties API Error: ' . $e->getMessage());
-        return response()->json(['beginner', 'intermediate'], 200); // advanced'i kaldırdım
+        \Log::error('Categories API Error: ' . $e->getMessage());
+        return response()->json([]);
     }
 });
 
-Route::get('/words/{lang}/{difficulty?}', function($lang, $difficulty = null) {
+Route::get('/words/{categoryId}/{page?}', function($categoryId, $page = 1) {
     try {
-        $words = Word::getQuizWords($lang, $difficulty, 50);
+        $category = WordSet::findOrFail($categoryId);
+        
+        // İlk kelimeden dili al
+        $firstWord = $category->words()->first();
+        $lang = $firstWord ? $firstWord->lang : 'en';
+        
+        // Sadece o dildeki kelimeleri getir
+        $words = $category->words()
+            ->where('lang', $lang)
+            ->orderBy('id')
+            ->skip(($page - 1) * 50)
+            ->take(50)
+            ->get();
         
         $gameWords = $words->map(function($word) {
             return [
                 'english' => $word->word,
                 'turkish' => $word->definition,
-                'difficulty' => $word->difficulty,
                 'id' => $word->id
             ];
         });
         
-        return response()->json($gameWords);
+        $totalWords = $category->words()->where('lang', $lang)->count();
+        
+        return response()->json([
+            'words' => $gameWords,
+            'current_page' => $page,
+            'total_pages' => $totalWords > 0 ? ceil($totalWords / 50) : 0,
+            'category_name' => $category->name
+        ]);
     } catch (\Exception $e) {
         \Log::error('Words API Error: ' . $e->getMessage());
         return response()->json([
-            ['english' => 'Apple', 'turkish' => 'Elma', 'difficulty' => 'beginner', 'id' => 1],
-            ['english' => 'Book', 'turkish' => 'Kitap', 'difficulty' => 'beginner', 'id' => 2],
+            'words' => [
+                ['english' => 'Apple', 'turkish' => 'Elma', 'id' => 1],
+                ['english' => 'Book', 'turkish' => 'Kitap', 'id' => 2],
+            ],
+            'current_page' => 1,
+            'total_pages' => 1,
+            'category_name' => 'Error'
         ]);
     }
 });
