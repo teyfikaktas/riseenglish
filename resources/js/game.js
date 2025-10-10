@@ -111,16 +111,27 @@ class CategorySelectionScene extends Phaser.Scene {
         const categories = await WordAPI.getCategories(this.selectedLanguage);
         loadingText.destroy();
         
-        this.createCategoryButtons(categories);
+        // SCROLL CONTAINER OLUŞTUR
+        this.createScrollableCategories(categories);
         this.createBackButton();
     }
     
-    createCategoryButtons(categories) {
+    createScrollableCategories(categories) {
         const { width, height } = this.scale;
-        const startY = height * 0.3;
+        
+        // Scroll alanı yüksekliği
+        const scrollAreaY = height * 0.25;
+        const scrollAreaHeight = height * 0.65;
+        
+        // Container oluştur
+        this.categoryContainer = this.add.container(0, 0);
+        
+        // Kategorileri oluştur
+        const startY = scrollAreaY;
+        const buttonHeight = 80; // Her buton yüksekliği (70 + 10 boşluk)
         
         categories.forEach((category, index) => {
-            const y = startY + (index * 80);
+            const y = startY + (index * buttonHeight);
             
             const button = this.add.rectangle(width/2, y, 400, 70, parseInt(category.color.replace('#', '0x')))
                 .setStrokeStyle(3, 0xffffff)
@@ -145,7 +156,92 @@ class CategorySelectionScene extends Phaser.Scene {
                     category: category
                 });
             });
+            
+            // Container'a ekle
+            this.categoryContainer.add([button, nameText, setCountText]);
         });
+        
+        // Toplam içerik yüksekliği
+        const totalContentHeight = categories.length * buttonHeight;
+        
+        // SCROLL MASK (görünür alan)
+        const maskShape = this.make.graphics();
+        maskShape.fillStyle(0xffffff);
+        maskShape.fillRect(0, scrollAreaY, width, scrollAreaHeight);
+        
+        const mask = maskShape.createGeometryMask();
+        this.categoryContainer.setMask(mask);
+        
+        // SCROLL KONTROLÜ
+        let isDragging = false;
+        let startY = 0;
+        let currentScrollY = 0;
+        
+        // Max scroll limiti
+        const maxScroll = Math.max(0, totalContentHeight - scrollAreaHeight);
+        
+        // Touch/Mouse events
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.y >= scrollAreaY && pointer.y <= scrollAreaY + scrollAreaHeight) {
+                isDragging = true;
+                startY = pointer.y;
+            }
+        });
+        
+        this.input.on('pointermove', (pointer) => {
+            if (isDragging) {
+                const deltaY = pointer.y - startY;
+                currentScrollY = Phaser.Math.Clamp(
+                    this.categoryContainer.y + deltaY,
+                    -maxScroll,
+                    0
+                );
+                this.categoryContainer.y = currentScrollY;
+                startY = pointer.y;
+            }
+        });
+        
+        this.input.on('pointerup', () => {
+            isDragging = false;
+        });
+        
+        // MOUSE WHEEL (Desktop için)
+        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
+            currentScrollY = Phaser.Math.Clamp(
+                this.categoryContainer.y - deltaY * 0.5,
+                -maxScroll,
+                0
+            );
+            
+            this.tweens.add({
+                targets: this.categoryContainer,
+                y: currentScrollY,
+                duration: 100,
+                ease: 'Power2'
+            });
+        });
+        
+        // SCROLL INDICATOR (opsiyonel - kaydırma çubuğu)
+        if (maxScroll > 0) {
+            const scrollbarWidth = 8;
+            const scrollbarHeight = scrollAreaHeight * (scrollAreaHeight / totalContentHeight);
+            
+            this.scrollbar = this.add.rectangle(
+                width - 20,
+                scrollAreaY + scrollbarHeight/2,
+                scrollbarWidth,
+                scrollbarHeight,
+                0x6366f1,
+                0.6
+            );
+            
+            // Scrollbar güncelleme
+            this.events.on('update', () => {
+                const scrollPercentage = Math.abs(this.categoryContainer.y) / maxScroll;
+                const scrollbarY = scrollAreaY + (scrollAreaHeight - scrollbarHeight) * scrollPercentage + scrollbarHeight/2;
+                this.scrollbar.y = scrollbarY;
+            });
+        }
     }
     
     createBackButton() {
@@ -956,9 +1052,36 @@ class GameScene extends Phaser.Scene {
         this.clearBubbles();
         this.currentWord = Phaser.Utils.Array.GetRandom(window.WordData);
         this.wordText.setText(this.currentWord.english);
+        
+        // KELİMEYİ SESLENDIR
+        this.speakWord(this.currentWord.english);
+        
         this.createOptions();
         this.totalQuestions++;
         this.updateInfo();
+    }
+    speakWord(text) {
+        // Önceki sesi durdur
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US'; // İngilizce
+        utterance.rate = 0.85; // Biraz yavaş
+        utterance.pitch = 1.0; // Normal ton
+        utterance.volume = 1.0; // Tam ses
+        
+        // Ses bittiğinde console log (opsiyonel)
+        utterance.onend = () => {
+            console.log('Kelime okundu: ' + text);
+        };
+        
+        utterance.onerror = (e) => {
+            console.error('Ses hatası:', e);
+        };
+        
+        window.speechSynthesis.speak(utterance);
     }
 
     createOptions() {
@@ -1322,25 +1445,30 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    endGame() {
-        this.gameActive = false;
-        
-        if (this.gameTimer) this.gameTimer.destroy();
-        this.clearBubbles();
-
-        // Accuracy bonus
-        if (this.correctAnswers > 0 && this.totalQuestions > 0) {
-            const accuracyBonus = Math.round((this.correctAnswers / this.totalQuestions) * 20);
-            this.score += accuracyBonus;
-        }
-
-        this.scene.start('GameOverScene', {
-            score: this.score,
-            correctAnswers: this.correctAnswers,
-            totalQuestions: this.totalQuestions,
-            streak: this.streak
-        });
+endGame() {
+    this.gameActive = false;
+    
+    // SESİ DURDUR
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
     }
+    
+    if (this.gameTimer) this.gameTimer.destroy();
+    this.clearBubbles();
+
+    // Accuracy bonus
+    if (this.correctAnswers > 0 && this.totalQuestions > 0) {
+        const accuracyBonus = Math.round((this.correctAnswers / this.totalQuestions) * 20);
+        this.score += accuracyBonus;
+    }
+
+    this.scene.start('GameOverScene', {
+        score: this.score,
+        correctAnswers: this.correctAnswers,
+        totalQuestions: this.totalQuestions,
+        streak: this.streak
+    });
+}
 }
 
 // Game Over Sahnesi
