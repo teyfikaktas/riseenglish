@@ -594,21 +594,26 @@ class MenuScene extends Phaser.Scene {
             });
             startButton.setFillStyle(0x6366f1);
         });
+// MenuScene'deki startButton.on('pointerdown') içine EKLE:
 
-        startButton.on('pointerdown', () => {
-            this.tweens.add({
-                targets: [startButton, startText],
-                scaleX: 0.95,
-                scaleY: 0.95,
-                duration: 100,
-                yoyo: true,
-                ease: 'Power2',
-                onComplete: () => {
-                    this.scene.start('GameScene');
-                }
-            });
+    startButton.on('pointerdown', () => {
+        // iOS unlock
+        const unlock = new SpeechSynthesisUtterance('');
+        unlock.volume = 0;
+        window.speechSynthesis.speak(unlock);
+        
+        this.tweens.add({
+            targets: [startButton, startText],
+            scaleX: 0.95,
+            scaleY: 0.95,
+            duration: 100,
+            yoyo: true,
+            ease: 'Power2',
+            onComplete: () => {
+                this.scene.start('GameScene');
+            }
         });
-
+    });
         // Animasyonlar
         this.tweens.add({
             targets: title,
@@ -811,6 +816,19 @@ class GameScene extends Phaser.Scene {
             repeat: -1,
             ease: 'Sine.easeInOut'
         });
+        const soundBtn = this.add.circle(width - 60, height - 60, 30, 0xf59e0b, 0.9)
+        .setStrokeStyle(3, 0xffffff)
+        .setInteractive({ useHandCursor: true });
+    
+    this.add.text(width - 60, height - 60, '🔊', {
+        fontSize: '28px'
+    }).setOrigin(0.5);
+    
+    soundBtn.on('pointerdown', () => {
+        if (this.currentWord) {
+            this.speakWord(this.currentWord.english);
+        }
+    });
     }
 
     createStars() {
