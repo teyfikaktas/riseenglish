@@ -27,10 +27,16 @@ class WordSet extends Model
         return $this->belongsTo(User::class);
     }
 
-    // İlişki düzeltmesi - words tablosu ile
+    // words tablosu ile ilişki
     public function words()
     {
         return $this->hasMany(Word::class, 'category', 'id');
+    }
+
+    // user_words tablosu ile ilişki - YENİ!
+    public function userWords()
+    {
+        return $this->hasMany(UserWord::class, 'word_set_id');
     }
 
     // 50'li gruplar halinde getir
