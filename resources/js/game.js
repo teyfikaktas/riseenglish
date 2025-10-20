@@ -111,138 +111,135 @@ class CategorySelectionScene extends Phaser.Scene {
         const categories = await WordAPI.getCategories(this.selectedLanguage);
         loadingText.destroy();
         
-        // SCROLL CONTAINER OLUŞTUR
         this.createScrollableCategories(categories);
         this.createBackButton();
     }
     
-    createScrollableCategories(categories) {
-        const { width, height } = this.scale;
-        
-        // Scroll alanı yüksekliği
-        const scrollAreaY = height * 0.25;
-        const scrollAreaHeight = height * 0.65;
-        
-        // Container oluştur
-        this.categoryContainer = this.add.container(0, 0);
-        
-        // Kategorileri oluştur
-        const startY = scrollAreaY;
-        const buttonHeight = 80; // Her buton yüksekliği (70 + 10 boşluk)
-        
-        categories.forEach((category, index) => {
-            const y = startY + (index * buttonHeight);
-            
-            const button = this.add.rectangle(width/2, y, 400, 70, parseInt(category.color.replace('#', '0x')))
-                .setStrokeStyle(3, 0xffffff)
-                .setInteractive({ useHandCursor: true });
-            
-            const nameText = this.add.text(width/2 - 150, y, category.name, {
-                fontSize: '22px',
-                fill: '#ffffff',
-                fontFamily: 'Arial',
-                fontStyle: 'bold'
-            }).setOrigin(0, 0.5);
-            
-            const setCountText = this.add.text(width/2 + 150, y, `${category.total_sets} Set`, {
-                fontSize: '18px',
-                fill: '#ffffff',
-                fontFamily: 'Arial'
-            }).setOrigin(1, 0.5);
-            
-            button.on('pointerdown', () => {
-                this.scene.start('SetSelectionScene', { 
-                    selectedLanguage: this.selectedLanguage,
-                    category: category
-                });
-            });
-            
-            // Container'a ekle
-            this.categoryContainer.add([button, nameText, setCountText]);
-        });
-        
-        // Toplam içerik yüksekliği
-        const totalContentHeight = categories.length * buttonHeight;
-        
-        // SCROLL MASK (görünür alan)
-        const maskShape = this.make.graphics();
-        maskShape.fillStyle(0xffffff);
-        maskShape.fillRect(0, scrollAreaY, width, scrollAreaHeight);
-        
-        const mask = maskShape.createGeometryMask();
-        this.categoryContainer.setMask(mask);
-        
-        // SCROLL KONTROLÜ
-        let isDragging = false;
-        let currentScrollY = 0;
-        
-        // Max scroll limiti
-        const maxScroll = Math.max(0, totalContentHeight - scrollAreaHeight);
-        
-        // Touch/Mouse events
-        this.input.on('pointerdown', (pointer) => {
-            if (pointer.y >= scrollAreaY && pointer.y <= scrollAreaY + scrollAreaHeight) {
-                isDragging = true;
-                startY = pointer.y;
-            }
-        });
-        
-        this.input.on('pointermove', (pointer) => {
-            if (isDragging) {
-                const deltaY = pointer.y - startY;
-                currentScrollY = Phaser.Math.Clamp(
-                    this.categoryContainer.y + deltaY,
-                    -maxScroll,
-                    0
-                );
-                this.categoryContainer.y = currentScrollY;
-                startY = pointer.y;
-            }
-        });
-        
-        this.input.on('pointerup', () => {
-            isDragging = false;
-        });
-        
-        // MOUSE WHEEL (Desktop için)
-        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
-            currentScrollY = Phaser.Math.Clamp(
-                this.categoryContainer.y - deltaY * 0.5,
-                -maxScroll,
-                0
-            );
-            
-            this.tweens.add({
-                targets: this.categoryContainer,
-                y: currentScrollY,
-                duration: 100,
-                ease: 'Power2'
-            });
-        });
-        
-        // SCROLL INDICATOR (opsiyonel - kaydırma çubuğu)
-        if (maxScroll > 0) {
-            const scrollbarWidth = 8;
-            const scrollbarHeight = scrollAreaHeight * (scrollAreaHeight / totalContentHeight);
-            
-            this.scrollbar = this.add.rectangle(
-                width - 20,
-                scrollAreaY + scrollbarHeight/2,
-                scrollbarWidth,
-                scrollbarHeight,
-                0x6366f1,
-                0.6
-            );
-            
-            // Scrollbar güncelleme
-            this.events.on('update', () => {
-                const scrollPercentage = Math.abs(this.categoryContainer.y) / maxScroll;
-                const scrollbarY = scrollAreaY + (scrollAreaHeight - scrollbarHeight) * scrollPercentage + scrollbarHeight/2;
-                this.scrollbar.y = scrollbarY;
-            });
-        }
-    }
+createScrollableCategories(categories) {
+    const { width, height } = this.scale;
     
+    const scrollAreaY = height * 0.25;
+    const scrollAreaHeight = height * 0.65;
+    const buttonHeight = 80;
+    
+    // ✅ CONTAINER
+    this.categoryContainer = this.add.container(0, 0);
+    
+    // ✅ KATEGORİLERİ EKLE
+    categories.forEach((category, index) => {
+        const y = scrollAreaY + (index * buttonHeight);
+        
+        const button = this.add.rectangle(width/2, y, 400, 70, parseInt(category.color.replace('#', '0x')))
+            .setStrokeStyle(3, 0xffffff)
+            .setInteractive({ useHandCursor: true });
+        
+        const nameText = this.add.text(width/2 - 150, y, category.name, {
+            fontSize: '22px',
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0, 0.5);
+        
+        const setCountText = this.add.text(width/2 + 150, y, `${category.total_sets} Set`, {
+            fontSize: '18px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setOrigin(1, 0.5);
+        
+        this.categoryContainer.add([button, nameText, setCountText]);
+        
+        button.on('pointerdown', () => {
+            this.scene.start('SetSelectionScene', { 
+                selectedLanguage: this.selectedLanguage,
+                category: category
+            });
+        });
+    });
+    
+    // ✅ MASK
+    const maskGraphics = this.make.graphics();
+    maskGraphics.fillStyle(0xffffff);
+    maskGraphics.fillRect(0, scrollAreaY, width, scrollAreaHeight);
+    const mask = maskGraphics.createGeometryMask();
+    this.categoryContainer.setMask(mask);
+    
+    // ✅ SCROLL HESAPLAMA
+    const totalHeight = categories.length * buttonHeight;
+    const maxScroll = totalHeight - scrollAreaHeight;
+    
+    console.log('📊 Scroll Info:', {
+        totalHeight,
+        scrollAreaHeight,
+        maxScroll,
+        categories: categories.length
+    });
+    
+    // ✅ SCROLL BUTONLARI
+    const btnSize = 35;
+    const btnX = width - 50;
+    const btnCenterY = scrollAreaY + scrollAreaHeight / 2;
+    const btnSpacing = 100;
+    
+    // YUKARI BUTONU
+    const upBtn = this.add.circle(btnX, btnCenterY - btnSpacing, btnSize, 0x6366f1, 0.9)
+        .setStrokeStyle(3, 0xffffff)
+        .setInteractive({ useHandCursor: true })
+        .setDepth(2000);
+    
+    this.add.text(btnX, btnCenterY - btnSpacing, '▲', {
+        fontSize: '28px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        fontStyle: 'bold'
+    }).setOrigin(0.5).setDepth(2000);
+    
+    // AŞAĞI BUTONU
+    const downBtn = this.add.circle(btnX, btnCenterY + btnSpacing, btnSize, 0x6366f1, 0.9)
+        .setStrokeStyle(3, 0xffffff)
+        .setInteractive({ useHandCursor: true })
+        .setDepth(2000);
+    
+    this.add.text(btnX, btnCenterY + btnSpacing, '▼', {
+        fontSize: '28px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        fontStyle: 'bold'
+    }).setOrigin(0.5).setDepth(2000);
+    
+    // ✅ YUKARI TIKLA
+    upBtn.on('pointerdown', () => {
+        console.log('⬆️ UP clicked - Current Y:', this.categoryContainer.y);
+        
+        const newY = Math.min(this.categoryContainer.y + 100, 0);
+        
+        this.tweens.add({
+            targets: this.categoryContainer,
+            y: newY,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => {
+                console.log('✅ Scrolled to:', newY);
+            }
+        });
+    });
+    
+    // ✅ AŞAĞI TIKLA
+    downBtn.on('pointerdown', () => {
+        console.log('⬇️ DOWN clicked - Current Y:', this.categoryContainer.y);
+        
+        const newY = Math.max(this.categoryContainer.y - 100, -maxScroll);
+        
+        this.tweens.add({
+            targets: this.categoryContainer,
+            y: newY,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => {
+                console.log('✅ Scrolled to:', newY);
+            }
+        });
+    });
+}
     createBackButton() {
         const backButton = this.add.text(50, 50, '← Geri', {
             fontSize: '24px',
@@ -271,7 +268,6 @@ class CategorySelectionScene extends Phaser.Scene {
         }
     }
 }
-
 // Set Seçim Sahnesi
 class SetSelectionScene extends Phaser.Scene {
     constructor() {
