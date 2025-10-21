@@ -9,11 +9,21 @@ class LearningPanelController extends Controller
 {
     public function index()
     {
-        return view('student.learning-panel.index');
+        // Token oluştur ve view'a gönder
+        $token = auth()->user()->createToken('game-token')->plainTextToken;
+        
+        return view('student.learning-panel.index', [
+            'token' => $token
+        ]);
     }
     
     public function questions()
     {
-        return view('student.learning-panel.questions');
+        // Token oluştur ve view'a gönder
+        $token = auth()->user()->createToken('game-token')->plainTextToken;
+        
+        return view('student.learning-panel.questions', [
+            'token' => $token
+        ]);
     }
 }

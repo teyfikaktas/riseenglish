@@ -702,7 +702,18 @@ class GameScene extends Phaser.Scene {
         // VİSİBİLİTY KONTROLÜ - Her oyun başladığında yeniden ekle
         this.setupCheatDetection();
     }
-
+    initializeSpeech() {
+        if (this.speechInitialized) return;
+        
+        // Sessiz bir ses çalarak sistemi unlock et
+        const unlock = new SpeechSynthesisUtterance('');
+        unlock.volume = 0;
+        unlock.onend = () => {
+            this.speechInitialized = true;
+            console.log('✅ Ses sistemi aktif');
+        };
+        window.speechSynthesis.speak(unlock);
+    }
     setupCheatDetection() {
         // Eski listener'ları temizle
         this.removeCheatDetection();
@@ -744,89 +755,176 @@ class GameScene extends Phaser.Scene {
         super.destroy();
     }
 
-    createUI() {
-        const { width, height } = this.scale;
-        
-        // İngilizce kelime - üstte ortada
-        this.wordText = this.add.text(width/2, height * 0.15, '', {
-            fontSize: Math.min(width/15, height/20, 42) + 'px',
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold',
-            align: 'center',
-            backgroundColor: 'rgba(30, 27, 75, 0.8)',
-            padding: { x: width * 0.02, y: height * 0.01 }
-        }).setOrigin(0.5);
+createUI() {
+    const { width, height } = this.scale;
+    
+    // İngilizce kelime - üstte ortada
+    this.wordText = this.add.text(width/2, height * 0.15, '', {
+        fontSize: Math.min(width/15, height/20, 42) + 'px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        fontStyle: 'bold',
+        align: 'center',
+        backgroundColor: 'rgba(30, 27, 75, 0.8)',
+        padding: { x: width * 0.02, y: height * 0.01 }
+    }).setOrigin(0.5);
 
-        // Responsive boyutlar
-        const cornerOffset = Math.min(width * 0.08, height * 0.08);
-        const circleSize = Math.min(width * 0.04, height * 0.04, 30);
-        
-        // Sağ üst - Timer
-        this.timerBg = this.add.circle(width - cornerOffset, cornerOffset, circleSize, 0xef4444, 0.9)
-            .setStrokeStyle(3, 0xffffff);
-        this.timerText = this.add.text(width - cornerOffset, cornerOffset, '60', {
-            fontSize: Math.min(circleSize, 20) + 'px',
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+    // Responsive boyutlar
+    const isMobile = width < 768;
+    const isTablet = width >= 768 && width < 1200;
+    const isDesktop = width >= 1200;
+    
+    // Kenar boşlukları
+    let sideMargin, topMargin;
+    
+    if (isMobile) {
+        sideMargin = width * 0.08; // SABİT ORAN - 8%
+        topMargin = height * 0.08; // SABİT ORAN - 8%
+    } else if (isTablet) {
+        sideMargin = Math.min(width * 0.15, 120);
+        topMargin = Math.min(height * 0.15, 100);
+    } else { // Desktop
+        sideMargin = Math.min(width * 0.18, 180);
+        topMargin = Math.min(height * 0.18, 140);
+    }
+    
+    // Circle boyutu
+    let circleSize;
+    if (isMobile) {
+        circleSize = Math.min(width * 0.08, height * 0.06, 45); // Mobilde biraz büyük
+    } else {
+        circleSize = Math.min(width * 0.045, height * 0.045, 40);
+    }
+    
+    // Dikey boşluk
+    let verticalSpacing;
+    if (isMobile) {
+        verticalSpacing = height * 0.09; // SABİT ORAN - yüksekliğin %9'u
+    } else if (isTablet) {
+        verticalSpacing = circleSize * 2.8;
+    } else { // Desktop
+        verticalSpacing = circleSize * 3.5;
+    }
+    
+    // SAĞ ÜST - Timer
+    this.timerBg = this.add.circle(width - sideMargin, topMargin, circleSize, 0xef4444, 0.9)
+        .setStrokeStyle(4, 0xffffff);
+    this.timerText = this.add.text(width - sideMargin, topMargin, '60', {
+        fontSize: Math.min(circleSize * 0.6, 24) + 'px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        fontStyle: 'bold'
+    }).setOrigin(0.5);
 
-        // Sağ üst - Score
-        this.scoreBg = this.add.circle(width - cornerOffset, cornerOffset * 2.2, circleSize, 0x10b981, 0.9)
-            .setStrokeStyle(3, 0xffffff);
-        this.scoreText = this.add.text(width - cornerOffset, cornerOffset * 2.2, '0', {
-            fontSize: Math.min(circleSize, 20) + 'px',
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+    // SAĞ - Score (Timer'ın ALTINDA)
+    this.scoreBg = this.add.circle(width - sideMargin, topMargin + verticalSpacing, circleSize, 0x10b981, 0.9)
+        .setStrokeStyle(4, 0xffffff);
+    this.scoreText = this.add.text(width - sideMargin, topMargin + verticalSpacing, '0', {
+        fontSize: Math.min(circleSize * 0.6, 24) + 'px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        fontStyle: 'bold'
+    }).setOrigin(0.5);
 
-        // Sol üst - Streak
-        this.streakBg = this.add.circle(cornerOffset, cornerOffset, circleSize, 0xf97316, 0.9)
-            .setStrokeStyle(3, 0xffffff);
-        this.streakText = this.add.text(cornerOffset, cornerOffset, '0x', {
-            fontSize: Math.min(circleSize * 0.8, 16) + 'px',
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+    // SOL ÜST - Streak
+    this.streakBg = this.add.circle(sideMargin, topMargin, circleSize, 0xf97316, 0.9)
+        .setStrokeStyle(4, 0xffffff);
+    this.streakText = this.add.text(sideMargin, topMargin, '0x', {
+        fontSize: Math.min(circleSize * 0.5, 20) + 'px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        fontStyle: 'bold'
+    }).setOrigin(0.5);
 
-        // Alt bilgi çubuğu
-        this.infoBg = this.add.rectangle(width/2, height * 0.95, width * 0.9, height * 0.06, 0x1f2937, 0.9)
-            .setStrokeStyle(2, 0x6366f1);
-        
-        this.infoText = this.add.text(width/2, height * 0.95, 'Soru: 0 | Doğru: 0 | Başarı: 0%', {
-            fontSize: Math.min(width/40, height/40, 18) + 'px',
-            fill: '#ffffff',
-            fontFamily: 'Arial'
-        }).setOrigin(0.5);
-
-        // UI animasyonları
-        this.tweens.add({
-            targets: [this.timerBg, this.scoreBg, this.streakBg],
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 2000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
-        const soundBtn = this.add.circle(width - 60, height - 60, 30, 0xf59e0b, 0.9)
-        .setStrokeStyle(3, 0xffffff)
+    // SOL - 🔊 SES BUTONU (Streak'in ALTINDA)
+    const soundBtn = this.add.circle(sideMargin, topMargin + verticalSpacing, circleSize, 0xf59e0b, 0.9)
+        .setStrokeStyle(4, 0xffffff)
         .setInteractive({ useHandCursor: true });
     
-    this.add.text(width - 60, height - 60, '🔊', {
-        fontSize: '28px'
+    const soundIcon = this.add.text(sideMargin, topMargin + verticalSpacing, '🔊', {
+        fontSize: Math.min(circleSize * 0.65, 26) + 'px'
     }).setOrigin(0.5);
     
+    // Glow efekti
+    const soundGlow = this.add.circle(sideMargin, topMargin + verticalSpacing, circleSize + 15, 0xf59e0b, 0.3);
+    soundGlow.setDepth(-1);
+    
+    // Animasyon
+    this.tweens.add({
+        targets: soundGlow,
+        alpha: 0.1,
+        scaleX: 1.2,
+        scaleY: 1.2,
+        duration: 1500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+    });
+    
+    // Hover efekti
+    soundBtn.on('pointerover', () => {
+        this.tweens.add({
+            targets: [soundBtn, soundIcon],
+            scaleX: 1.15,
+            scaleY: 1.15,
+            duration: 200,
+            ease: 'Back.easeOut'
+        });
+    });
+    
+    soundBtn.on('pointerout', () => {
+        this.tweens.add({
+            targets: [soundBtn, soundIcon],
+            scaleX: 1,
+            scaleY: 1,
+            duration: 200,
+            ease: 'Back.easeOut'
+        });
+    });
+    
+    // Tıklama
     soundBtn.on('pointerdown', () => {
+        this.tweens.add({
+            targets: [soundBtn, soundIcon],
+            scaleX: 0.9,
+            scaleY: 0.9,
+            duration: 100,
+            yoyo: true,
+            ease: 'Power2'
+        });
+        
+        if (!this.speechInitialized) {
+            this.initializeSpeech();
+        }
+        
         if (this.currentWord) {
-            this.speakWord(this.currentWord.english);
+            setTimeout(() => {
+                this.speakWord(this.currentWord.english);
+            }, 50);
         }
     });
-    }
 
+    // Alt bilgi çubuğu
+    this.infoBg = this.add.rectangle(width/2, height * 0.95, width * 0.9, height * 0.06, 0x1f2937, 0.9)
+        .setStrokeStyle(2, 0x6366f1);
+    
+    this.infoText = this.add.text(width/2, height * 0.95, 'Soru: 0 | Doğru: 0 | Başarı: 0%', {
+        fontSize: Math.min(width/40, height/40, 18) + 'px',
+        fill: '#ffffff',
+        fontFamily: 'Arial'
+    }).setOrigin(0.5);
+
+    // UI animasyonları
+    this.tweens.add({
+        targets: [this.timerBg, this.scoreBg, this.streakBg, soundBtn],
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 2000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+    });
+}
     createStars() {
         for (let i = 0; i < 30; i++) {
             const x = Phaser.Math.Between(0, this.scale.width);
@@ -1495,11 +1593,12 @@ class GameOverScene extends Phaser.Scene {
         this.correctAnswers = data.correctAnswers || 0;
         this.totalQuestions = data.totalQuestions || 0;
         this.maxStreak = data.streak || 0;
-        this.isMobile = window.innerWidth < 768;
     }
 
     create() {
         const { width, height } = this.scale;
+        const isMobile = width < 768;
+        const isSmall = width < 480;
 
         // Arka plan
         this.add.rectangle(width/2, height/2, width, height, 0x1e1b4b);
@@ -1508,30 +1607,61 @@ class GameOverScene extends Phaser.Scene {
         this.createAnimatedBackground();
         this.createStars();
 
-        // Panel boyutu
-        const panelWidth = Math.min(width * 0.85, this.isMobile ? 350 : 500);
-        const panelHeight = this.isMobile ? 380 : 480;
+        // Panel boyutu - RESPONSIVE
+        const panelWidth = Math.min(
+            width * (isSmall ? 0.95 : isMobile ? 0.9 : 0.85),
+            isSmall ? 340 : isMobile ? 400 : 600
+        );
+        const panelHeight = Math.min(
+            height * (isSmall ? 0.75 : isMobile ? 0.7 : 0.65),
+            isSmall ? 450 : isMobile ? 480 : 580
+        );
         
         // Panel shadow
-        const panelShadow = this.add.rectangle(width/2 + 5, height/2 + 5, panelWidth, panelHeight, 0x000000, 0.3);
+        const panelShadow = this.add.rectangle(
+            width/2 + 5, 
+            height/2 + 5, 
+            panelWidth, 
+            panelHeight, 
+            0x000000, 
+            0.3
+        );
         
         // Ana panel
-        const panel = this.add.rectangle(width/2, height/2, panelWidth, panelHeight, 0x1f2937, 0.95)
-            .setStrokeStyle(4, 0x6366f1);
+        const panel = this.add.rectangle(
+            width/2, 
+            height/2, 
+            panelWidth, 
+            panelHeight, 
+            0x1f2937, 
+            0.95
+        ).setStrokeStyle(4, 0x6366f1);
         
         // Panel glow
-        const panelGlow = this.add.rectangle(width/2, height/2, panelWidth + 20, panelHeight + 20, 0x6366f1, 0.1);
+        const panelGlow = this.add.rectangle(
+            width/2, 
+            height/2, 
+            panelWidth + 20, 
+            panelHeight + 20, 
+            0x6366f1, 
+            0.1
+        );
 
-        // Başlık
-        const titleSize = this.isMobile ? '36px' : '52px';
-        const title = this.add.text(width/2, height/2 - panelHeight/3, 'Oyun Bitti!', {
-            fontSize: titleSize,
-            fill: '#a855f7',
-            fontFamily: 'Arial',
-            fontStyle: 'bold',
-            stroke: '#ffffff',
-            strokeThickness: 2
-        }).setOrigin(0.5);
+        // Başlık - RESPONSIVE
+        const titleSize = isSmall ? 32 : isMobile ? 40 : 56;
+        const title = this.add.text(
+            width/2, 
+            height/2 - panelHeight * 0.38, 
+            'Oyun Bitti!', 
+            {
+                fontSize: titleSize + 'px',
+                fill: '#a855f7',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+                stroke: '#ffffff',
+                strokeThickness: 2
+            }
+        ).setOrigin(0.5);
 
         // Başlık animasyonu
         this.tweens.add({
@@ -1548,8 +1678,9 @@ class GameOverScene extends Phaser.Scene {
         const accuracy = this.totalQuestions > 0 ? 
             Math.round((this.correctAnswers / this.totalQuestions) * 100) : 0;
 
-        const statSize = this.isMobile ? '20px' : '26px';
-        const valueSize = this.isMobile ? '22px' : '28px';
+        const statSize = isSmall ? 16 : isMobile ? 18 : 24;
+        const valueSize = isSmall ? 18 : isMobile ? 20 : 28;
+        const iconSize = isSmall ? 18 : isMobile ? 20 : 26;
         
         const stats = [
             { label: 'Final Puan', value: this.finalScore, color: '#10b981', icon: '🏆' },
@@ -1558,26 +1689,32 @@ class GameOverScene extends Phaser.Scene {
             { label: 'En Uzun Seri', value: `${this.maxStreak}x`, color: '#ef4444', icon: '🔥' }
         ];
 
+        // İstatistikleri yerleştir - RESPONSIVE
+        const statsStartY = height/2 - panelHeight * 0.18;
+        const statSpacing = panelHeight * (isSmall ? 0.12 : isMobile ? 0.11 : 0.1);
+        const leftMargin = panelWidth * (isSmall ? 0.25 : 0.3);
+        const rightMargin = panelWidth * (isSmall ? 0.25 : 0.3);
+        
         stats.forEach((stat, index) => {
-            const y = height/2 - 80 + (index * (this.isMobile ? 35 : 45));
-            const leftX = width/2 - panelWidth/3;
-            const rightX = width/2 + panelWidth/3;
+            const y = statsStartY + (index * statSpacing);
+            const leftX = width/2 - leftMargin;
+            const rightX = width/2 + rightMargin;
             
             // İkon
-            this.add.text(leftX - 40, y, stat.icon, {
-                fontSize: this.isMobile ? '18px' : '22px'
+            this.add.text(leftX - (isSmall ? 30 : 38), y, stat.icon, {
+                fontSize: iconSize + 'px'
             }).setOrigin(0.5);
             
             // Label
             this.add.text(leftX, y, stat.label + ':', {
-                fontSize: statSize,
+                fontSize: statSize + 'px',
                 fill: '#ffffff',
                 fontFamily: 'Arial'
             }).setOrigin(0, 0.5);
 
             // Value - animasyonlu
             const valueText = this.add.text(rightX, y, stat.value, {
-                fontSize: valueSize,
+                fontSize: valueSize + 'px',
                 fill: stat.color,
                 fontFamily: 'Arial',
                 fontStyle: 'bold',
@@ -1597,29 +1734,34 @@ class GameOverScene extends Phaser.Scene {
             });
         });
 
-        // Butonlar
-        const buttonWidth = this.isMobile ? 140 : 180;
-        const buttonHeight = this.isMobile ? 45 : 55;
-        const buttonSpacing = this.isMobile ? 90 : 120;
+        // Butonlar - RESPONSIVE
+        const buttonWidth = isSmall ? 140 : isMobile ? 160 : 200;
+        const buttonHeight = isSmall ? 45 : isMobile ? 50 : 60;
+        const buttonSpacing = isSmall ? 160 : isMobile ? 190 : 260;
+        const buttonY = height/2 + panelHeight * 0.36;
         
         this.createBeautifulButton(
             width/2 - buttonSpacing/2, 
-            height/2 + panelHeight/3 - 30, 
+            buttonY, 
             buttonWidth, 
             buttonHeight, 
             'Tekrar Oyna', 
             0x10b981,
-            () => { this.scene.start('GameScene'); }
+            () => { this.scene.start('GameScene'); },
+            isSmall,
+            isMobile
         );
 
         this.createBeautifulButton(
             width/2 + buttonSpacing/2, 
-            height/2 + panelHeight/3 - 30, 
+            buttonY, 
             buttonWidth, 
             buttonHeight, 
             'Ana Menü', 
             0x6366f1,
-            () => { this.scene.start('MenuScene'); }
+            () => { this.scene.start('MenuScene'); },
+            isSmall,
+            isMobile
         );
 
         // Kutlama efekti
@@ -1638,37 +1780,50 @@ class GameOverScene extends Phaser.Scene {
             repeat: -1,
             ease: 'Sine.easeInOut'
         });
-
     }
 
-    createBeautifulButton(x, y, width, height, text, color, callback) {
+    createBeautifulButton(x, y, width, height, text, color, callback, isSmall, isMobile) {
         // Button shadow
-        const shadow = this.add.rectangle(x + 3, y + 3, width, height, 0x000000, 0.3);
+        const shadow = this.add.rectangle(
+            x + 4, 
+            y + 4, 
+            width, 
+            height, 
+            0x000000, 
+            0.4
+        );
         
         // Main button
         const button = this.add.rectangle(x, y, width, height, color)
-            .setStrokeStyle(3, 0xffffff)
+            .setStrokeStyle(isSmall ? 3 : 4, 0xffffff)
             .setInteractive({ useHandCursor: true });
 
         // Button glow
-        const glow = this.add.rectangle(x, y, width + 10, height + 10, color, 0.3);
+        const glow = this.add.rectangle(
+            x, 
+            y, 
+            width + 15, 
+            height + 15, 
+            color, 
+            0.3
+        );
 
-        const fontSize = this.isMobile ? '16px' : '20px';
+        const fontSize = isSmall ? 15 : isMobile ? 17 : 22;
         const buttonText = this.add.text(x, y, text, {
-            fontSize: fontSize,
+            fontSize: fontSize + 'px',
             fill: '#ffffff',
             fontFamily: 'Arial',
             fontStyle: 'bold',
             stroke: '#000000',
-            strokeThickness: 1
+            strokeThickness: isSmall ? 1 : 2
         }).setOrigin(0.5);
 
         // Button effects
         button.on('pointerover', () => {
             this.tweens.add({
                 targets: [button, buttonText],
-                scaleX: 1.1,
-                scaleY: 1.1,
+                scaleX: 1.08,
+                scaleY: 1.08,
                 duration: 200,
                 ease: 'Power2'
             });
@@ -1676,6 +1831,8 @@ class GameOverScene extends Phaser.Scene {
             this.tweens.add({
                 targets: glow,
                 alpha: 0.6,
+                scaleX: 1.1,
+                scaleY: 1.1,
                 duration: 200
             });
         });
@@ -1692,6 +1849,8 @@ class GameOverScene extends Phaser.Scene {
             this.tweens.add({
                 targets: glow,
                 alpha: 0.3,
+                scaleX: 1,
+                scaleY: 1,
                 duration: 200
             });
         });
@@ -1723,13 +1882,21 @@ class GameOverScene extends Phaser.Scene {
 
     createAnimatedBackground() {
         const { width, height } = this.scale;
+        const isMobile = width < 768;
         
-        // Floating bubbles
-        for (let i = 0; i < 15; i++) {
+        // Floating bubbles - responsive sayıda
+        const bubbleCount = isMobile ? 10 : 15;
+        
+        for (let i = 0; i < bubbleCount; i++) {
             const x = Phaser.Math.Between(50, width - 50);
             const y = Phaser.Math.Between(50, height - 50);
-            const size = Phaser.Math.Between(20, 60);
-            const color = Phaser.Utils.Array.GetRandom([0x6366f1, 0x8b5cf6, 0xa855f7, 0x10b981, 0xf97316]);
+            const size = Phaser.Math.Between(
+                isMobile ? 15 : 20, 
+                isMobile ? 40 : 60
+            );
+            const color = Phaser.Utils.Array.GetRandom([
+                0x6366f1, 0x8b5cf6, 0xa855f7, 0x10b981, 0xf97316
+            ]);
             
             const bubble = this.add.circle(x, y, size, color, 0.1)
                 .setStrokeStyle(2, color, 0.3);
@@ -1737,7 +1904,7 @@ class GameOverScene extends Phaser.Scene {
             // Random movement - X axis
             this.tweens.add({
                 targets: bubble,
-                x: x + Phaser.Math.Between(-200, 200),
+                x: x + Phaser.Math.Between(-150, 150),
                 duration: Phaser.Math.Between(8000, 15000),
                 yoyo: true,
                 repeat: -1,
@@ -1747,7 +1914,7 @@ class GameOverScene extends Phaser.Scene {
             // Random movement - Y axis
             this.tweens.add({
                 targets: bubble,
-                y: y + Phaser.Math.Between(-200, 200),
+                y: y + Phaser.Math.Between(-150, 150),
                 duration: Phaser.Math.Between(6000, 12000),
                 yoyo: true,
                 repeat: -1,
@@ -1789,14 +1956,19 @@ class GameOverScene extends Phaser.Scene {
 
     celebrateHighScore() {
         const { width, height } = this.scale;
+        const isMobile = width < 768;
         
-        // Konfeti efekti
-        for (let i = 0; i < 50; i++) {
+        // Konfeti efekti - responsive sayıda
+        const confettiCount = isMobile ? 30 : 50;
+        
+        for (let i = 0; i < confettiCount; i++) {
             const confetti = this.add.circle(
                 Phaser.Math.Between(0, width),
                 -10,
                 Phaser.Math.Between(3, 8),
-                Phaser.Utils.Array.GetRandom([0xf59e0b, 0x10b981, 0x6366f1, 0xa855f7])
+                Phaser.Utils.Array.GetRandom([
+                    0xf59e0b, 0x10b981, 0x6366f1, 0xa855f7
+                ])
             );
 
             this.tweens.add({
@@ -1813,9 +1985,12 @@ class GameOverScene extends Phaser.Scene {
 
     goodScore() {
         const { width, height } = this.scale;
+        const isMobile = width < 768;
         
-        // Orta seviye başarı için mini konfeti
-        for (let i = 0; i < 20; i++) {
+        // Orta seviye başarı için mini konfeti - responsive
+        const confettiCount = isMobile ? 15 : 20;
+        
+        for (let i = 0; i < confettiCount; i++) {
             const confetti = this.add.circle(
                 width/2 + Phaser.Math.Between(-100, 100),
                 height/2 - 100,
@@ -1836,10 +2011,22 @@ class GameOverScene extends Phaser.Scene {
     }
 
     createStars() {
-        for (let i = 0; i < 30; i++) {
-            const x = Phaser.Math.Between(0, this.scale.width);
-            const y = Phaser.Math.Between(0, this.scale.height);
-            const star = this.add.circle(x, y, Phaser.Math.Between(1, 2), 0x6366f1, 0.5);
+        const { width, height } = this.scale;
+        const isMobile = width < 768;
+        
+        // Yıldız sayısı responsive
+        const starCount = isMobile ? 20 : 30;
+        
+        for (let i = 0; i < starCount; i++) {
+            const x = Phaser.Math.Between(0, width);
+            const y = Phaser.Math.Between(0, height);
+            const star = this.add.circle(
+                x, 
+                y, 
+                Phaser.Math.Between(1, 2), 
+                0x6366f1, 
+                0.5
+            );
             
             this.tweens.add({
                 targets: star,
@@ -1851,7 +2038,6 @@ class GameOverScene extends Phaser.Scene {
         }
     }
 }
-
 // Oyun Konfigürasyonu
 // Scene config'i güncelle
 window.GameConfig = {

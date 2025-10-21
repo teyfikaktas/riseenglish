@@ -164,3 +164,17 @@
         </div>
     </div>
 @endsection
+@push('scripts')
+<script>
+    // Auth token'ı localStorage'a kaydet (kullanıcı giriş yapmışsa)
+    @auth
+        const authToken = '{{ auth()->user()->createToken("game-token")->plainTextToken }}';
+        localStorage.setItem('auth_token', authToken);
+        console.log('✅ Auth token kaydedildi!');
+    @else
+        // Giriş yapılmamışsa token'ı temizle
+        localStorage.removeItem('auth_token');
+        console.log('⚠️ Kullanıcı giriş yapmamış, token temizlendi.');
+    @endauth
+</script>
+@endpush
