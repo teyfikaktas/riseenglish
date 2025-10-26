@@ -1788,7 +1788,7 @@ public function gradeSubmission(Request $request, $submissionId)
         
         Log::info("Ödev değerlendirmesi güncellendi", ['submission_id' => $submissionId]);
         
-        // Her zaman SMS gönder
+        // 🔥 SMS gönder - submission ile birlikte student bilgisini de gönder
         $smsResult = $this->sendGradeSMS($session, $submission);
         
         $smsMessage = 'Ödev değerlendirmesi başarıyla kaydedildi.';
@@ -1821,41 +1821,46 @@ public function gradeSubmission(Request $request, $submissionId)
 private function sendGradeSMS($session, $submission)
 {
     try {
-        // Temel bilgileri hazırla
-        $studentName = $submission->student ? $submission->student->name : 'Öğrenci';
-        $studentPhone = $submission->student ? $submission->student->phone : null;
+        // 🔥 Submission'a ait öğrenciyi al (her submission'ın kendi öğrencisi var)
+        $student = $submission->student;
+        
+        if (!$student) {
+            Log::warning("SMS gönderilemedi: Öğrenci bulunamadı. Submission ID: " . $submission->id);
+            return ['success' => false, 'message' => 'Öğrenci bulunamadı'];
+        }
+        
+        $studentName = $student->name ?? 'Öğrenci';
+        $studentPhone = $student->phone;
         $homeworkTitle = $submission->homework ? $submission->homework->title : 'ödev';
         $score = $submission->score;
         
         // Veli telefon numaralarını al
-        $parentPhone = null;
-        $parentPhone2 = null;
+        $parentPhone = $student->parent_phone_number ?? null;
+        $parentPhone2 = $student->parent_phone_number_2 ?? null;
         
-        if ($submission->student && $submission->student->parent_phone_number) {
-            $parentPhone = $submission->student->parent_phone_number;
-        }
-        
-        if ($submission->student && $submission->student->parent_phone_number_2) {
-            $parentPhone2 = $submission->student->parent_phone_number_2;
-        }
-        
-        // Log kayıtları
-        Log::info("Ödev değerlendirme SMS gönderimi için hazırlık yapılıyor. Submission ID: " . $submission->id);
+        Log::info("Ödev değerlendirme SMS gönderimi hazırlık", [
+            'submission_id' => $submission->id,
+            'student_id' => $student->id,
+            'student_name' => $studentName,
+            'score' => $score
+        ]);
         
         // SMS sonuçlarını takip et
         $smsResults = [];
         
-        // Öğrenci için SMS içeriği - değiştirildi
+        // Öğrenci için SMS içeriği
         if ($studentPhone) {
             try {
-                $studentSmsContent = "Sayın Öğrenci, özel ders için teslim ettiğiniz \"{$homeworkTitle}\" başlıklı ödeviniz değerlendirildi. Puanınız: {$score}/100. Detaylı sonuçları Risenglish üzerinden görebilirsiniz.";
+                $studentSmsContent = "Sayın {$studentName}, özel ders için teslim ettiğiniz \"{$homeworkTitle}\" başlıklı ödeviniz değerlendirildi. Puanınız: {$score}/100. Detaylı sonuçları Risenglish üzerinden görebilirsiniz.";
                 
-                Log::info("ÖĞRENCİ DEĞERLENDIRME SMS GÖNDERME - Telefon: {$studentPhone}, İçerik: {$studentSmsContent}");
+                Log::info("ÖĞRENCİ DEĞERLENDIRME SMS", [
+                    'phone' => $studentPhone,
+                    'content' => $studentSmsContent
+                ]);
                 
-                // Öğrenciye SMS gönder
                 $studentResult = \App\Services\SmsService::sendSms($studentPhone, $studentSmsContent);
                 
-                Log::info("ÖĞRENCİ DEĞERLENDIRME SMS SONUCU: " . json_encode($studentResult));
+                Log::info("ÖĞRENCİ SMS SONUCU", ['result' => $studentResult]);
                 
                 $smsResults[] = [
                     'recipient' => 'Öğrenci',
@@ -1863,7 +1868,7 @@ private function sendGradeSMS($session, $submission)
                     'result' => $studentResult
                 ];
             } catch (\Exception $e) {
-                Log::error("Öğrenci değerlendirme SMS gönderiminde HATA: " . $e->getMessage());
+                Log::error("Öğrenci SMS hatası", ['error' => $e->getMessage()]);
                 $smsResults[] = [
                     'recipient' => 'Öğrenci',
                     'phone' => $studentPhone,
@@ -1872,17 +1877,17 @@ private function sendGradeSMS($session, $submission)
             }
         }
         
-        // Veli için SMS içeriği - değiştirildi
+        // Veli için SMS içeriği
         $parentSmsContent = "Sayın Veli, {$studentName}'in özel ders için teslim ettiği \"{$homeworkTitle}\" başlıklı ödevi değerlendirildi. Puanı: {$score}/100";
         
-        // 1. Veliye SMS gönder
+        // Veli-1'e SMS
         if ($parentPhone) {
             try {
-                Log::info("VELİ-1 DEĞERLENDIRME SMS GÖNDERME - Telefon: {$parentPhone}, İçerik: {$parentSmsContent}");
+                Log::info("VELİ-1 SMS", ['phone' => $parentPhone, 'content' => $parentSmsContent]);
                 
                 $parentResult = \App\Services\SmsService::sendSms($parentPhone, $parentSmsContent);
                 
-                Log::info("VELİ-1 DEĞERLENDIRME SMS SONUCU: " . json_encode($parentResult));
+                Log::info("VELİ-1 SMS SONUCU", ['result' => $parentResult]);
                 
                 $smsResults[] = [
                     'recipient' => 'Veli-1',
@@ -1890,7 +1895,7 @@ private function sendGradeSMS($session, $submission)
                     'result' => $parentResult
                 ];
             } catch (\Exception $e) {
-                Log::error("Veli-1 değerlendirme SMS gönderiminde HATA: " . $e->getMessage());
+                Log::error("Veli-1 SMS hatası", ['error' => $e->getMessage()]);
                 $smsResults[] = [
                     'recipient' => 'Veli-1',
                     'phone' => $parentPhone,
@@ -1899,14 +1904,14 @@ private function sendGradeSMS($session, $submission)
             }
         }
         
-        // 2. Veliye SMS gönder
+        // Veli-2'ye SMS
         if ($parentPhone2) {
             try {
-                Log::info("VELİ-2 DEĞERLENDIRME SMS GÖNDERME - Telefon: {$parentPhone2}, İçerik: {$parentSmsContent}");
+                Log::info("VELİ-2 SMS", ['phone' => $parentPhone2, 'content' => $parentSmsContent]);
                 
                 $parent2Result = \App\Services\SmsService::sendSms($parentPhone2, $parentSmsContent);
                 
-                Log::info("VELİ-2 DEĞERLENDIRME SMS SONUCU: " . json_encode($parent2Result));
+                Log::info("VELİ-2 SMS SONUCU", ['result' => $parent2Result]);
                 
                 $smsResults[] = [
                     'recipient' => 'Veli-2',
@@ -1914,7 +1919,7 @@ private function sendGradeSMS($session, $submission)
                     'result' => $parent2Result
                 ];
             } catch (\Exception $e) {
-                Log::error("Veli-2 değerlendirme SMS gönderiminde HATA: " . $e->getMessage());
+                Log::error("Veli-2 SMS hatası", ['error' => $e->getMessage()]);
                 $smsResults[] = [
                     'recipient' => 'Veli-2',
                     'phone' => $parentPhone2,
@@ -1923,7 +1928,7 @@ private function sendGradeSMS($session, $submission)
             }
         }
         
-        // En az bir başarılı gönderim var mı kontrol et
+        // En az bir başarılı gönderim var mı
         $anySuccess = false;
         foreach ($smsResults as $result) {
             if (isset($result['result']['success']) && $result['result']['success']) {
@@ -1938,14 +1943,13 @@ private function sendGradeSMS($session, $submission)
         ];
         
     } catch (\Exception $e) {
-        Log::error("Değerlendirme SMS gönderimi ana işleminde hata: " . $e->getMessage());
+        Log::error("SMS gönderim hatası", ['error' => $e->getMessage()]);
         return [
             'success' => false,
             'message' => $e->getMessage()
         ];
     }
 }
-
 /**
  * Download homework submission file
  *
@@ -2418,39 +2422,217 @@ public function completeLesson($id)
             return redirect()->back()->with('info', 'Bu ders zaten tamamlanmış durumda.');
         }
         
-        // Dersi tamamla
-        $session->status = 'completed';
-        $session->save();
+        // 🔥 Grup dersi mi kontrol et
+        $isGroupLesson = $session->group_id !== null;
         
-        // SMS gönderimi yapılacak kısım
-        $smsResult = $this->sendCompletionSMS($session);
-        
-        // SMS durum mesajını oluştur
-        $smsMessage = 'Ders başarıyla tamamlandı!';
-        
-        // $smsResult'ın bir dizi olduğundan emin olalım
-        if (is_array($smsResult)) {
-            if (isset($smsResult['success']) && $smsResult['success']) {
-                $sessionNumber = isset($smsResult['session_number']) ? $smsResult['session_number'] : '';
-                $smsMessage .= " {$sessionNumber}. seans SMS bilgilendirmesi gönderildi.";
-            } else {
-                $smsMessage .= " Ancak SMS gönderiminde sorun oluştu.";
+        if ($isGroupLesson) {
+            // Grup dersiyse TÜM session'ları tamamla
+            $groupSessions = PrivateLessonSession::where('group_id', $session->group_id)
+                ->where('start_date', $session->start_date)
+                ->where('start_time', $session->start_time)
+                ->get();
+            
+            foreach ($groupSessions as $groupSession) {
+                $groupSession->status = 'completed';
+                $groupSession->save();
             }
-        } else {
-            // Boolean değer döndürüldüyse
-            if ($smsResult === true) {
-                $smsMessage .= " SMS bilgilendirmesi gönderildi.";
+            
+            // Her öğrenci için SMS gönder
+            $allSmsResults = [];
+            foreach ($groupSessions as $groupSession) {
+                $smsResult = $this->sendCompletionSMS($groupSession);
+                $allSmsResults[] = $smsResult;
+            }
+            
+            // Toplu sonuç mesajı
+            $successCount = 0;
+            foreach ($allSmsResults as $result) {
+                if (is_array($result) && isset($result['success']) && $result['success']) {
+                    $successCount++;
+                }
+            }
+            
+            $smsMessage = 'Grup dersi başarıyla tamamlandı! ';
+            if ($successCount > 0) {
+                $smsMessage .= "{$successCount} öğrenciye SMS bilgilendirmesi gönderildi.";
             } else {
-                $smsMessage .= " Ancak SMS gönderiminde sorun oluştu.";
+                $smsMessage .= "Ancak SMS gönderiminde sorun oluştu.";
+            }
+            
+        } else {
+            // Bireysel ders
+            $session->status = 'completed';
+            $session->save();
+            
+            // SMS gönderimi
+            $smsResult = $this->sendCompletionSMS($session);
+            
+            $smsMessage = 'Ders başarıyla tamamlandı!';
+            
+            if (is_array($smsResult)) {
+                if (isset($smsResult['success']) && $smsResult['success']) {
+                    $sessionNumber = isset($smsResult['session_number']) ? $smsResult['session_number'] : '';
+                    $smsMessage .= " {$sessionNumber}. seans SMS bilgilendirmesi gönderildi.";
+                } else {
+                    $smsMessage .= " Ancak SMS gönderiminde sorun oluştu.";
+                }
+            } else {
+                if ($smsResult === true) {
+                    $smsMessage .= " SMS bilgilendirmesi gönderildi.";
+                } else {
+                    $smsMessage .= " Ancak SMS gönderiminde sorun oluştu.";
+                }
             }
         }
         
         return redirect()->back()->with('success', $smsMessage);
         
     } catch (\Exception $e) {
-        // Hata durumunda
-        Log::error("Ders tamamlama işleminde hata: " . $e->getMessage());
+        Log::error("Ders tamamlama hatası", ['error' => $e->getMessage()]);
         return redirect()->back()->with('error', 'Ders tamamlanırken bir hata oluştu: ' . $e->getMessage());
+    }
+}
+
+/**
+ * Ders tamamlandığında SMS gönderme fonksiyonu
+ */
+private function sendCompletionSMS($session)
+{
+    try {
+        // 🔥 Session'a ait öğrenciyi al
+        $student = $session->student;
+        
+        if (!$student) {
+            Log::warning("SMS gönderilemedi: Öğrenci bulunamadı. Session ID: " . $session->id);
+            return ['success' => false, 'message' => 'Öğrenci bulunamadı'];
+        }
+        
+        // Seans numarasını hesapla - sadece iptal edilmemiş seansları dahil et
+        $sessionNumber = PrivateLessonSession::where('private_lesson_id', $session->private_lesson_id)
+            ->where('student_id', $student->id) // 🔥 Bu öğrencinin seansları
+            ->where('status', '!=', 'cancelled')
+            ->where('start_date', '<=', $session->start_date)
+            ->orderBy('start_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get()
+            ->search(function($item) use ($session) {
+                return $item->id === $session->id;
+            }) + 1;
+        
+        $studentName = $student->name ?? 'Öğrenci';
+        $studentPhone = $student->phone;
+        $parentPhone = $student->parent_phone_number ?? null;
+        $parentPhone2 = $student->parent_phone_number_2 ?? null;
+        $lessonDate = Carbon::parse($session->start_date)->format('d.m.Y');
+        
+        Log::info("Ders tamamlama SMS hazırlık", [
+            'session_id' => $session->id,
+            'student_id' => $student->id,
+            'student_name' => $studentName,
+            'session_number' => $sessionNumber
+        ]);
+        
+        $smsResults = [];
+        
+        // Öğrenci SMS
+        if ($studentPhone) {
+            try {
+                $studentSmsContent = "Sayın {$studentName}, {$lessonDate} tarihli {$sessionNumber}. ders seansınız tamamlanmıştır.";
+                
+                Log::info("ÖĞRENCİ SMS", ['phone' => $studentPhone, 'content' => $studentSmsContent]);
+                
+                $studentResult = \App\Services\SmsService::sendSms($studentPhone, $studentSmsContent);
+                
+                Log::info("ÖĞRENCİ SMS SONUCU", ['result' => $studentResult]);
+                
+                $smsResults[] = [
+                    'recipient' => 'Öğrenci',
+                    'phone' => $studentPhone,
+                    'result' => $studentResult
+                ];
+            } catch (\Exception $e) {
+                Log::error("Öğrenci SMS hatası", ['error' => $e->getMessage()]);
+                $smsResults[] = [
+                    'recipient' => 'Öğrenci',
+                    'phone' => $studentPhone,
+                    'result' => ['success' => false, 'message' => $e->getMessage()]
+                ];
+            }
+        }
+        
+        // Veli SMS
+        $parentSmsContent = "Sayın Veli, {$studentName}'in {$lessonDate} tarihli {$sessionNumber}. ders seansı tamamlanmıştır.";
+        
+        // Veli-1
+        if ($parentPhone) {
+            try {
+                Log::info("VELİ-1 SMS", ['phone' => $parentPhone, 'content' => $parentSmsContent]);
+                
+                $parentResult = \App\Services\SmsService::sendSms($parentPhone, $parentSmsContent);
+                
+                Log::info("VELİ-1 SMS SONUCU", ['result' => $parentResult]);
+                
+                $smsResults[] = [
+                    'recipient' => 'Veli-1',
+                    'phone' => $parentPhone,
+                    'result' => $parentResult
+                ];
+            } catch (\Exception $e) {
+                Log::error("Veli-1 SMS hatası", ['error' => $e->getMessage()]);
+                $smsResults[] = [
+                    'recipient' => 'Veli-1',
+                    'phone' => $parentPhone,
+                    'result' => ['success' => false, 'message' => $e->getMessage()]
+                ];
+            }
+        }
+        
+        // Veli-2
+        if ($parentPhone2) {
+            try {
+                Log::info("VELİ-2 SMS", ['phone' => $parentPhone2, 'content' => $parentSmsContent]);
+                
+                $parent2Result = \App\Services\SmsService::sendSms($parentPhone2, $parentSmsContent);
+                
+                Log::info("VELİ-2 SMS SONUCU", ['result' => $parent2Result]);
+                
+                $smsResults[] = [
+                    'recipient' => 'Veli-2',
+                    'phone' => $parentPhone2,
+                    'result' => $parent2Result
+                ];
+            } catch (\Exception $e) {
+                Log::error("Veli-2 SMS hatası", ['error' => $e->getMessage()]);
+                $smsResults[] = [
+                    'recipient' => 'Veli-2',
+                    'phone' => $parentPhone2,
+                    'result' => ['success' => false, 'message' => $e->getMessage()]
+                ];
+            }
+        }
+        
+        // En az bir başarılı gönderim var mı
+        $anySuccess = false;
+        foreach ($smsResults as $result) {
+            if (isset($result['result']['success']) && $result['result']['success']) {
+                $anySuccess = true;
+                break;
+            }
+        }
+        
+        return [
+            'success' => $anySuccess,
+            'results' => $smsResults,
+            'session_number' => $sessionNumber
+        ];
+        
+    } catch (\Exception $e) {
+        Log::error("SMS gönderim hatası", ['error' => $e->getMessage()]);
+        return [
+            'success' => false,
+            'message' => $e->getMessage(),
+            'session_number' => 0
+        ];
     }
 }
 /**
