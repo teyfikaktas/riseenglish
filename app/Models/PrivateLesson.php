@@ -9,6 +9,7 @@ use App\Models\User;
 class PrivateLesson extends Model
 {
     protected $fillable = [
+        'group_id', 
         'name',
         'description',
         'price',

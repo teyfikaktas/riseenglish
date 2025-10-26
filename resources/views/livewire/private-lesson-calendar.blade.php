@@ -287,11 +287,24 @@
                                                             </div>
                                                             
                                                             <!-- Öğrenci ve saat -->
-                                                            <div class="flex justify-between items-center text-xs text-gray-600">
-                                                                <div class="truncate flex-1">{{ $occurrence['student'] }}</div>
-                                                                <div>{{ $startTime }} - {{ $endTime }}</div>
-                                                            </div>
-                                                            
+<!-- Öğrenci ve saat -->
+<div class="flex justify-between items-center text-xs text-gray-600">
+    <div class="truncate flex-1">
+        @if(isset($occurrence['is_group']) && $occurrence['is_group'])
+            {{-- GRUP DERSİ - Öğrencileri yan yana göster --}}
+            <div class="flex items-center">
+                <span class="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded text-xs mr-1 font-semibold">GRUP</span>
+                <span class="text-xs">
+                    {{ implode(' - ', $occurrence['students']) }}
+                </span>
+            </div>
+        @else
+            {{-- BİREYSEL DERS --}}
+            {{ $occurrence['student'] }}
+        @endif
+    </div>
+    <div>{{ $startTime }} - {{ $endTime }}</div>
+</div>
                                                             <!-- Konum -->
                                                             @if(!$compactView)
                                                             <div class="mt-1 text-xs text-gray-500 flex items-center">

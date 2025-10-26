@@ -13,17 +13,29 @@
     </div>
     <!-- İşlenen Konular Bölümü -->
 <div class="mt-5 border-t border-gray-100 pt-4">
-    <div class="flex justify-between items-center mb-2">
-        <h3 class="text-lg font-semibold">İşlenen Konular</h3>
+<div class="flex justify-between items-center mb-2">
+    <h3 class="text-lg font-semibold">İşlenen Konular</h3>
+    <div class="flex gap-2">
         <a href="{{ route('ogretmen.private-lessons.session.topics', $session->id) }}"
            class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm">
             Konuları Düzenle
         </a>
+        <a href="{{ route('ogretmen.private-lessons.edit', $session->id) }}"
+           class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Düzenle
+        </a>
     </div>
+</div>
 
     @php
-        $sessionTopics = \App\Models\SessionTopic::with('topic.category')
-            ->where('session_id', $session->id)
+        $sessionTopics = \App\Models\SessionTopic::with(['topic.category'])
+            ->join('topics', 'session_topics.topic_id', '=', 'topics.id')
+            ->where('session_topics.session_id', $session->id)
+            ->orderBy('topics.name')
+            ->select('session_topics.*')
             ->get();
             
         // Group by topic and count occurrences
@@ -91,70 +103,120 @@
         <p class="text-sm text-gray-600 mt-1">{{ $session->title ?? $session->privateLesson->name ?? 'Özel Ders' }}</p>
     </div>
     
-    <!-- Temel Bilgiler - Daha kompakt grid -->
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-        <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
-            <p class="text-xs text-gray-500 mb-0.5">Öğrenci</p>
-            <p class="font-medium text-gray-800 text-sm">{{ $session->student ? $session->student->name : 'Öğrenci Atanmamış' }}</p>
-        </div>
-        <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
-            <p class="text-xs text-gray-500 mb-0.5">Öğretmen</p>
-            <p class="font-medium text-gray-800 text-sm">{{ $session->teacher ? $session->teacher->name : 'Öğretmen Atanmamış' }}</p>
-        </div>
+<!-- Temel Bilgiler - Daha kompakt grid -->
+<!-- Temel Bilgiler - Daha kompakt grid -->
+<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+        @php
+        // Grup dersi mi kontrol et
+        $isGroupLesson = $session->group_id !== null;
         
-        <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
-            <p class="text-xs text-gray-500 mb-0.5">Tarih</p>
-            <p class="font-medium text-gray-800 text-sm">{{ Carbon\Carbon::parse($session->start_date)->format('d.m.Y') }}</p>
-        </div>
-        <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
-            <p class="text-xs text-gray-500 mb-0.5">Saat</p>
-            <p class="font-medium text-gray-800 text-sm">{{ Carbon\Carbon::parse($session->start_time)->format('H:i') }} - {{ Carbon\Carbon::parse($session->end_time)->format('H:i') }}</p>
-        </div>
-        <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
-            <p class="text-xs text-gray-500 mb-0.5">Konum</p>
-            <p class="font-medium text-gray-800 text-sm">{{ $session->location ?? 'Belirtilmemiş' }}</p>
-        </div>
-        <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
-            <p class="text-xs text-gray-500 mb-0.5">Durum</p>
-            <p>
-                @php
-                    $statusColors = [
-                        'scheduled' => 'bg-blue-100 text-blue-800 border-blue-200',
-                        'completed' => 'bg-green-100 text-green-800 border-green-200',
-                        'cancelled' => 'bg-gray-100 text-gray-800 border-gray-200',
-                        'pending' => 'bg-amber-100 text-amber-800 border-amber-200',
-                        'active' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                        'rejected' => 'bg-red-100 text-red-800 border-red-200',
-                        'approved' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
-                    ];
-                    $badgeColor = $statusColors[$session->status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
-                @endphp
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border {{ $badgeColor }}">
-                    {{ $statuses[$session->status] ?? $session->status }}
-                </span>
-            </p>
-        </div>
-        <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
-            <p class="text-xs text-gray-500 mb-0.5">Ücret</p>
-            <p class="font-medium text-gray-800 text-sm">₺{{ $session->fee ?? ($session->privateLesson ? $session->privateLesson->price : 0) }}</p>
-        </div>
-    </div>
-    <div class="bg-gray-50 p-3 rounded-lg shadow-sm">
-        <p class="text-xs text-gray-500 mb-0.5">Ödeme Durumu</p>
-        <p>
-            @php
-                $paymentColors = [
-                    'pending' => 'bg-amber-100 text-amber-800 border-amber-200',
-                    'paid' => 'bg-green-100 text-green-800 border-green-200',
-                ];
-                $paymentBadgeColor = $paymentColors[$session->payment_status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
-                $paymentText = $session->payment_status == 'pending' ? 'Ödeme Bekliyor' : 'Ödendi';
-            @endphp
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border {{ $paymentBadgeColor }}">
-                {{ $paymentText }}
+        // Grup dersiyse tüm session'ları al
+        if ($isGroupLesson) {
+            $groupSessions = $session->groupSessions()->with('student')->get();
+        } else {
+            $groupSessions = collect([$session]);
+        }
+    @endphp
+
+    @if($isGroupLesson)
+        <!-- Grup Dersi Badge -->
+        <div class="mb-4">
+            <span class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-sm font-semibold inline-flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                GRUP DERSİ - {{ $groupSessions->count() }} Öğrenci
             </span>
-        </p>
-    </div>
+        </div>
+    @endif
+
+    <!-- Her Öğrenci için Ayrı Kart -->
+    @foreach($groupSessions as $index => $studentSession)
+        <div class="mb-6 {{ $isGroupLesson ? 'border-2 border-purple-200 rounded-xl p-4 bg-purple-50/30' : '' }}">
+            @if($isGroupLesson)
+                <h3 class="text-lg font-semibold text-purple-800 mb-3 flex items-center">
+                    <span class="bg-purple-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm mr-2">
+                        {{ $index + 1 }}
+                    </span>
+                    {{ $studentSession->student ? $studentSession->student->name : 'Öğrenci ' . ($index + 1) }}
+                </h3>
+            @endif
+
+            <!-- Temel Bilgiler Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                    <p class="text-xs text-gray-500 mb-0.5">Öğrenci</p>
+                    <p class="font-medium text-gray-800 text-sm">{{ $studentSession->student ? $studentSession->student->name : 'Öğrenci Atanmamış' }}</p>
+                </div>
+                
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                    <p class="text-xs text-gray-500 mb-0.5">Öğretmen</p>
+                    <p class="font-medium text-gray-800 text-sm">{{ $studentSession->teacher ? $studentSession->teacher->name : 'Öğretmen Atanmamış' }}</p>
+                </div>
+                
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                    <p class="text-xs text-gray-500 mb-0.5">Tarih</p>
+                    <p class="font-medium text-gray-800 text-sm">{{ Carbon\Carbon::parse($studentSession->start_date)->format('d.m.Y') }}</p>
+                </div>
+
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                    <p class="text-xs text-gray-500 mb-0.5">Saat</p>
+                    <p class="font-medium text-gray-800 text-sm">{{ Carbon\Carbon::parse($studentSession->start_time)->format('H:i') }} - {{ Carbon\Carbon::parse($studentSession->end_time)->format('H:i') }}</p>
+                </div>
+
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                    <p class="text-xs text-gray-500 mb-0.5">Konum</p>
+                    <p class="font-medium text-gray-800 text-sm">{{ $studentSession->location ?? 'Belirtilmemiş' }}</p>
+                </div>
+
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                    <p class="text-xs text-gray-500 mb-0.5">Durum</p>
+                    <p>
+                        @php
+                            $statusColors = [
+                                'scheduled' => 'bg-blue-100 text-blue-800 border-blue-200',
+                                'completed' => 'bg-green-100 text-green-800 border-green-200',
+                                'cancelled' => 'bg-gray-100 text-gray-800 border-gray-200',
+                                'pending' => 'bg-amber-100 text-amber-800 border-amber-200',
+                                'active' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                'rejected' => 'bg-red-100 text-red-800 border-red-200',
+                                'approved' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                            ];
+                            $badgeColor = $statusColors[$studentSession->status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
+                        @endphp
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border {{ $badgeColor }}">
+                            {{ $statuses[$studentSession->status] ?? $studentSession->status }}
+                        </span>
+                    </p>
+                </div>
+
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                    <p class="text-xs text-gray-500 mb-0.5">Ücret</p>
+                    <p class="font-medium text-gray-800 text-sm">₺{{ $studentSession->fee ?? ($studentSession->privateLesson ? $studentSession->privateLesson->price : 0) }}</p>
+                </div>
+
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                    <p class="text-xs text-gray-500 mb-0.5">Ödeme Durumu</p>
+                    <p>
+                        @php
+                            $paymentColors = [
+                                'pending' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                                'paid' => 'bg-green-100 text-green-800 border-green-200',
+                                'partially_paid' => 'bg-orange-100 text-orange-800 border-orange-200',
+                                'refunded' => 'bg-gray-100 text-gray-800 border-gray-200',
+                                'cancelled' => 'bg-red-100 text-red-800 border-red-200',
+                            ];
+                            $paymentBadge = $paymentColors[$studentSession->payment_status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
+                        @endphp
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border {{ $paymentBadge }}">
+                            {{ ucfirst($studentSession->payment_status) }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
     <!-- In teacher.private-lessons.session.blade.php -->
     @if(count($sessionTopics) > 0)
     <!-- Topic Notes Section -->
@@ -184,81 +246,150 @@
         </div>
     </div>
 @endif
-    <div class="mt-4">
-        <div class="flex justify-between items-center mb-2">
-            <h3 class="text-lg font-semibold">Ödevler</h3>
-            <a href="{{ route('ogretmen.private-lessons.homework.create', $session->id) }}"
-               class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
-                Ödev Ekle
-            </a>
-        </div>
-    
-        @if($session->homeworks && $session->homeworks->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Başlık
-                            </th>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Teslim Tarihi
-                            </th>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Teslimler
-                            </th>
-                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                İşlemler
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($session->homeworks as $homework)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    {{ $homework->title }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($homework->due_date)->format('d.m.Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    {{ $homework->submissions->count() }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ route('ogretmen.private-lessons.homework.submissions', $homework->id) }}"
-                                       class="text-blue-600 hover:text-blue-900 mr-3">
-                                        Teslimleri Gör
-                                    </a>
-    
-                                    @if($homework->file_path)
-                                        <a href="{{ route('ogretmen.private-lessons.homework.download', $homework->id) }}"
-                                           class="text-green-600 hover:text-green-900 mr-3">
-                                            İndir
-                                        </a>
-                                    @endif
-    
-                                    <form class="inline"
-                                          action="{{ route('ogretmen.private-lessons.homework.delete', $homework->id) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('Bu ödevi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900">
-                                            Sil
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @else
-            <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 p-3 rounded">
-                Bu derse henüz ödev eklenmemiş.
-            </div>
-        @endif
+<div class="mt-4">
+    <div class="flex justify-between items-center mb-2">
+        <h3 class="text-lg font-semibold">Ödevler</h3>
+        <a href="{{ route('ogretmen.private-lessons.homework.create', $session->id) }}"
+           class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+            Ödev Ekle
+        </a>
     </div>
+
+    @php
+        // 🔥 Grup dersi mi kontrol et
+        $isGroupLesson = $session->group_id !== null;
+        
+        // 🔥 Grup dersiyse TÜM öğrencilerin session'larını al
+        if ($isGroupLesson) {
+            $groupSessions = $session->groupSessions()->with('student')->get();
+            $sessionIds = $groupSessions->pluck('id')->toArray();
+            
+            // Tüm ödevleri al ve başlığa göre grupla
+            $allHomeworks = \App\Models\PrivateLessonHomework::whereIn('session_id', $sessionIds)
+                ->with(['session.student', 'submissions'])
+                ->get();
+            
+            $groupedHomeworks = $allHomeworks->groupBy('title');
+        } else {
+            $groupedHomeworks = $session->homeworks->groupBy('title');
+        }
+    @endphp
+
+    @if($groupedHomeworks->count() > 0)
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Başlık
+                        </th>
+                        @if($isGroupLesson)
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Öğrenciler
+                            </th>
+                        @endif
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Teslim Tarihi
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Teslimler
+                        </th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            İşlemler
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($groupedHomeworks as $title => $homeworkGroup)
+                        @php
+                            $firstHomework = $homeworkGroup->first();
+                            
+                            // Toplam teslim sayısı
+                            $totalSubmissions = $homeworkGroup->sum(function($hw) {
+                                return $hw->submissions->count();
+                            });
+                            
+                            // Öğrenci sayısı
+                            $studentCount = $homeworkGroup->count();
+                        @endphp
+                        <tr>
+                            <td class="px-6 py-4">
+                                <div>
+                                    <div class="font-medium text-gray-900">{{ $title }}</div>
+                                    @if($firstHomework->description)
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            {{ Str::limit($firstHomework->description, 60) }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </td>
+                            
+                            @if($isGroupLesson)
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach($homeworkGroup as $hw)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                {{ $hw->session->student ? $hw->session->student->name : 'Öğrenci' }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </td>
+                            @endif
+                            
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {{ \Carbon\Carbon::parse($firstHomework->due_date)->format('d.m.Y') }}
+                            </td>
+                            
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($totalSubmissions > 0)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        ✓ {{ $totalSubmissions }}
+                                        @if($isGroupLesson)
+                                            / {{ $studentCount }}
+                                        @endif
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Teslim Yok
+                                    </span>
+                                @endif
+                            </td>
+                            
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ route('ogretmen.private-lessons.homework.submissions', $firstHomework->id) }}"
+                                   class="text-blue-600 hover:text-blue-900 mr-3">
+                                    Teslimleri Gör
+                                </a>
+
+                                @if($firstHomework->file_path)
+                                    <a href="{{ route('ogretmen.private-lessons.homework.download', $firstHomework->id) }}"
+                                       class="text-green-600 hover:text-green-900 mr-3">
+                                        İndir
+                                    </a>
+                                @endif
+
+                                <form class="inline"
+                                      action="{{ route('ogretmen.private-lessons.homework.delete', $firstHomework->id) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('Bu ödevi silmek istediğinize emin misiniz?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-900">
+                                        Sil
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 p-3 rounded">
+            Bu derse henüz ödev eklenmemiş.
+        </div>
+    @endif
+</div>
     
     @php
         $reportExists = \App\Models\PrivateLessonReport::where('session_id', $session->id)->exists();

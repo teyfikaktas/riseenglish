@@ -1057,14 +1057,26 @@ public function storeHomework(Request $request, $id)
     ]);
     
     try {
+        // 🔥 Grup dersi mi kontrol et
+        $isGroupLesson = $session->group_id !== null;
+        
+        // 🔥 Grup dersiyse tüm öğrencileri al
+        if ($isGroupLesson) {
+            $sessions = $session->groupSessions()->with('student')->get();
+        } else {
+            $sessions = collect([$session]);
+        }
+        
         $homeworkData = [
-            'session_id' => $session->id,
             'title' => $validated['title'],
             'description' => $validated['description'],
             'due_date' => $validated['due_date'],
         ];
         
         // Handle file upload if provided
+        $filePath = null;
+        $originalName = null;
+        
         if ($request->hasFile('file')) {
             $originalName = $request->file('file')->getClientOriginalName();
             $uniqueFileName = uniqid() . '_' . time() . '.' . $request->file('file')->getClientOriginalExtension();
@@ -1074,20 +1086,37 @@ public function storeHomework(Request $request, $id)
                 $uniqueFileName, 
                 'local'
             );
-            
-            $homeworkData['file_path'] = $filePath;
-            $homeworkData['original_filename'] = $originalName;
         }
         
-        // Create homework
-        $homework = PrivateLessonHomework::create($homeworkData);
+        $createdHomeworks = [];
         
-        // Her zaman SMS gönder (send_sms parametresini kontrol etmeden)
-        $smsResult = $this->sendHomeworkSMS($session, $homework);
+        // 🔥 Her öğrenci için ödev oluştur
+        foreach ($sessions as $studentSession) {
+            $studentHomeworkData = array_merge($homeworkData, [
+                'session_id' => $studentSession->id,
+            ]);
+            
+            if ($filePath) {
+                $studentHomeworkData['file_path'] = $filePath;
+                $studentHomeworkData['original_filename'] = $originalName;
+            }
+            
+            // Create homework
+            $homework = PrivateLessonHomework::create($studentHomeworkData);
+            $createdHomeworks[] = $homework;
+        }
         
-        $smsMessage = 'Ödev başarıyla eklendi.';
+        // 🔥 SMS gönder (tüm öğrencilere)
+        $smsResult = $this->sendHomeworkSMS($session, $createdHomeworks[0]);
+        
+        $studentCount = count($sessions);
+        $smsMessage = $isGroupLesson 
+            ? "✅ Grup dersi için {$studentCount} öğrenciye ödev başarıyla eklendi."
+            : "Ödev başarıyla eklendi.";
+        
         if (is_array($smsResult) && isset($smsResult['success']) && $smsResult['success']) {
-            $smsMessage .= " SMS bilgilendirmesi gönderildi.";
+            $totalSms = $smsResult['total_sent'] ?? 0;
+            $smsMessage .= " {$totalSms} SMS bilgilendirmesi gönderildi.";
         } else {
             $smsMessage .= " Ancak SMS gönderiminde sorun oluştu.";
         }
@@ -1390,104 +1419,110 @@ public function deleteReport($id)
 private function sendHomeworkSMS($session, $homework)
 {
     try {
-        // Temel bilgileri hazırla
-        $studentName = $session->student ? $session->student->name : 'Öğrenci';
-        $studentPhone = $session->student ? $session->student->phone : null;
         $dueDate = Carbon::parse($homework->due_date)->format('d.m.Y');
         
-        // Veli telefon numaralarını al
-        $parentPhone = null;
-        $parentPhone2 = null;
-        
-        if ($session->student && $session->student->parent_phone_number) {
-            $parentPhone = $session->student->parent_phone_number;
-        }
-        
-        if ($session->student && $session->student->parent_phone_number_2) {
-            $parentPhone2 = $session->student->parent_phone_number_2;
-        }
-        
-        // Log kayıtları
         Log::info("Ödev SMS gönderimi için hazırlık yapılıyor. Ödev ID: " . $homework->id);
         
-        // SMS sonuçlarını takip et
         $smsResults = [];
         
-        // Öğrenci için SMS içeriği - değiştirildi
-        if ($studentPhone) {
-            try {
-                $studentSmsContent = "Sayın Öğrenci, özel dersinize yeni bir ödev eklendi. Son teslim tarihi: {$dueDate}. Ödev: {$homework->title}. Ödevinizi Risenglish üzerinden eklemeyi unutmayınız.";
-                
-                Log::info("ÖĞRENCİ ÖDEV SMS GÖNDERME - Telefon: {$studentPhone}, İçerik: {$studentSmsContent}");
-                
-                // Öğrenciye SMS gönder
-                $studentResult = \App\Services\SmsService::sendSms($studentPhone, $studentSmsContent);
-                
-                Log::info("ÖĞRENCİ ÖDEV SMS SONUCU: " . json_encode($studentResult));
-                
-                $smsResults[] = [
-                    'recipient' => 'Öğrenci',
-                    'phone' => $studentPhone,
-                    'result' => $studentResult
-                ];
-            } catch (\Exception $e) {
-                Log::error("Öğrenci ödev SMS gönderiminde HATA: " . $e->getMessage());
-                $smsResults[] = [
-                    'recipient' => 'Öğrenci',
-                    'phone' => $studentPhone,
-                    'result' => ['success' => false, 'message' => $e->getMessage()]
-                ];
-            }
+        // 🔥 Grup dersi mi kontrol et
+        $isGroupLesson = $session->group_id !== null;
+        
+        // 🔥 Grup dersiyse tüm öğrencileri al, değilse sadece bu öğrenci
+        if ($isGroupLesson) {
+            $sessions = $session->groupSessions()->with('student')->get();
+        } else {
+            $sessions = collect([$session]);
         }
         
-        // Veli için SMS içeriği - değiştirildi
-        $parentSmsContent = "Sayın Veli, {$studentName} için özel derse yeni bir ödev eklendi. Son teslim tarihi: {$dueDate}. Ödev: {$homework->title}";
-        
-        // 1. Veliye SMS gönder
-        if ($parentPhone) {
-            try {
-                Log::info("VELİ-1 ÖDEV SMS GÖNDERME - Telefon: {$parentPhone}, İçerik: {$parentSmsContent}");
-                
-                $parentResult = \App\Services\SmsService::sendSms($parentPhone, $parentSmsContent);
-                
-                Log::info("VELİ-1 ÖDEV SMS SONUCU: " . json_encode($parentResult));
-                
-                $smsResults[] = [
-                    'recipient' => 'Veli-1',
-                    'phone' => $parentPhone,
-                    'result' => $parentResult
-                ];
-            } catch (\Exception $e) {
-                Log::error("Veli-1 ödev SMS gönderiminde HATA: " . $e->getMessage());
-                $smsResults[] = [
-                    'recipient' => 'Veli-1',
-                    'phone' => $parentPhone,
-                    'result' => ['success' => false, 'message' => $e->getMessage()]
-                ];
+        // 🔥 Her öğrenci için SMS gönder
+        foreach ($sessions as $studentSession) {
+            $student = $studentSession->student;
+            
+            if (!$student) {
+                continue;
             }
-        }
-        
-        // 2. Veliye SMS gönder
-        if ($parentPhone2) {
-            try {
-                Log::info("VELİ-2 ÖDEV SMS GÖNDERME - Telefon: {$parentPhone2}, İçerik: {$parentSmsContent}");
-                
-                $parent2Result = \App\Services\SmsService::sendSms($parentPhone2, $parentSmsContent);
-                
-                Log::info("VELİ-2 ÖDEV SMS SONUCU: " . json_encode($parent2Result));
-                
-                $smsResults[] = [
-                    'recipient' => 'Veli-2',
-                    'phone' => $parentPhone2,
-                    'result' => $parent2Result
-                ];
-            } catch (\Exception $e) {
-                Log::error("Veli-2 ödev SMS gönderiminde HATA: " . $e->getMessage());
-                $smsResults[] = [
-                    'recipient' => 'Veli-2',
-                    'phone' => $parentPhone2,
-                    'result' => ['success' => false, 'message' => $e->getMessage()]
-                ];
+            
+            $studentName = $student->name;
+            $studentPhone = $student->phone;
+            $parentPhone = $student->parent_phone_number;
+            $parentPhone2 = $student->parent_phone_number_2;
+            
+            // Öğrenciye SMS
+            if ($studentPhone) {
+                try {
+                    $studentSmsContent = "Sayın Öğrenci, özel dersinize yeni bir ödev eklendi. Son teslim tarihi: {$dueDate}. Ödev: {$homework->title}. Ödevinizi Risenglish üzerinden eklemeyi unutmayınız.";
+                    
+                    Log::info("ÖĞRENCİ ÖDEV SMS GÖNDERME - Öğrenci: {$studentName}, Telefon: {$studentPhone}");
+                    
+                    $studentResult = \App\Services\SmsService::sendSms($studentPhone, $studentSmsContent);
+                    
+                    Log::info("ÖĞRENCİ ÖDEV SMS SONUCU: " . json_encode($studentResult));
+                    
+                    $smsResults[] = [
+                        'recipient' => "Öğrenci: {$studentName}",
+                        'phone' => $studentPhone,
+                        'result' => $studentResult
+                    ];
+                } catch (\Exception $e) {
+                    Log::error("Öğrenci {$studentName} ödev SMS gönderiminde HATA: " . $e->getMessage());
+                    $smsResults[] = [
+                        'recipient' => "Öğrenci: {$studentName}",
+                        'phone' => $studentPhone,
+                        'result' => ['success' => false, 'message' => $e->getMessage()]
+                    ];
+                }
+            }
+            
+            // Veli SMS içeriği
+            $parentSmsContent = "Sayın Veli, {$studentName} için özel derse yeni bir ödev eklendi. Son teslim tarihi: {$dueDate}. Ödev: {$homework->title}";
+            
+            // 1. Veliye SMS
+            if ($parentPhone) {
+                try {
+                    Log::info("VELİ-1 ÖDEV SMS GÖNDERME - Öğrenci: {$studentName}, Telefon: {$parentPhone}");
+                    
+                    $parentResult = \App\Services\SmsService::sendSms($parentPhone, $parentSmsContent);
+                    
+                    Log::info("VELİ-1 ÖDEV SMS SONUCU: " . json_encode($parentResult));
+                    
+                    $smsResults[] = [
+                        'recipient' => "Veli-1: {$studentName}",
+                        'phone' => $parentPhone,
+                        'result' => $parentResult
+                    ];
+                } catch (\Exception $e) {
+                    Log::error("Veli-1 {$studentName} ödev SMS gönderiminde HATA: " . $e->getMessage());
+                    $smsResults[] = [
+                        'recipient' => "Veli-1: {$studentName}",
+                        'phone' => $parentPhone,
+                        'result' => ['success' => false, 'message' => $e->getMessage()]
+                    ];
+                }
+            }
+            
+            // 2. Veliye SMS
+            if ($parentPhone2) {
+                try {
+                    Log::info("VELİ-2 ÖDEV SMS GÖNDERME - Öğrenci: {$studentName}, Telefon: {$parentPhone2}");
+                    
+                    $parent2Result = \App\Services\SmsService::sendSms($parentPhone2, $parentSmsContent);
+                    
+                    Log::info("VELİ-2 ÖDEV SMS SONUCU: " . json_encode($parent2Result));
+                    
+                    $smsResults[] = [
+                        'recipient' => "Veli-2: {$studentName}",
+                        'phone' => $parentPhone2,
+                        'result' => $parent2Result
+                    ];
+                } catch (\Exception $e) {
+                    Log::error("Veli-2 {$studentName} ödev SMS gönderiminde HATA: " . $e->getMessage());
+                    $smsResults[] = [
+                        'recipient' => "Veli-2: {$studentName}",
+                        'phone' => $parentPhone2,
+                        'result' => ['success' => false, 'message' => $e->getMessage()]
+                    ];
+                }
             }
         }
         
@@ -1502,7 +1537,8 @@ private function sendHomeworkSMS($session, $homework)
         
         return [
             'success' => $anySuccess,
-            'results' => $smsResults
+            'results' => $smsResults,
+            'total_sent' => count($smsResults)
         ];
         
     } catch (\Exception $e) {
@@ -1513,7 +1549,6 @@ private function sendHomeworkSMS($session, $homework)
         ];
     }
 }
-
 /**
  * View all homeworks for a session
  *
@@ -1618,14 +1653,51 @@ public function deleteHomework($homeworkId)
 public function viewHomeworkSubmissions($homeworkId)
 {
     $homework = PrivateLessonHomework::with([
-        'session',
+        'session.student',
         'submissions.student',
-        'submissions.files'   // her teslimin dosyalarını getiriyoruz
+        'submissions.files'
     ])->findOrFail($homeworkId);
+    
+    // 🔥 Grup dersi mi kontrol et
+    $isGroupLesson = $homework->session->group_id !== null;
+    
+    // 🔥 Grup dersiyse TÜM öğrencilerin ödevlerini ve teslimlerini al
+    if ($isGroupLesson) {
+        $groupSessions = $homework->session->groupSessions()->with('student')->get();
+        $sessionIds = $groupSessions->pluck('id')->toArray();
+        
+        // Aynı başlıklı tüm ödevleri al
+        $allHomeworks = PrivateLessonHomework::with([
+            'session.student',
+            'submissions.student',
+            'submissions.files'
+        ])
+        ->whereIn('session_id', $sessionIds)
+        ->where('title', $homework->title)
+        ->get();
+        
+        // Her öğrenci için ödev ve teslim bilgisini hazırla
+        $studentData = [];
+        foreach ($allHomeworks as $hw) {
+            $studentData[] = [
+                'homework' => $hw,
+                'student' => $hw->session->student,
+                'submission' => $hw->submissions->first(), // En son teslim
+                'submission_count' => $hw->submissions->count()
+            ];
+        }
+    } else {
+        // Bireysel ders
+        $studentData = [[
+            'homework' => $homework,
+            'student' => $homework->session->student,
+            'submission' => $homework->submissions->first(),
+            'submission_count' => $homework->submissions->count()
+        ]];
+    }
 
-    return view('teacher.private-lessons.homework-submissions', compact('homework'));
+    return view('teacher.private-lessons.homework-submissions', compact('homework', 'isGroupLesson', 'studentData'));
 }
-
 /**
  * Download homework file
  *
@@ -1698,15 +1770,23 @@ public function gradeSubmission(Request $request, $submissionId)
         
         // Validate the input
         $validated = $request->validate([
-            'teacher_feedback' => 'required|string',
-            'score' => 'required|numeric|min:0|max:100',
+            'feedback' => 'nullable|string',
+            'score' => 'nullable|numeric|min:0|max:100',
+        ]);
+        
+        Log::info("Ödev değerlendirme başladı", [
+            'submission_id' => $submissionId,
+            'teacher_id' => Auth::id(),
+            'data' => $validated
         ]);
         
         // Update the submission
         $submission->update([
-            'teacher_feedback' => $validated['teacher_feedback'],
+            'teacher_feedback' => $validated['feedback'],
             'score' => $validated['score'],
         ]);
+        
+        Log::info("Ödev değerlendirmesi güncellendi", ['submission_id' => $submissionId]);
         
         // Her zaman SMS gönder
         $smsResult = $this->sendGradeSMS($session, $submission);
@@ -1718,10 +1798,17 @@ public function gradeSubmission(Request $request, $submissionId)
             $smsMessage .= " Ancak SMS gönderiminde sorun oluştu.";
         }
         
-        return redirect()->route('ogretmen.private-lessons.homework.submissions', $submission->homework_id)
+        return redirect()->back()
             ->with('success', $smsMessage);
             
     } catch (\Exception $e) {
+        Log::error("Ödev değerlendirme HATASI", [
+            'submission_id' => $submissionId,
+            'teacher_id' => Auth::id(),
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
         return redirect()->back()
             ->with('error', 'Değerlendirme kaydedilirken bir hata oluştu: ' . $e->getMessage())
             ->withInput();
@@ -2446,6 +2533,41 @@ public function showSession($id)
     }
 }
 /**
+ * Ödev teslimi için geri bildirim kaydet
+ */
+public function submitHomeworkFeedback(Request $request, $id)
+{
+    try {
+        $submission = PrivateLessonHomeworkSubmission::with('homework.session')
+            ->findOrFail($id);
+        
+        // Sadece kendi dersinin ödevine geri bildirim verebilsin
+        if ($submission->homework->session->teacher_id !== Auth::id()) {
+            abort(403, 'Bu ödeve geri bildirim verme yetkiniz yok.');
+        }
+        
+        $validated = $request->validate([
+            'feedback' => 'nullable|string',
+            'grade' => 'nullable|numeric|min:0|max:100',
+            'status' => 'required|in:pending,reviewed,approved,rejected'
+        ]);
+        
+        $submission->update([
+            'teacher_feedback' => $validated['feedback'],
+            'grade' => $validated['grade'],
+            'status' => $validated['status'],
+            'reviewed_at' => now()
+        ]);
+        
+        return redirect()->back()
+            ->with('success', 'Geri bildirim başarıyla kaydedildi.');
+            
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Geri bildirim kaydedilirken hata oluştu: ' . $e->getMessage());
+    }
+}
+/**
  * Ders tamamlandığında SMS gönderme fonksiyonu
  */
 /**
@@ -2638,10 +2760,12 @@ private function sendCompletionSMS($session)
 public function store(Request $request)
 {
     try {
-        // Form verilerini doğrulama
-        $validated = $request->validate([
+        $teacherId = Auth::id();
+        
+        $isGroupLesson = $request->has('is_group_lesson') && $request->is_group_lesson == '1';
+        
+        $rules = [
             'lesson_name' => 'required|string|max:255',
-            'student_id' => 'required|exists:users,id',
             'fee' => 'required|numeric|min:0',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
@@ -2649,124 +2773,151 @@ public function store(Request $request)
             'days.*' => 'required|integer|min:0|max:6',
             'start_times' => 'required|array|min:1',
             'start_times.*' => 'required',
-            'end_times' => 'required|array|min:1', // Bitiş saatleri için doğrulama
+            'end_times' => 'required|array|min:1',
             'end_times.*' => 'required',
             'location' => 'nullable|string|max:255',
             'status' => 'required|in:approved,cancelled',
             'notes' => 'nullable|string'
-        ]);
-
-        // Mevcut giriş yapmış öğretmeni atayalım
-        $teacherId = Auth::id();
+        ];
+        
+        if ($isGroupLesson) {
+            $rules['student_ids'] = 'required|array|min:1';
+            $rules['student_ids.*'] = 'exists:users,id';
+        } else {
+            $rules['student_id'] = 'required|exists:users,id';
+        }
+        
+        $validated = $request->validate($rules);
+        
+        $studentIds = $isGroupLesson ? $validated['student_ids'] : [$validated['student_id']];
+        
         Log::info("Store started for teacher: $teacherId, data: " . json_encode($validated));
 
-        // Özel ders kaydını oluşturalım
-        $privateLesson = PrivateLesson::create([
-            'name' => $validated['lesson_name'],
-            'price' => $validated['fee'],
-            'is_active' => true,
-            'created_by' => $teacherId,
-            'has_recurring_sessions' => true
-        ]);
-
-        // Tarih aralığını hesaplayalım
         $startDate = Carbon::parse($validated['start_date']);
         $endDate = Carbon::parse($validated['end_date']);
         Log::info("Date range: {$startDate->toDateString()} to {$endDate->toDateString()}");
 
         $createdSessionsIds = [];
         $skippedSessions = [];
+        
+        $groupId = $isGroupLesson ? 'group_' . time() . '_' . uniqid() : null;
 
-        // Her gün için seanslar oluştur
-        for ($i = 0; $i < count($validated['days']); $i++) {
-            $dayOfWeek = (int)$validated['days'][$i];
-            $startTime = $validated['start_times'][$i];
-            $endTime = $validated['end_times'][$i];
+        DB::beginTransaction();
+        
+        foreach ($studentIds as $studentId) {
+            $privateLesson = PrivateLesson::create([
+                'group_id' => $groupId,
+                'name' => $validated['lesson_name'],
+                'price' => $validated['fee'],
+                'teacher_id' => $teacherId,
+                'student_id' => $studentId,
+                'is_active' => true,
+                'created_by' => $teacherId,
+                'has_recurring_sessions' => true
+            ]);
 
-            // Bitiş saati gönderilmediyse 45 dakika sonrasını otomatik hesapla
-            if (empty($endTime)) {
-                // Başlangıç saatini ayrıştır
-                $startTimeParts = explode(':', $startTime);
-                $startHour = (int)$startTimeParts[0];
-                $startMinute = (int)$startTimeParts[1];
-                
-                // 45 dakika sonrasını hesapla
-                $endMinute = $startMinute + 45;
-                $endHour = $startHour;
-                
-                // Dakikalar 60'ı aşarsa saat arttır
-                if ($endMinute >= 60) {
-                    $endHour += 1;
-                    $endMinute -= 60;
+            for ($i = 0; $i < count($validated['days']); $i++) {
+                $dayOfWeek = (int)$validated['days'][$i];
+                $startTime = $validated['start_times'][$i];
+                $endTime = $validated['end_times'][$i];
+
+                if (empty($endTime)) {
+                    $startTimeParts = explode(':', $startTime);
+                    $startHour = (int)$startTimeParts[0];
+                    $startMinute = (int)$startTimeParts[1];
+                    
+                    $endMinute = $startMinute + 45;
+                    $endHour = $startHour;
+                    
+                    if ($endMinute >= 60) {
+                        $endHour += 1;
+                        $endMinute -= 60;
+                    }
+                    
+                    if ($endHour >= 24) {
+                        $endHour = 23;
+                        $endMinute = 59;
+                    }
+                    
+                    $endTime = sprintf("%02d:%02d", $endHour, $endMinute);
                 }
-                
-                // Saat 24'ü aşarsa kontrol et
-                if ($endHour >= 24) {
-                    $endHour = 23;
-                    $endMinute = 59;
+
+                $firstSessionDate = clone $startDate;
+                $currentDayOfWeek = (int)$firstSessionDate->format('w');
+                if ($currentDayOfWeek != $dayOfWeek) {
+                    $daysUntilTargetDay = ($dayOfWeek - $currentDayOfWeek + 7) % 7;
+                    $firstSessionDate->addDays($daysUntilTargetDay);
                 }
-                
-                $endTime = sprintf("%02d:%02d", $endHour, $endMinute);
-            }
 
-            // İlk seans tarihini hesapla
-            $firstSessionDate = clone $startDate;
-            $currentDayOfWeek = (int)$firstSessionDate->format('w');
-            if ($currentDayOfWeek != $dayOfWeek) {
-                $daysUntilTargetDay = ($dayOfWeek - $currentDayOfWeek + 7) % 7;
-                $firstSessionDate->addDays($daysUntilTargetDay);
-            }
+                Log::info("Day $dayOfWeek, First session date: {$firstSessionDate->toDateString()}");
 
-            Log::info("Day $dayOfWeek, First session date: {$firstSessionDate->toDateString()}");
-
-            if ($firstSessionDate > $endDate) {
-                Log::info("Skipped day $dayOfWeek: First session date exceeds end date.");
-                $skippedSessions[] = "Gün: $dayOfWeek, Tarih: {$firstSessionDate->toDateString()} (Bitiş tarihinden sonra)";
-                continue;
-            }
-
-            $sessionDate = clone $firstSessionDate;
-
-            while ($sessionDate <= $endDate) {
-                $conflictExists = $this->checkLessonConflict(
-                    $teacherId,
-                    $dayOfWeek,
-                    $startTime,
-                    $endTime,
-                    $sessionDate->format('Y-m-d'),
-                    null
-                );
-
-                if ($conflictExists) {
-                    $skippedSessions[] = "{$sessionDate->format('d.m.Y')} - Çakışma var";
-                    Log::info("Conflict detected for {$sessionDate->toDateString()} at $startTime-$endTime");
-                    $sessionDate->addWeek();
+                if ($firstSessionDate > $endDate) {
+                    Log::info("Skipped day $dayOfWeek: First session date exceeds end date.");
+                    if ($studentId === $studentIds[0]) {
+                        $skippedSessions[] = "Gün: $dayOfWeek, Tarih: {$firstSessionDate->toDateString()} (Bitiş tarihinden sonra)";
+                    }
                     continue;
                 }
 
-                $session = PrivateLessonSession::create([
-                    'private_lesson_id' => $privateLesson->id,
-                    'teacher_id' => $teacherId,
-                    'student_id' => $validated['student_id'],
-                    'day_of_week' => $dayOfWeek,
-                    'start_date' => $sessionDate->format('Y-m-d'),
-                    'start_time' => $startTime,
-                    'end_time' => $endTime,
-                    'location' => $validated['location'] ?? null,
-                    'fee' => $validated['fee'],
-                    'payment_status' => 'pending',
-                    'paid_amount' => 0,
-                    'status' => $validated['status'],
-                    'is_recurring' => true,
-                    'notes' => $validated['notes'] ?? null
-                ]);
+                $sessionDate = clone $firstSessionDate;
 
-                $createdSessionsIds[] = $session->id;
-                Log::info("Session created: ID {$session->id}, Date: {$sessionDate->toDateString()}, Time: $startTime-$endTime");
+                while ($sessionDate <= $endDate) {
+                    $conflictExists = $this->checkLessonConflict(
+                        $teacherId,
+                        $dayOfWeek,
+                        $startTime,
+                        $endTime,
+                        $sessionDate->format('Y-m-d'),
+                        null
+                    );
 
-                $sessionDate->addWeek();
+                    if ($conflictExists) {
+                        if ($studentId === $studentIds[0]) {
+                            $skippedSessions[] = "{$sessionDate->format('d.m.Y')} - Çakışma var";
+                        }
+                        Log::info("Conflict detected for {$sessionDate->toDateString()} at $startTime-$endTime");
+                        $sessionDate->addWeek();
+                        continue;
+                    }
+
+                    $session = PrivateLessonSession::create([
+                        'private_lesson_id' => $privateLesson->id,
+                        'group_id' => $groupId,
+                        'teacher_id' => $teacherId,
+                        'student_id' => $studentId,
+                        'day_of_week' => $dayOfWeek,
+                        'start_date' => $sessionDate->format('Y-m-d'),
+                        'start_time' => $startTime,
+                        'end_time' => $endTime,
+                        'location' => $validated['location'] ?? null,
+                        'fee' => $validated['fee'],
+                        'payment_status' => 'pending',
+                        'paid_amount' => 0,
+                        'status' => $validated['status'],
+                        'is_recurring' => true,
+                        'notes' => $validated['notes'] ?? null
+                    ]);
+
+                    $createdSessionsIds[] = $session->id;
+                    Log::info("Session created: ID {$session->id}, Date: {$sessionDate->toDateString()}, Time: $startTime-$endTime");
+
+                    $sessionDate->addWeek();
+                }
             }
         }
+        
+        if ($isGroupLesson && $groupId) {
+            foreach ($studentIds as $studentId) {
+                DB::table('lesson_group_students')->insert([
+                    'group_id' => $groupId,
+                    'student_id' => $studentId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        DB::commit();
 
         $sessionCount = count($createdSessionsIds);
         if ($sessionCount == 0) {
@@ -2779,7 +2930,15 @@ public function store(Request $request)
                 ->withInput();
         }
 
-        $successMessage = "Özel ders planı başarıyla oluşturuldu. Toplam {$sessionCount} seans planlandı.";
+        $studentCount = count($studentIds);
+        $sessionsPerStudent = $sessionCount / $studentCount;
+        
+        if ($isGroupLesson) {
+            $successMessage = "✅ Grup dersi başarıyla oluşturuldu! {$studentCount} öğrenci için {$sessionsPerStudent} seans planlandı. (Toplam {$sessionCount} kayıt)";
+        } else {
+            $successMessage = "Özel ders planı başarıyla oluşturuldu. Toplam {$sessionCount} seans planlandı.";
+        }
+        
         if (!empty($skippedSessions)) {
             $successMessage .= ' Atlanan seanslar: ' . implode(', ', $skippedSessions);
         }
@@ -2788,12 +2947,14 @@ public function store(Request $request)
             ->with('success', $successMessage);
 
     } catch (\Exception $e) {
+        DB::rollBack();
         Log::error("Store failed: " . $e->getMessage());
         return redirect()->back()
             ->with('error', 'Hata: ' . $e->getMessage())
             ->withInput();
     }
-} /**
+}
+/**
      * Ders çakışması kontrolü yapar
      */
     private function checkLessonConflict($teacherId, $dayOfWeek, $startTime, $endTime, $date, $excludeSessionId = null)

@@ -821,16 +821,57 @@ public function loadOccurrences()
         
         $sessions = $query->get();
         
-        // Zaman dilimlerini yeniden oluştur (varolan derslere göre)
+        // Zaman dilimlerini yeniden oluştur
         $this->generateDynamicTimeSlots();
         
         $this->calendarData = [];
+        
+        // 🔥 Grup derslerini topla
+        $groupedSessions = [];
         
         foreach ($sessions as $session) {
             $date = Carbon::parse($session->start_date)->format('Y-m-d');
             $startTime = Carbon::parse($session->start_time)->format('H:i');
             
-            // Dersin başlangıç saati için en yakın zaman dilimini bul
+            // 🔥 group_id'yi privateLesson'dan al
+            $groupId = $session->privateLesson ? $session->privateLesson->group_id : null;
+            
+            if ($groupId) {
+                // Grup dersi - group_id, tarih ve saat'e göre grupla
+                $groupKey = $groupId . '_' . $date . '_' . $startTime;
+                
+                if (!isset($groupedSessions[$groupKey])) {
+                    $groupedSessions[$groupKey] = [
+                        'group_id' => $groupId,
+                        'date' => $date,
+                        'start_time' => $startTime,
+                        'end_time' => $session->end_time,
+                        'sessions' => [],
+                        'is_group' => true,
+                    ];
+                }
+                
+                $groupedSessions[$groupKey]['sessions'][] = $session;
+            } else {
+                // Bireysel ders - direkt ekle
+                $groupKey = 'individual_' . $session->id;
+                $groupedSessions[$groupKey] = [
+                    'group_id' => null,
+                    'date' => $date,
+                    'start_time' => $startTime,
+                    'end_time' => $session->end_time,
+                    'sessions' => [$session],
+                    'is_group' => false,
+                ];
+            }
+        }
+        
+        // 🔥 Grupları takvime ekle
+        foreach ($groupedSessions as $groupKey => $groupData) {
+            $date = $groupData['date'];
+            $startTime = $groupData['start_time'];
+            
+            // En yakın zaman dilimini bul
             $closestTimeSlot = $this->findClosestTimeSlot($startTime);
             
             if (!isset($this->calendarData[$date])) {
@@ -841,27 +882,61 @@ public function loadOccurrences()
                 $this->calendarData[$date][$closestTimeSlot] = [];
             }
             
-            $occurrence = [
-                'id' => $session->id,
-                'title' => $session->privateLesson ? $session->privateLesson->name : 'Ders',
-                'teacher' => $session->teacher ? $session->teacher->name : 'Öğretmen Atanmamış',
-                'teacher_id' => $session->teacher_id,
-                'student' => $session->student ? $session->student->name : 'Öğrenci Atanmamış',
-                'student_id' => $session->student_id,
-                'start_time' => $session->start_time,
-                'end_time' => $session->end_time,
-                'status' => $session->status,
-                'notes' => $session->notes,
-                'location' => $session->location,
-                'lesson_date' => $session->start_date,
-                'fee' => $session->fee,
-                'price' => $session->fee !== null ? $session->fee : 
-                    ($session->privateLesson && $session->privateLesson->price ? $session->privateLesson->price : 0),
-                // Ders süresi hesaplaması (kaç zaman dilimi kaplayacak)
-                'rowspan' => $this->calculateSessionRowspan($session->start_time, $session->end_time),
-            ];
+            if ($groupData['is_group']) {
+                // 🔥 GRUP DERSİ - Öğrencileri topla
+                $students = [];
+                $firstSession = $groupData['sessions'][0];
+                
+                foreach ($groupData['sessions'] as $sess) {
+                    $students[] = $sess->student ? $sess->student->name : 'Öğrenci';
+                }
+                
+                $occurrence = [
+                    'id' => $firstSession->id,
+                    'is_group' => true,
+                    'group_id' => $groupData['group_id'],
+                    'title' => $firstSession->privateLesson ? $firstSession->privateLesson->name : 'Ders',
+                    'teacher' => $firstSession->teacher ? $firstSession->teacher->name : 'Öğretmen Atanmamış',
+                    'teacher_id' => $firstSession->teacher_id,
+                    'students' => $students, // 🔥 Öğrenci listesi
+                    'student_count' => count($students),
+                    'start_time' => $firstSession->start_time,
+                    'end_time' => $firstSession->end_time,
+                    'status' => $firstSession->status,
+                    'notes' => $firstSession->notes,
+                    'location' => $firstSession->location,
+                    'lesson_date' => $firstSession->start_date,
+                    'fee' => $firstSession->fee,
+                    'price' => $firstSession->fee !== null ? $firstSession->fee : 
+                        ($firstSession->privateLesson && $firstSession->privateLesson->price ? $firstSession->privateLesson->price : 0),
+                    'rowspan' => $this->calculateSessionRowspan($firstSession->start_time, $firstSession->end_time),
+                ];
+            } else {
+                // BİREYSEL DERS
+                $session = $groupData['sessions'][0];
+                
+                $occurrence = [
+                    'id' => $session->id,
+                    'is_group' => false,
+                    'group_id' => null,
+                    'title' => $session->privateLesson ? $session->privateLesson->name : 'Ders',
+                    'teacher' => $session->teacher ? $session->teacher->name : 'Öğretmen Atanmamış',
+                    'teacher_id' => $session->teacher_id,
+                    'student' => $session->student ? $session->student->name : 'Öğrenci Atanmamış',
+                    'student_id' => $session->student_id,
+                    'start_time' => $session->start_time,
+                    'end_time' => $session->end_time,
+                    'status' => $session->status,
+                    'notes' => $session->notes,
+                    'location' => $session->location,
+                    'lesson_date' => $session->start_date,
+                    'fee' => $session->fee,
+                    'price' => $session->fee !== null ? $session->fee : 
+                        ($session->privateLesson && $session->privateLesson->price ? $session->privateLesson->price : 0),
+                    'rowspan' => $this->calculateSessionRowspan($session->start_time, $session->end_time),
+                ];
+            }
             
-            // Her occurrence'ı logla
             Log::info("Occurrence verisi: " . json_encode($occurrence));
             
             $this->calendarData[$date][$closestTimeSlot][] = $occurrence;
@@ -875,7 +950,6 @@ public function loadOccurrences()
         session()->flash('error', 'Ders bilgileri yüklenirken hata oluştu: ' . $e->getMessage());
     }
 }
-
 /**
  * En yakın zaman dilimini bul
  */

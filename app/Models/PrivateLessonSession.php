@@ -26,6 +26,7 @@ class PrivateLessonSession extends Model
         'status',
         'notes',
         'teacher_notes',
+        'group_id', 
     ];
 
     /**
@@ -50,6 +51,16 @@ class PrivateLessonSession extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(User::class, 'student_id');
+    }
+
+    /**
+     * 🔥 Grup dersindeki diğer öğrencilerin session'larını getir
+     */
+    public function groupSessions(): HasMany
+    {
+        return $this->hasMany(PrivateLessonSession::class, 'group_id', 'group_id')
+            ->where('start_date', $this->start_date)
+            ->where('start_time', $this->start_time);
     }
 
     /**

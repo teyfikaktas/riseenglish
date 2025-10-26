@@ -58,12 +58,28 @@
                             @enderror
                         </div>
                         
-                        <!-- Öğrenci Seçimi -->
+                        <!-- Grup Dersi mi? -->
                         <div>
+                            <label for="is_group_lesson" class="block text-sm font-medium text-gray-700 mb-1">
+                                Grup Dersi mi?
+                            </label>
+                            <div class="flex items-center h-10">
+                                <input type="checkbox" id="is_group_lesson" name="is_group_lesson" value="1" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="is_group_lesson" class="ml-2 text-sm text-gray-600">
+                                    Bu bir grup dersidir (Birden fazla öğrenci seçebilirsiniz)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Öğrenci Seçimi -->
+                    <div class="mt-6">
+                        <!-- Tek Öğrenci Seçimi -->
+                        <div id="single-student-container">
                             <label for="student_id" class="block text-sm font-medium text-gray-700 mb-1">
                                 Öğrenci <span class="text-red-500">*</span>
                             </label>
-                            <select id="student_id" name="student_id" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                            <select id="student_id" name="student_id" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Seçiniz</option>
                                 @foreach($students ?? [] as $student)
                                     <option value="{{ $student->id }}">{{ $student->name }}</option>
@@ -73,7 +89,35 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
+                        <!-- Çoklu Öğrenci Seçimi -->
+                        <div id="multiple-students-container" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Öğrenciler <span class="text-red-500">*</span>
+                                <span class="text-xs text-gray-500 font-normal">(Birden fazla öğrenci seçebilirsiniz)</span>
+                            </label>
+                            <div class="border border-gray-300 rounded-md max-h-60 overflow-y-auto p-3 bg-gray-50">
+                                @foreach($students ?? [] as $student)
+                                    <div class="flex items-center mb-2">
+                                        <input type="checkbox" 
+                                               id="student_{{ $student->id }}" 
+                                               name="student_ids[]" 
+                                               value="{{ $student->id }}" 
+                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded student-checkbox">
+                                        <label for="student_{{ $student->id }}" class="ml-2 text-sm text-gray-700">
+                                            {{ $student->name }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @error('student_ids')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-gray-500 mt-1" id="selected-count">Seçili öğrenci sayısı: 0</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                         <!-- Ücret -->
                         <div>
                             <label for="fee" class="block text-sm font-medium text-gray-700 mb-1">
@@ -168,14 +212,9 @@
                             </div>
                         </div>
                         
-                        <div class="mt-3">
-                            <button type="button" id="add-lesson-day" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-                                </svg>
-                                Başka Gün Ekle
-                            </button>
-                        </div>
+                        <button type="button" id="add-lesson-day" class="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            + Yeni Gün Ekle
+                        </button>
                     </div>
                 </div>
                 
@@ -248,12 +287,59 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    // Öğrenci seçimi toggle
+    const isGroupLessonCheckbox = document.getElementById('is_group_lesson');
+    const singleStudentContainer = document.getElementById('single-student-container');
+    const multipleStudentsContainer = document.getElementById('multiple-students-container');
+    const studentIdSelect = document.getElementById('student_id');
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+    const selectedCountText = document.getElementById('selected-count');
+    
+    function toggleStudentSelection() {
+        if (isGroupLessonCheckbox.checked) {
+            singleStudentContainer.classList.add('hidden');
+            multipleStudentsContainer.classList.remove('hidden');
+            studentIdSelect.removeAttribute('required');
+            updateSelectedCount();
+        } else {
+            singleStudentContainer.classList.remove('hidden');
+            multipleStudentsContainer.classList.add('hidden');
+            studentIdSelect.setAttribute('required', 'required');
+            studentCheckboxes.forEach(cb => {
+                cb.checked = false;
+                cb.removeAttribute('required');
+            });
+        }
+    }
+    
+    function updateSelectedCount() {
+        const checkedCount = document.querySelectorAll('.student-checkbox:checked').length;
+        selectedCountText.textContent = `Seçili öğrenci sayısı: ${checkedCount}`;
+        
+        if (checkedCount > 0 && isGroupLessonCheckbox.checked) {
+            studentCheckboxes.forEach(cb => {
+                cb.removeAttribute('required');
+            });
+        } else if (checkedCount === 0 && isGroupLessonCheckbox.checked) {
+            studentCheckboxes.forEach(cb => {
+                cb.setAttribute('required', 'required');
+            });
+        }
+    }
+    
+    isGroupLessonCheckbox.addEventListener('change', toggleStudentSelection);
+    
+    studentCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateSelectedCount);
+    });
+    
+    toggleStudentSelection();
+    
     // Ders Günleri Ekleme İşlevi
     const addLessonDayBtn = document.getElementById('add-lesson-day');
     const lessonDaysContainer = document.getElementById('lesson-days-container');
     
-    // Başlangıç saati değiştiğinde bitiş saatini 45 dakika sonraya ayarla
     function setupTimeInputListeners() {
         document.querySelectorAll('.start-time-input').forEach(input => {
             if (!input.hasAttribute('data-has-listener')) {
@@ -261,26 +347,21 @@
                 input.addEventListener('change', function() {
                     const endTimeInput = this.closest('.lesson-day-row').querySelector('.end-time-input');
                     if (this.value && !endTimeInput.value) {
-                        // Başlangıç saatini ayrıştır
                         const [hours, minutes] = this.value.split(':').map(Number);
                         
-                        // 45 dakika sonrasını hesapla
                         let endHours = hours;
                         let endMinutes = minutes + 45;
                         
-                        // Dakikalar 60'ı aşarsa saat arttır
                         if (endMinutes >= 60) {
                             endHours += 1;
                             endMinutes -= 60;
                         }
                         
-                        // Saat 24'ü aşarsa kontrol et
                         if (endHours >= 24) {
                             endHours = 23;
                             endMinutes = 59;
                         }
                         
-                        // Bitiş saatini ayarla
                         endTimeInput.value = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
                     }
                 });
@@ -288,10 +369,8 @@
         });
     }
     
-    // İlk satır için dinleyiciyi ekle
     setupTimeInputListeners();
     
-    // Yeni ders günü ekle
     addLessonDayBtn.addEventListener('click', function() {
         const newRow = document.createElement('div');
         newRow.className = 'lesson-day-row bg-white p-3 rounded border border-gray-200 mb-2';
@@ -336,10 +415,8 @@
         
         lessonDaysContainer.appendChild(newRow);
         
-        // Yeni eklenen satır için dinleyiciyi ekle
         setupTimeInputListeners();
         
-        // Satır silme düğmesi için dinleyici ekle
         newRow.querySelector('.remove-row').addEventListener('click', function() {
             newRow.remove();
         });

@@ -437,6 +437,7 @@ Route::get('/ozel-ders-teslim/{submissionId}', [App\Http\Controllers\Teacher\Tea
 ->name('private-lessons.submission.view');
 Route::post('/ozel-ders-teslim/{submissionId}/degerlendir', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'gradeSubmission'])
 ->name('private-lessons.submission.grade');
+
 Route::get('/ozel-ders-teslim/{submissionId}/indir', [App\Http\Controllers\Teacher\TeacherPrivateLessonController::class, 'downloadSubmission'])
 ->name('private-lessons.submission.download');
             // Öğretmen rotaları içinde, özel ders rotaları arasına ekleyin
