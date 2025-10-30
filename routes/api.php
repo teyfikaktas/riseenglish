@@ -21,8 +21,7 @@ Route::get('/languages', function() {
 
 Route::get('/categories/{lang}', function($lang) {
     try {
-        $categories = WordSet::where('user_id', 1)
-            ->where('is_active', 1)
+        $categories = WordSet::where('is_active', 1)
             ->whereHas('words', function($query) use ($lang) {
                 $query->where('lang', $lang);
             })
