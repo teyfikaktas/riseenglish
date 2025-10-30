@@ -18,10 +18,15 @@ Route::get('/languages', function() {
         return response()->json(['en'], 200);
     }
 });
-
 Route::get('/categories/{lang}', function($lang) {
     try {
+        $userId = auth()->check() ? auth()->id() : 1;
+        
         $categories = WordSet::where('is_active', 1)
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', 1)
+                      ->orWhere('user_id', $userId);
+            })
             ->whereHas('words', function($query) use ($lang) {
                 $query->where('lang', $lang);
             })
@@ -41,7 +46,6 @@ Route::get('/categories/{lang}', function($lang) {
         return response()->json([]);
     }
 });
-
 Route::get('/words/{categoryId}/{page}/{lang?}', function($categoryId, $page = 1, $lang = null) {
     try {
         $category = WordSet::findOrFail($categoryId);
