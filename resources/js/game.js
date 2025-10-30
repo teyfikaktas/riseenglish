@@ -121,13 +121,14 @@ createScrollableCategories(categories) {
     const scrollAreaY = height * 0.25;
     const scrollAreaHeight = height * 0.65;
     const buttonHeight = 80;
+    const topPadding = 40; // ✅ Üstten boşluk
     
     // ✅ CONTAINER
-    this.categoryContainer = this.add.container(0, 0);
+    this.categoryContainer = this.add.container(0, scrollAreaY);
     
     // ✅ KATEGORİLERİ EKLE
     categories.forEach((category, index) => {
-        const y = scrollAreaY + (index * buttonHeight);
+        const y = topPadding + (index * buttonHeight); // ✅ topPadding ile başla
         
         const button = this.add.rectangle(width/2, y, 400, 70, parseInt(category.color.replace('#', '0x')))
             .setStrokeStyle(3, 0xffffff)
@@ -164,81 +165,93 @@ createScrollableCategories(categories) {
     this.categoryContainer.setMask(mask);
     
     // ✅ SCROLL HESAPLAMA
-    const totalHeight = categories.length * buttonHeight;
-    const maxScroll = totalHeight - scrollAreaHeight;
+    const totalHeight = topPadding + (categories.length * buttonHeight) + topPadding; // Alt boşluk da ekle
+    const maxScroll = Math.max(0, totalHeight - scrollAreaHeight);
     
     console.log('📊 Scroll Info:', {
-        totalHeight,
+        containerY: scrollAreaY,
         scrollAreaHeight,
+        totalHeight,
         maxScroll,
+        topPadding,
+        firstButtonY: topPadding,
         categories: categories.length
     });
     
-    // ✅ SCROLL BUTONLARI
-    const btnSize = 35;
-    const btnX = width - 50;
-    const btnCenterY = scrollAreaY + scrollAreaHeight / 2;
-    const btnSpacing = 100;
-    
-    // YUKARI BUTONU
-    const upBtn = this.add.circle(btnX, btnCenterY - btnSpacing, btnSize, 0x6366f1, 0.9)
-        .setStrokeStyle(3, 0xffffff)
-        .setInteractive({ useHandCursor: true })
-        .setDepth(2000);
-    
-    this.add.text(btnX, btnCenterY - btnSpacing, '▲', {
-        fontSize: '28px',
-        fill: '#ffffff',
-        fontFamily: 'Arial',
-        fontStyle: 'bold'
-    }).setOrigin(0.5).setDepth(2000);
-    
-    // AŞAĞI BUTONU
-    const downBtn = this.add.circle(btnX, btnCenterY + btnSpacing, btnSize, 0x6366f1, 0.9)
-        .setStrokeStyle(3, 0xffffff)
-        .setInteractive({ useHandCursor: true })
-        .setDepth(2000);
-    
-    this.add.text(btnX, btnCenterY + btnSpacing, '▼', {
-        fontSize: '28px',
-        fill: '#ffffff',
-        fontFamily: 'Arial',
-        fontStyle: 'bold'
-    }).setOrigin(0.5).setDepth(2000);
-    
-    // ✅ YUKARI TIKLA
-    upBtn.on('pointerdown', () => {
-        console.log('⬆️ UP clicked - Current Y:', this.categoryContainer.y);
+    // ⭐ Sadece scroll gerekiyorsa butonları göster
+    if (maxScroll > 0) {
+        const btnSize = 35;
+        const btnX = width - 50;
+        const btnCenterY = scrollAreaY + scrollAreaHeight / 2;
+        const btnSpacing = 100;
         
-        const newY = Math.min(this.categoryContainer.y + 100, 0);
+        // YUKARI BUTONU
+        const upBtn = this.add.circle(btnX, btnCenterY - btnSpacing, btnSize, 0x6366f1, 0.9)
+            .setStrokeStyle(3, 0xffffff)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(2000);
         
-        this.tweens.add({
-            targets: this.categoryContainer,
-            y: newY,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => {
-                console.log('✅ Scrolled to:', newY);
-            }
+        this.add.text(btnX, btnCenterY - btnSpacing, '▲', {
+            fontSize: '28px',
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(2000);
+        
+        // AŞAĞI BUTONU
+        const downBtn = this.add.circle(btnX, btnCenterY + btnSpacing, btnSize, 0x6366f1, 0.9)
+            .setStrokeStyle(3, 0xffffff)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(2000);
+        
+        this.add.text(btnX, btnCenterY + btnSpacing, '▼', {
+            fontSize: '28px',
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(2000);
+        
+        // ✅ YUKARI TIKLA
+        upBtn.on('pointerdown', () => {
+            const currentOffset = this.categoryContainer.y - scrollAreaY;
+            const newOffset = Math.min(currentOffset + 120, 0);
+            const newY = scrollAreaY + newOffset;
+            
+            console.log('⬆️ Scroll Up:', { 
+                currentY: this.categoryContainer.y, 
+                currentOffset, 
+                newY 
+            });
+            
+            this.tweens.add({
+                targets: this.categoryContainer,
+                y: newY,
+                duration: 300,
+                ease: 'Power2'
+            });
         });
-    });
-    
-    // ✅ AŞAĞI TIKLA
-    downBtn.on('pointerdown', () => {
-        console.log('⬇️ DOWN clicked - Current Y:', this.categoryContainer.y);
         
-        const newY = Math.max(this.categoryContainer.y - 100, -maxScroll);
-        
-        this.tweens.add({
-            targets: this.categoryContainer,
-            y: newY,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => {
-                console.log('✅ Scrolled to:', newY);
-            }
+        // ✅ AŞAĞI TIKLA
+        downBtn.on('pointerdown', () => {
+            const currentOffset = this.categoryContainer.y - scrollAreaY;
+            const newOffset = Math.max(currentOffset - 120, -maxScroll);
+            const newY = scrollAreaY + newOffset;
+            
+            console.log('⬇️ Scroll Down:', { 
+                currentY: this.categoryContainer.y, 
+                currentOffset, 
+                newY,
+                maxScroll
+            });
+            
+            this.tweens.add({
+                targets: this.categoryContainer,
+                y: newY,
+                duration: 300,
+                ease: 'Power2'
+            });
         });
-    });
+    }
 }
     createBackButton() {
         const backButton = this.add.text(50, 50, '← Geri', {
@@ -302,40 +315,141 @@ class SetSelectionScene extends Phaser.Scene {
         this.createBackButton();
     }
     
-    createSetButtons() {
-        const { width, height } = this.scale;
-        const totalSets = this.category.total_sets;
-        const startY = height * 0.35;
+createSetButtons() {
+    const { width, height } = this.scale;
+    const totalSets = this.category.total_sets;
+    
+    const scrollAreaY = height * 0.35;
+    const scrollAreaHeight = height * 0.55; // Scroll alanı yüksekliği
+    const buttonHeight = 70;
+    const topPadding = 20;
+    
+    // ✅ CONTAINER oluştur
+    this.setContainer = this.add.container(0, scrollAreaY);
+    
+    // ✅ SETLERI EKLE
+    for (let i = 1; i <= totalSets; i++) {
+        const y = topPadding + ((i - 1) * buttonHeight);
         
-        for (let i = 1; i <= totalSets; i++) {
-            const y = startY + ((i - 1) * 70);
-            
-            const button = this.add.rectangle(width/2, y, 300, 60, 0x10b981)
-                .setStrokeStyle(3, 0xffffff)
-                .setInteractive({ useHandCursor: true });
-            
-            const buttonText = this.add.text(width/2, y, `Set ${i} (1-50)`, {
-                fontSize: '22px',
+        const button = this.add.rectangle(width/2, y, 300, 60, 0x10b981)
+            .setStrokeStyle(3, 0xffffff)
+            .setInteractive({ useHandCursor: true });
+        
+        const buttonText = this.add.text(width/2, y, `Set ${i} (1-50)`, {
+            fontSize: '22px',
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        this.setContainer.add([button, buttonText]);
+        
+        button.on('pointerdown', async () => {
+            const loadingOverlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.8);
+            const loadingMsg = this.add.text(width/2, height/2, 'Kelimeler yükleniyor...', {
+                fontSize: '32px',
                 fill: '#ffffff',
-                fontFamily: 'Arial',
-                fontStyle: 'bold'
+                fontFamily: 'Arial'
             }).setOrigin(0.5);
             
-            button.on('pointerdown', async () => {
-                const loadingOverlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.8);
-                const loadingMsg = this.add.text(width/2, height/2, 'Kelimeler yükleniyor...', {
-                    fontSize: '32px',
-                    fill: '#ffffff',
-                    fontFamily: 'Arial'
-                }).setOrigin(0.5);
-                
-                const words = await WordAPI.getWordsBySet(this.category.id, i);
-                window.WordData = words;
-                
-                this.scene.start('MenuScene');
-            });
-        }
+            const words = await WordAPI.getWordsBySet(this.category.id, i);
+            window.WordData = words;
+            
+            this.scene.start('MenuScene');
+        });
     }
+    
+    // ✅ MASK
+    const maskGraphics = this.make.graphics();
+    maskGraphics.fillStyle(0xffffff);
+    maskGraphics.fillRect(0, scrollAreaY, width, scrollAreaHeight);
+    const mask = maskGraphics.createGeometryMask();
+    this.setContainer.setMask(mask);
+    
+    // ✅ SCROLL HESAPLAMA
+    const totalHeight = topPadding + (totalSets * buttonHeight) + topPadding;
+    const maxScroll = Math.max(0, totalHeight - scrollAreaHeight);
+    
+    console.log('📊 Set Scroll Info:', {
+        totalSets,
+        totalHeight,
+        scrollAreaHeight,
+        maxScroll
+    });
+    
+    // ⭐ Scroll gerekiyorsa okları göster
+    if (maxScroll > 0) {
+        const btnSize = 35;
+        const btnX = width - 50;
+        const btnCenterY = scrollAreaY + scrollAreaHeight / 2;
+        const btnSpacing = 100;
+        
+        // YUKARI BUTONU
+        const upBtn = this.add.circle(btnX, btnCenterY - btnSpacing, btnSize, 0x6366f1, 0.9)
+            .setStrokeStyle(3, 0xffffff)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(2000);
+        
+        this.add.text(btnX, btnCenterY - btnSpacing, '▲', {
+            fontSize: '28px',
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(2000);
+        
+        // AŞAĞI BUTONU
+        const downBtn = this.add.circle(btnX, btnCenterY + btnSpacing, btnSize, 0x6366f1, 0.9)
+            .setStrokeStyle(3, 0xffffff)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(2000);
+        
+        this.add.text(btnX, btnCenterY + btnSpacing, '▼', {
+            fontSize: '28px',
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(2000);
+        
+        // ✅ YUKARI TIKLA
+        upBtn.on('pointerdown', () => {
+            const currentOffset = this.setContainer.y - scrollAreaY;
+            const newOffset = Math.min(currentOffset + 120, 0);
+            const newY = scrollAreaY + newOffset;
+            
+            this.tweens.add({
+                targets: this.setContainer,
+                y: newY,
+                duration: 300,
+                ease: 'Power2'
+            });
+        });
+        
+        // ✅ AŞAĞI TIKLA
+        downBtn.on('pointerdown', () => {
+            const currentOffset = this.setContainer.y - scrollAreaY;
+            const newOffset = Math.max(currentOffset - 120, -maxScroll);
+            const newY = scrollAreaY + newOffset;
+            
+            this.tweens.add({
+                targets: this.setContainer,
+                y: newY,
+                duration: 300,
+                ease: 'Power2'
+            });
+        });
+        
+        // Glow animasyonu
+        this.tweens.add({
+            targets: [upBtn, downBtn],
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+}
     
     createBackButton() {
         const backButton = this.add.text(50, 50, '← Geri', {

@@ -43,13 +43,15 @@ Route::get('/categories/{lang}', function($lang) {
     }
 });
 
-Route::get('/words/{categoryId}/{page?}', function($categoryId, $page = 1) {
+Route::get('/words/{categoryId}/{page}/{lang?}', function($categoryId, $page = 1, $lang = null) {
     try {
         $category = WordSet::findOrFail($categoryId);
         
-        // İlk kelimeden dili al
-        $firstWord = $category->words()->first();
-        $lang = $firstWord ? $firstWord->lang : 'en';
+        // Eğer lang gönderilmediyse, ilk kelimeden al
+        if (!$lang) {
+            $firstWord = $category->words()->first();
+            $lang = $firstWord ? $firstWord->lang : 'en';
+        }
         
         // Sadece o dildeki kelimeleri getir
         $words = $category->words()
@@ -73,7 +75,8 @@ Route::get('/words/{categoryId}/{page?}', function($categoryId, $page = 1) {
             'words' => $gameWords,
             'current_page' => $page,
             'total_pages' => $totalWords > 0 ? ceil($totalWords / 50) : 0,
-            'category_name' => $category->name
+            'category_name' => $category->name,
+            'lang' => $lang // Dil bilgisini de gönder
         ]);
     } catch (\Exception $e) {
         \Log::error('Words API Error: ' . $e->getMessage());
@@ -84,7 +87,8 @@ Route::get('/words/{categoryId}/{page?}', function($categoryId, $page = 1) {
             ],
             'current_page' => 1,
             'total_pages' => 1,
-            'category_name' => 'Error'
+            'category_name' => 'Error',
+            'lang' => 'en'
         ]);
     }
 });

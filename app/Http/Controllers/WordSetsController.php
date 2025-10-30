@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Word;
 use App\Models\WordSet;
 use App\Models\UserWord;
 use Illuminate\Http\Request;
@@ -107,51 +108,67 @@ class WordSetsController extends Controller
 
         return view('word-sets.show', compact('wordSet', 'words'));
     }
-
     // Kelime ekleme
-    public function addWord(Request $request, WordSet $wordSet)
-    {
-        // Kullanıcının kendi seti mi kontrol et
-        if ($wordSet->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        $request->validate([
-            'english_word' => 'required|string|max:255',
-            'turkish_meaning' => 'required|string|max:255',
-            'word_type' => 'nullable|string|max:50'
-        ]);
-
-        // Aynı kelime var mı kontrol et
-        if ($wordSet->userWords()->where('english_word', $request->english_word)->exists()) {
-            return back()->withErrors(['english_word' => 'Bu kelime zaten bu sette mevcut!']);
-        }
-
-        $wordSet->userWords()->create([
-            'english_word' => $request->english_word,
-            'turkish_meaning' => $request->turkish_meaning,
-            'word_type' => $request->word_type,
-        ]);
-
-        // Word count'u güncelle
-        $wordSet->update(['word_count' => $wordSet->userWords()->count()]);
-
-        return back()->with('success', 'Kelime başarıyla eklendi!');
+public function addWord(Request $request, WordSet $wordSet)
+{
+    // Kullanıcının kendi seti mi kontrol et
+    if ($wordSet->user_id !== Auth::id()) {
+        abort(403);
     }
 
-    // Kelime silme
-    public function deleteWord(WordSet $wordSet, UserWord $userWord)
-    {
-        // Kullanıcının kendi seti mi kontrol et
-        if ($wordSet->user_id !== Auth::id() || $userWord->word_set_id !== $wordSet->id) {
-            abort(403);
-        }
+    $request->validate([
+        'english_word' => 'required|string|max:255',
+        'turkish_meaning' => 'required|string|max:255',
+        'word_type' => 'nullable|string|max:50'
+    ]);
 
-        $userWord->delete();
-
-        // Word count'u güncelle
-        $wordSet->update(['word_count' => $wordSet->userWords()->count()]);
-
-        return back()->with('success', 'Kelime başarıyla silindi!');
+    // Aynı kelime var mı kontrol et
+    if ($wordSet->userWords()->where('english_word', $request->english_word)->exists()) {
+        return back()->withErrors(['english_word' => 'Bu kelime zaten bu sette mevcut!']);
     }
+
+    // words tablosuna ekle ← İŞTE BU YENİ!
+    Word::create([
+        'word' => $request->english_word,
+        'definition' => $request->turkish_meaning,
+        'lang' => 'en',
+        'category' => $wordSet->id,
+        'difficulty' => 'beginner',
+        'is_active' => true
+    ]);
+
+    // user_words tablosuna ekle (zaten vardı)
+    $wordSet->userWords()->create([
+        'english_word' => $request->english_word,
+        'turkish_meaning' => $request->turkish_meaning,
+        'word_type' => $request->word_type,
+    ]);
+
+    // Word count güncelle
+    $wordSet->update(['word_count' => $wordSet->words()->count()]);
+
+    return back()->with('success', 'Kelime başarıyla eklendi!');
+}
+
+// Kelime silme
+public function deleteWord(WordSet $wordSet, UserWord $userWord)
+{
+    // Kullanıcının kendi seti mi kontrol et
+    if ($wordSet->user_id !== Auth::id() || $userWord->word_set_id !== $wordSet->id) {
+        abort(403);
+    }
+
+    // words tablosundan sil
+    Word::where('category', $wordSet->id)
+        ->where('word', $userWord->english_word)
+        ->delete();
+
+    // user_words tablosundan sil
+    $userWord->delete();
+
+    // Word count'u güncelle
+    $wordSet->update(['word_count' => $wordSet->words()->count()]);
+
+    return back()->with('success', 'Kelime başarıyla silindi!');
+}
 }

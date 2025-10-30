@@ -46,7 +46,7 @@
             @endif
             
             <p class="mt-2"><span class="font-medium">Tarih:</span> {{ \Carbon\Carbon::parse($session->start_date)->format('d.m.Y') }}</p>
-        </div>
+        </div>set
         
         @if($isGroupLesson)
             <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
