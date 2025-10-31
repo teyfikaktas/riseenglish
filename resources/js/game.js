@@ -595,11 +595,28 @@ class WordAPI {
             return ['en'];
         }
     }
-    
+       static getAuthToken() {
+        // Laravel Sanctum için meta tag'den al
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        return token;
+    }
     static async getCategories(lang) {
         try {
-            const response = await fetch(`/api/categories/${lang}`);
-            return await response.json();
+            const response = await fetch(`/api/categories/${lang}`, {
+                headers: this.getHeaders(),
+                credentials: 'same-origin' // ✅ Cookie'leri gönder (SESSION için önemli!)
+            });
+            
+            const data = await response.json();
+            
+            // ✅ DEBUG: Gelen veriyi konsola yaz
+            console.log('📦 Categories Response:', {
+                lang: lang,
+                count: data.length,
+                categories: data
+            });
+            
+            return data;
         } catch (error) {
             console.error('Kategoriler yüklenemedi:', error);
             return [];
