@@ -602,21 +602,8 @@ class WordAPI {
     }
     static async getCategories(lang) {
         try {
-            const response = await fetch(`/api/categories/${lang}`, {
-                headers: this.getHeaders(),
-                credentials: 'same-origin' // ✅ Cookie'leri gönder (SESSION için önemli!)
-            });
-            
-            const data = await response.json();
-            
-            // ✅ DEBUG: Gelen veriyi konsola yaz
-            console.log('📦 Categories Response:', {
-                lang: lang,
-                count: data.length,
-                categories: data
-            });
-            
-            return data;
+            const response = await fetch(`/api/categories/${lang}`);
+            return await response.json();
         } catch (error) {
             console.error('Kategoriler yüklenemedi:', error);
             return [];
