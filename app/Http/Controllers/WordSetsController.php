@@ -117,6 +117,7 @@ public function addWord(Request $request, WordSet $wordSet)
     }
 
     $request->validate([
+        'lang' => 'required|in:en,de',
         'english_word' => 'required|string|max:255',
         'turkish_meaning' => 'required|string|max:255',
         'word_type' => 'nullable|string|max:50'
@@ -127,17 +128,17 @@ public function addWord(Request $request, WordSet $wordSet)
         return back()->withErrors(['english_word' => 'Bu kelime zaten bu sette mevcut!']);
     }
 
-    // words tablosuna ekle ← İŞTE BU YENİ!
+    // words tablosuna ekle (dil bilgisi ile)
     Word::create([
         'word' => $request->english_word,
         'definition' => $request->turkish_meaning,
-        'lang' => 'en',
+        'lang' => $request->lang, // Kullanıcının seçtiği dil
         'category' => $wordSet->id,
         'difficulty' => 'beginner',
         'is_active' => true
     ]);
 
-    // user_words tablosuna ekle (zaten vardı)
+    // user_words tablosuna ekle
     $wordSet->userWords()->create([
         'english_word' => $request->english_word,
         'turkish_meaning' => $request->turkish_meaning,
@@ -147,7 +148,8 @@ public function addWord(Request $request, WordSet $wordSet)
     // Word count güncelle
     $wordSet->update(['word_count' => $wordSet->words()->count()]);
 
-    return back()->with('success', 'Kelime başarıyla eklendi!');
+    $langName = $request->lang === 'en' ? 'İngilizce' : 'Almanca';
+    return back()->with('success', "Kelime başarıyla eklendi! ({$langName})");
 }
 
 // Kelime silme

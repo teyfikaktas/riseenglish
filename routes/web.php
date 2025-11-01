@@ -121,7 +121,34 @@ Route::prefix('kelimelerim')->name('word-sets.')->group(function () {
     Route::post('/telefon-dogrulama/send', [App\Http\Controllers\OtpController::class, 'sendOtp'])
         ->name('verification.phone.send');
 });
-
+Route::middleware(['auth'])->group(function () {
+    Route::get('/categories/{lang}', function($lang) {
+        $userId = auth()->id(); // Artık kesin var
+        
+        \Log::info('Categories API Called', [
+            'lang' => $lang,
+            'userId' => $userId
+        ]);
+        
+        $categories = \App\Models\WordSet::where('is_active', 1)
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', 1)
+                      ->orWhere('user_id', $userId);
+            })
+            ->whereHas('words', function($query) use ($lang) {
+                $query->where('lang', $lang);
+            })
+            ->select('id', 'name', 'description', 'color', 'word_count', 'user_id')
+            ->get()
+            ->map(function($category) use ($lang) {
+                $wordCount = $category->words()->where('lang', $lang)->count();
+                $category->total_sets = $wordCount > 0 ? ceil($wordCount / 50) : 0;
+                return $category;
+            });
+        
+        return response()->json($categories);
+    });
+});
 // Ana Route'lar
 // Ana route
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index']);

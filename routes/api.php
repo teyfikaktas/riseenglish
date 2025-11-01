@@ -22,23 +22,42 @@ Route::get('/categories/{lang}', function($lang) {
     try {
         $userId = auth()->check() ? auth()->id() : 1;
         
+        \Log::info('Categories API Called', [
+            'lang' => $lang,
+            'userId' => $userId,
+            'is_authenticated' => auth()->check()
+        ]);
+        
         $categories = WordSet::where('is_active', 1)
             ->where(function($query) use ($userId) {
                 $query->where('user_id', 1)
+                      ->orWhere('user_id', 36)
                       ->orWhere('user_id', $userId);
             })
             ->whereHas('words', function($query) use ($lang) {
                 $query->where('lang', $lang);
             })
-            ->select('id', 'name', 'description', 'color', 'word_count')
+            ->select('id', 'name', 'description', 'color', 'word_count', 'user_id') // ← user_id ekledim
             ->get()
             ->map(function($category) use ($lang) {
-                // Sadece bu dildeki kelime sayısına göre set sayısını hesapla
                 $wordCount = $category->words()->where('lang', $lang)->count();
                 $totalChunks = $wordCount > 0 ? ceil($wordCount / 50) : 0;
+                
+                \Log::info('Category Processed', [
+                    'category_id' => $category->id,
+                    'category_name' => $category->name,
+                    'user_id' => $category->user_id,
+                    'actual_word_count' => $wordCount,
+                    'total_sets' => $totalChunks
+                ]);
+                
                 $category->total_sets = $totalChunks;
                 return $category;
             });
+        
+        \Log::info('Categories Response', [
+            'total_categories' => $categories->count()
+        ]);
         
         return response()->json($categories);
     } catch (\Exception $e) {

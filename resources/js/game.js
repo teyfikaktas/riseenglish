@@ -602,7 +602,7 @@ class WordAPI {
     }
     static async getCategories(lang) {
         try {
-            const response = await fetch(`/api/categories/${lang}`);
+            const response = await fetch(`/categories/${lang}`);
             return await response.json();
         } catch (error) {
             console.error('Kategoriler yüklenemedi:', error);
