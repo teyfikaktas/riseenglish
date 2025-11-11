@@ -108,6 +108,119 @@ class WordSetsController extends Controller
 
         return view('word-sets.show', compact('wordSet', 'words'));
     }
+
+    public function importExcel(Request $request, WordSet $wordSet)
+{
+    // Kullanıcının kendi seti mi kontrol et
+    if ($wordSet->user_id !== Auth::id()) {
+        abort(403);
+    }
+
+    $request->validate([
+        'excel_file' => 'required|mimes:xlsx,xls,csv|max:5120'
+    ]);
+
+    try {
+        $file = $request->file('excel_file');
+        $excel = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->path());
+        $sheet = $excel->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        $importedCount = 0;
+        $skippedCount = 0;
+        $errors = [];
+        $debugLog = [];
+
+        foreach ($rows as $index => $row) {
+            // Başlık satırını atla
+            if ($index === 0) {
+                $debugLog[] = "Satır 1 (Başlık) atlandı";
+                continue;
+            }
+
+            // Null kontrol - her hücre kontrol et
+            $lang = isset($row[0]) ? trim((string)$row[0]) : '';
+            $english_word = isset($row[1]) ? trim((string)$row[1]) : '';
+            $turkish_meaning = isset($row[2]) ? trim((string)$row[2]) : '';
+            $word_type = isset($row[3]) ? trim((string)$row[3]) : null;
+
+            // Boş satırları atla
+            if (empty($english_word) && empty($turkish_meaning)) {
+                $debugLog[] = "Satır " . ($index + 1) . " boş, atlandı";
+                continue;
+            }
+
+            try {
+                // Validasyon
+                if (empty($english_word)) {
+                    $errors[] = "Satır " . ($index + 1) . ": Kelime boş!";
+                    $skippedCount++;
+                    continue;
+                }
+
+                if (empty($turkish_meaning)) {
+                    $errors[] = "Satır " . ($index + 1) . ": Anlamı boş!";
+                    $skippedCount++;
+                    continue;
+                }
+
+                // Dil kontrol - boşsa default "en"
+                if (empty($lang) || !in_array(strtolower($lang), ['en', 'de'])) {
+                    $lang = 'en';
+                } else {
+                    $lang = strtolower($lang);
+                }
+
+                // Aynı kelime var mı kontrol et
+                if ($wordSet->userWords()->where('english_word', $english_word)->exists()) {
+                    $debugLog[] = "Satır " . ($index + 1) . ": '{$english_word}' zaten var, atlandı";
+                    $skippedCount++;
+                    continue;
+                }
+
+                // words tablosuna ekle
+                Word::create([
+                    'word' => $english_word,
+                    'definition' => $turkish_meaning,
+                    'lang' => $lang,
+                    'category' => $wordSet->id,
+                    'difficulty' => 'beginner',
+                    'is_active' => true
+                ]);
+
+                // user_words tablosuna ekle
+                $wordSet->userWords()->create([
+                    'english_word' => $english_word,
+                    'turkish_meaning' => $turkish_meaning,
+                    'word_type' => $word_type ?: null,
+                ]);
+
+                $debugLog[] = "Satır " . ($index + 1) . ": '{$english_word}' ✅ eklendi";
+                $importedCount++;
+            } catch (\Exception $e) {
+                $errors[] = "Satır " . ($index + 1) . " ({$english_word}): " . $e->getMessage();
+                $skippedCount++;
+            }
+        }
+
+        // Word count'u güncelle
+        $wordSet->update(['word_count' => $wordSet->userWords()->count()]);
+
+        $message = "{$importedCount} kelime başarıyla eklendi!";
+        if ($skippedCount > 0) {
+            $message .= " ({$skippedCount} atlandı)";
+        }
+
+        // Session'a debug log ekle
+        session()->flash('import_debug', $debugLog);
+        
+        return back()->with('success', $message)->with('import_errors', $errors);
+    } catch (\Exception $e) {
+        \Log::error('Excel Import Error: ' . $e->getMessage());
+        return back()->withErrors(['excel_file' => 'Excel dosyası okunurken hata oluştu: ' . $e->getMessage()]);
+    }
+}
+
     // Kelime ekleme
 public function addWord(Request $request, WordSet $wordSet)
 {

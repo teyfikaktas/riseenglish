@@ -111,7 +111,8 @@ Route::prefix('kelimelerim')->name('word-sets.')->group(function () {
     Route::get('/{wordSet}/duzenle', [WordSetsController::class, 'edit'])->name('edit');
     Route::put('/{wordSet}', [WordSetsController::class, 'update'])->name('update');
     Route::delete('/{wordSet}', [WordSetsController::class, 'destroy'])->name('destroy');
-    
+        Route::post('/{wordSet}/import-excel', [WordSetsController::class, 'importExcel'])->name('import-excel');
+
     // Kelime işlemleri
     Route::post('/{wordSet}/kelime-ekle', [WordSetsController::class, 'addWord'])->name('add-word');
     Route::delete('/{wordSet}/kelime/{userWord}', [WordSetsController::class, 'deleteWord'])->name('delete-word'); // ← BURASI DEĞİŞTİ

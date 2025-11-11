@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">
         <!-- Header -->
@@ -54,7 +55,50 @@
                 </ul>
             </div>
         @endif
-
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 mb-8">
+    <div class="p-6 border-b border-gray-100">
+        <h2 class="text-xl font-bold text-[#1a2e5a] flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Toplu Kelime Yükle
+        </h2>
+    </div>
+<form action="{{ route('word-sets.import-excel', $wordSet) }}" method="POST" enctype="multipart/form-data" class="p-6">
+        @csrf
+        <div class="space-y-4">
+            <div>
+                <label for="excel_file" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Excel Dosyası <span class="text-red-500">*</span>
+                </label>
+                <div class="flex items-center justify-center w-full">
+                    <label for="excel_file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <p class="text-sm text-gray-500"><span class="font-semibold">Dosya seçmek için tıklayın</span> veya sürükleyip bırakın</p>
+                            <p class="text-xs text-gray-400 mt-1">Excel dosyası (.xlsx, .xls)</p>
+                        </div>
+                        <input id="excel_file" type="file" name="excel_file" class="hidden" accept=".xlsx,.xls">
+                    </label>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    📋 Format: Sütunlar sırasıyla <strong>Dil (en/de)</strong>, <strong>Kelime</strong>, <strong>Türkçe Anlamı</strong>, <strong>Kelime Türü (isteğe bağlı)</strong>
+                </p>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Yükle
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
         <!-- Kelime Ekleme Formu -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 mb-8">
             <div class="p-6 border-b border-gray-100">
