@@ -3,8 +3,18 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OtpController;
+use App\Http\Controllers\Api\AuthController;
 use App\Models\Word;
 use App\Models\WordSet;
+
+// Auth routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+});
 
 // API route for OTP SMS without middleware
 Route::post('/send-otp', [OtpController::class, 'sendOtp']);
@@ -18,6 +28,7 @@ Route::get('/languages', function() {
         return response()->json(['en'], 200);
     }
 });
+
 Route::get('/categories/{lang}', function($lang) {
     try {
         $userId = auth()->check() ? auth()->id() : 1;
@@ -37,7 +48,7 @@ Route::get('/categories/{lang}', function($lang) {
             ->whereHas('words', function($query) use ($lang) {
                 $query->where('lang', $lang);
             })
-            ->select('id', 'name', 'description', 'color', 'word_count', 'user_id') // ← user_id ekledim
+            ->select('id', 'name', 'description', 'color', 'word_count', 'user_id')
             ->get()
             ->map(function($category) use ($lang) {
                 $wordCount = $category->words()->where('lang', $lang)->count();
@@ -65,17 +76,16 @@ Route::get('/categories/{lang}', function($lang) {
         return response()->json([]);
     }
 });
+
 Route::get('/words/{categoryId}/{page}/{lang?}', function($categoryId, $page = 1, $lang = null) {
     try {
         $category = WordSet::findOrFail($categoryId);
         
-        // Eğer lang gönderilmediyse, ilk kelimeden al
         if (!$lang) {
             $firstWord = $category->words()->first();
             $lang = $firstWord ? $firstWord->lang : 'en';
         }
         
-        // Sadece o dildeki kelimeleri getir
         $words = $category->words()
             ->where('lang', $lang)
             ->orderBy('id')
@@ -98,7 +108,7 @@ Route::get('/words/{categoryId}/{page}/{lang?}', function($categoryId, $page = 1
             'current_page' => $page,
             'total_pages' => $totalWords > 0 ? ceil($totalWords / 50) : 0,
             'category_name' => $category->name,
-            'lang' => $lang // Dil bilgisini de gönder
+            'lang' => $lang
         ]);
     } catch (\Exception $e) {
         \Log::error('Words API Error: ' . $e->getMessage());
