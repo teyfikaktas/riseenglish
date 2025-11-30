@@ -57,17 +57,18 @@ public function show($examId)
         })
         ->with([
             'teacher:id,name',
-            'wordSets.words' => function($query) {
-                $query->select('words.id', 'words.word', 'words.definition', 'words.word_set_id') // ✅ english/turkish değil word/definition
-                      ->inRandomOrder();
-            }
+            'wordSets' // ✅ eager load'u kaldır, manuel çekeceğiz
         ])
         ->findOrFail($examId);
     
-    // Tüm setlerden kelimeleri topla
-    $questions = $exam->wordSets->flatMap(function($set) {
-        return $set->words;
-    })->shuffle()->values();
+    // Word set ID'lerini al
+    $wordSetIds = $exam->wordSets->pluck('id')->toArray();
+    
+    // Kelimeleri çek - category kullan, word_set_id yok
+    $words = \App\Models\Word::whereIn('category', $wordSetIds)
+        ->select('id', 'word', 'definition', 'category')
+        ->inRandomOrder()
+        ->get();
     
     return response()->json([
         'success' => true,
@@ -79,16 +80,16 @@ public function show($examId)
                 'teacher_name' => $exam->teacher->name,
                 'start_time' => $exam->start_time,
                 'time_per_question' => $exam->time_per_question,
-                'total_questions' => $questions->count(),
+                'total_questions' => $words->count(),
             ],
-            'questions' => $questions->map(function($word, $index) {
+            'questions' => $words->map(function($word, $index) {
                 return [
                     'question_number' => $index + 1,
                     'word_id' => $word->id,
-                    'english' => $word->word,        // ✅ word kolonunu english olarak dön
-                    'turkish' => $word->definition,  // ✅ definition kolonunu turkish olarak dön
+                    'english' => $word->word,
+                    'turkish' => $word->definition,
                 ];
-            })
+            })->values()
         ]
     ]);
 }
