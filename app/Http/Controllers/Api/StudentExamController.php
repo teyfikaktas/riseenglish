@@ -9,37 +9,43 @@ use Illuminate\Http\Request;
 class StudentExamController extends Controller
 {
     // Öğrenciye atanan sınavları listele
-    public function index(Request $request)
-    {
-        $studentId = auth()->id();
-        
-        $exams = Exam::whereHas('students', function($query) use ($studentId) {
-                $query->where('users.id', $studentId);
-            })
-            ->with(['teacher:id,name', 'wordSets:id,name'])
-            ->withCount('wordSets')
-            ->select('id', 'teacher_id', 'name', 'description', 'start_time', 'time_per_question', 'is_active')
-            ->orderBy('start_time', 'desc')
-            ->get()
-            ->map(function($exam) {
-                return [
-                    'id' => $exam->id,
-                    'name' => $exam->name,
-                    'description' => $exam->description,
-                    'teacher_name' => $exam->teacher->name,
-                    'start_time' => $exam->start_time,
-                    'time_per_question' => $exam->time_per_question,
-                    'is_active' => $exam->is_active,
-                    'word_set_count' => $exam->word_sets_count,
-                    'word_sets' => $exam->wordSets->pluck('name'),
-                ];
-            });
-        
-        return response()->json([
-            'success' => true,
-            'data' => $exams
-        ]);
-    }
+// StudentExamController.php - index metodu
+public function index(Request $request)
+{
+    $studentId = auth()->id();
+    
+    $exams = Exam::whereHas('students', function($query) use ($studentId) {
+            $query->where('users.id', $studentId);
+        })
+        ->with(['teacher:id,name', 'wordSets:id,name'])
+        ->withCount('wordSets')
+        ->select('id', 'teacher_id', 'name', 'description', 'start_time', 'time_per_question', 'is_active')
+        ->orderBy('start_time', 'desc')
+        ->get()
+        ->map(function($exam) {
+            return [
+                'id' => $exam->id,
+                'name' => $exam->name,
+                'description' => $exam->description,
+                'teacher_name' => $exam->teacher->name,
+                'start_time' => $exam->start_time,
+                'time_per_question' => $exam->time_per_question,
+                'is_active' => $exam->is_active,
+                'word_set_count' => $exam->word_sets_count,
+                'word_sets' => $exam->wordSets->map(function($set) {  // ✅ sadece name yerine obje
+                    return [
+                        'id' => $set->id,
+                        'name' => $set->name,
+                    ];
+                }),
+            ];
+        });
+    
+    return response()->json([
+        'success' => true,
+        'data' => $exams
+    ]);
+}
     
     // Sınav detayı ve soruları
     public function show($examId)
