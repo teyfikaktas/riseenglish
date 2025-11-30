@@ -23,6 +23,8 @@ use App\Http\Controllers\Admin\CourseTypeController;
 use App\Http\Controllers\Admin\CourseLevelController;
 use App\Http\Controllers\Admin\CourseFrequencyController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\ExamController;
+
 use App\Http\Controllers\FrontendCourseController;
 use App\Models\Course;
 use Illuminate\Support\Facades\URL;
@@ -194,7 +196,10 @@ Route::get('/home', function () {
 Route::get('/standard-home', [App\Http\Controllers\HomeController::class, 'index'])
     ->middleware(['auth', 'verified.phone'])
     ->name('standard.home');
-
+Route::middleware(['auth', 'role:ogretmen'])->group(function () {
+    Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
+    Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
+});
 // Özel kayıt rotalarımız
 Route::get('/kayit-ol', [CustomRegisterController::class, 'create'])->name('register');
 Route::post('/kayit-ol', [CustomRegisterController::class, 'store']);
