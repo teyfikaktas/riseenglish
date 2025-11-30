@@ -47,49 +47,49 @@ public function index(Request $request)
     ]);
 }
     
-    // Sınav detayı ve soruları
-    public function show($examId)
-    {
-        $studentId = auth()->id();
-        
-        $exam = Exam::whereHas('students', function($query) use ($studentId) {
-                $query->where('users.id', $studentId);
+// StudentExamController.php - show metodu
+public function show($examId)
+{
+    $studentId = auth()->id();
+    
+    $exam = Exam::whereHas('students', function($query) use ($studentId) {
+            $query->where('users.id', $studentId);
+        })
+        ->with([
+            'teacher:id,name',
+            'wordSets.words' => function($query) {
+                $query->select('words.id', 'words.word', 'words.definition', 'words.word_set_id') // ✅ english/turkish değil word/definition
+                      ->inRandomOrder();
+            }
+        ])
+        ->findOrFail($examId);
+    
+    // Tüm setlerden kelimeleri topla
+    $questions = $exam->wordSets->flatMap(function($set) {
+        return $set->words;
+    })->shuffle()->values();
+    
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'exam' => [
+                'id' => $exam->id,
+                'name' => $exam->name,
+                'description' => $exam->description,
+                'teacher_name' => $exam->teacher->name,
+                'start_time' => $exam->start_time,
+                'time_per_question' => $exam->time_per_question,
+                'total_questions' => $questions->count(),
+            ],
+            'questions' => $questions->map(function($word, $index) {
+                return [
+                    'question_number' => $index + 1,
+                    'word_id' => $word->id,
+                    'english' => $word->word,        // ✅ word kolonunu english olarak dön
+                    'turkish' => $word->definition,  // ✅ definition kolonunu turkish olarak dön
+                ];
             })
-            ->with([
-                'teacher:id,name',
-                'wordSets.words' => function($query) {
-                    $query->select('words.id', 'words.english', 'words.turkish', 'words.word_set_id')
-                          ->inRandomOrder();
-                }
-            ])
-            ->findOrFail($examId);
-        
-        // Tüm setlerden kelimeleri topla
-        $questions = $exam->wordSets->flatMap(function($set) {
-            return $set->words;
-        })->shuffle()->values();
-        
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'exam' => [
-                    'id' => $exam->id,
-                    'name' => $exam->name,
-                    'description' => $exam->description,
-                    'teacher_name' => $exam->teacher->name,
-                    'start_time' => $exam->start_time,
-                    'time_per_question' => $exam->time_per_question,
-                    'total_questions' => $questions->count(),
-                ],
-                'questions' => $questions->map(function($word, $index) {
-                    return [
-                        'question_number' => $index + 1,
-                        'word_id' => $word->id,
-                        'english' => $word->english,
-                        'turkish' => $word->turkish,
-                    ];
-                })
-            ]
-        ]);
-    }
+        ]
+    ]);
+}
 }
