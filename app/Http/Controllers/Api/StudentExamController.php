@@ -28,7 +28,7 @@ public function index(Request $request)
                 'name' => $exam->name,
                 'description' => $exam->description,
                 'teacher_name' => $exam->teacher->name,
-                'start_time' => $exam->start_time,
+                'start_time' => $exam->start_time->toIso8601String(), // ← BURAYA SADECE ->toIso8601String() EKLE
                 'time_per_question' => $exam->time_per_question,
                 'is_active' => $exam->is_active,
                 'word_set_count' => $exam->word_sets_count,
