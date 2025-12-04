@@ -16,9 +16,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
     
-    // Öğrenci Sınavları ✅ YENİ
-    Route::get('/student/exams', [StudentExamController::class, 'index']);
-    Route::get('/student/exams/{exam}', [StudentExamController::class, 'show']);
+    // ✅ Öğrenci Sınavları
+    Route::prefix('student')->group(function () {
+        Route::get('exams', [StudentExamController::class, 'index']);
+        Route::get('exams/{exam}', [StudentExamController::class, 'show']);
+        Route::post('exams/{exam}/submit', [StudentExamController::class, 'submitResult']);
+        Route::get('exam-results', [StudentExamController::class, 'results']);
+    });
     
     Route::get('/word-sets/{setId}/words', function($setId) {
         try {
