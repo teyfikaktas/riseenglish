@@ -10,46 +10,51 @@ use Illuminate\Support\Facades\Log;
 
 class ExamController extends Controller
 {
-    public function create()
-    {
-        try {
-            $userId = auth()->id();
-            
-            // Word setleri çek
-            $wordSets = WordSet::where('is_active', 1)
-                ->where(function($query) use ($userId) {
-                    $query->where('user_id', 1)
-                          ->orWhere('user_id', 36)
-                          ->orWhere('user_id', $userId);
-                })
-                ->withCount('words')
-                ->select('id', 'name', 'description', 'color', 'word_count', 'user_id')
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->map(function($set) use ($userId) {
-                    return [
-                        'id' => $set->id,
-                        'name' => $set->name,
-                        'description' => $set->description,
-                        'color' => $set->color,
-                        'word_count' => $set->words_count ?? $set->word_count,
-                        'is_my_set' => $set->user_id == $userId,
-                    ];
-                });
-            
-            // Öğrencileri çek
-            $students = User::role('ogrenci')
-                ->select('id', 'name', 'email')
-                ->orderBy('name')
-                ->get();
-            
-            return view('exams.create', compact('wordSets', 'students'));
-            
-        } catch (\Exception $e) {
-            Log::error('Exam Create Error: ' . $e->getMessage());
-            return back()->with('error', 'Bir hata oluştu');
-        }
+public function create()
+{
+    try {
+        $userId = auth()->id();
+        
+        // Öğrencileri ve onların setlerini çek
+        $students = User::role('ogrenci')
+            ->with(['wordSets' => function($query) {
+                $query->where('is_active', 1)
+                      ->withCount('words')
+                      ->select('id', 'name', 'description', 'color', 'user_id', 'word_count', 'created_at')
+                      ->orderBy('created_at', 'desc');
+            }])
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+        
+        // Öğretmenin ve genel setleri
+        $teacherWordSets = WordSet::where('is_active', 1)
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', 1)
+                      ->orWhere('user_id', 36)
+                      ->orWhere('user_id', $userId);
+            })
+            ->withCount('words')
+            ->select('id', 'name', 'description', 'color', 'user_id', 'word_count')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($set) use ($userId) {
+                return [
+                    'id' => $set->id,
+                    'name' => $set->name,
+                    'description' => $set->description,
+                    'color' => $set->color,
+                    'word_count' => $set->words_count ?? $set->word_count,
+                ];
+            });
+        
+        return view('exams.create', compact('teacherWordSets', 'students'));
+        
+    } catch (\Exception $e) {
+        Log::error('Exam Create Error: ' . $e->getMessage());
+        return back()->with('error', 'Bir hata oluştu');
     }
+}
     
     public function store(Request $request)
     {

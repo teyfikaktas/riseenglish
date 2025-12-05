@@ -93,4 +93,9 @@ public function chainProgress()
             'password' => 'hashed',
         ];
     }
+    // Öğrencinin kendi oluşturduğu kelime setleri
+public function wordSets()
+{
+    return $this->hasMany(WordSet::class, 'user_id');
+}
 }
