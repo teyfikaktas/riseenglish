@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('student')->group(function () {
         Route::get('exams', [StudentExamController::class, 'index']);
         Route::get('exams/{exam}', [StudentExamController::class, 'show']);
+                Route::post('exams/{exam}/enter', [StudentExamController::class, 'enterExam']); // ✅ YENİ - Sınava giriş kontrolü
         Route::post('exams/{exam}/submit', [StudentExamController::class, 'submitResult']);
         Route::get('exam-results', [StudentExamController::class, 'results']);
     });
