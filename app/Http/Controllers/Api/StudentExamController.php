@@ -349,66 +349,57 @@ class StudentExamController extends Controller
         ]);
     }
     
-    /**
-     * Sınav sonucunu kaydet
-     */
-    public function submitResult(Request $request, $examId)
-    {
-        $validated = $request->validate([
-            'score' => 'required|integer|min:0',
-            'total_questions' => 'required|integer|min:1',
-            'time_spent' => 'required|integer|min:0',
-            'answers' => 'required|array',
-            'answers.*.question_number' => 'required|integer',
-            'answers.*.word_id' => 'required|integer',
-            'answers.*.selected_answer' => 'nullable|string',
-            'answers.*.is_correct' => 'required|boolean',
-            'answers.*.time_taken' => 'required|integer|min:0',
-            'violation' => 'sometimes|boolean',
-            'violation_reason' => 'sometimes|string',
-        ]);
+public function submitResult(Request $request, $examId)
+{
+    $validated = $request->validate([
+        'score' => 'required|integer|min:0',
+        'total_questions' => 'required|integer|min:1',
+        'time_spent' => 'required|integer|min:0',
+        'answers' => 'required|array',
+        'answers.*.question_number' => 'required|integer',
+        'answers.*.word_id' => 'required|integer',
+        'answers.*.selected_answer' => 'nullable|string',
+        'answers.*.is_correct' => 'required|boolean',
+        'answers.*.time_taken' => 'required|integer|min:0',
+        'violation' => 'sometimes|boolean',
+        'violation_reason' => 'sometimes|string',
+    ]);
+    
+    $studentId = auth()->id();
+    $student = auth()->user();
+    
+    // Sınavı kontrol et
+    $exam = Exam::whereHas('students', function($query) use ($studentId) {
+        $query->where('users.id', $studentId);
+    })->with('teacher:id,name')->findOrFail($examId);
+    
+    // ✅ SADECE completed_at dolu olanları kontrol et
+    $existingResult = ExamResult::where('exam_id', $examId)
+        ->where('student_id', $studentId)
+        ->whereNotNull('completed_at')
+        ->first();
+    
+    if ($existingResult) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Bu sınavı zaten tamamladınız'
+        ], 422);
+    }
+    
+    DB::beginTransaction();
+    try {
+        // Başarı oranını hesapla
+        $successRate = $validated['total_questions'] > 0 
+            ? ($validated['score'] / $validated['total_questions']) * 100 
+            : 0;
         
-        $studentId = auth()->id();
-        $student = auth()->user();
-        
-        // Sınavı kontrol et
-        $exam = Exam::whereHas('students', function($query) use ($studentId) {
-            $query->where('users.id', $studentId);
-        })->with('teacher:id,name')->findOrFail($examId);
-        
-        // Öğrenci bu sınavı daha önce tamamlamış mı kontrol et
-        $existingResult = ExamResult::where('exam_id', $examId)
-            ->where('student_id', $studentId)
-            ->whereNotNull('completed_at')
-            ->first();
-        
-        if ($existingResult) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bu sınavı zaten tamamladınız'
-            ], 422);
-        }
-        
-        DB::beginTransaction();
-        try {
-            // Başarı oranını hesapla
-            $successRate = $validated['total_questions'] > 0 
-                ? ($validated['score'] / $validated['total_questions']) * 100 
-                : 0;
-            
-            // Giriş kaydını bul veya oluştur
-            $result = ExamResult::firstOrCreate(
-                [
-                    'exam_id' => $examId,
-                    'student_id' => $studentId,
-                ],
-                [
-                    'entered_at' => now(),
-                ]
-            );
-            
-            // Sonucu güncelle
-            $result->update([
+        // ✅ Giriş kaydını bul veya oluştur (enterExam'den gelmişse zaten var)
+        $result = ExamResult::updateOrCreate(
+            [
+                'exam_id' => $examId,
+                'student_id' => $studentId,
+            ],
+            [
                 'score' => $validated['score'],
                 'total_questions' => $validated['total_questions'],
                 'time_spent' => $validated['time_spent'],
@@ -417,40 +408,41 @@ class StudentExamController extends Controller
                 'completed_at' => now(),
                 'violation' => $validated['violation'] ?? false,
                 'violation_reason' => $validated['violation_reason'] ?? null,
-            ]);
-            
-            // ✅ İhlal yoksa veliye sonuç SMS'i gönder
-            if (!($validated['violation'] ?? false)) {
-                $this->sendExamResultSms($student, $exam, $result);
-            } else {
-                // İhlal varsa öğretmene bildir
-                $this->sendViolationNotification($student, $exam, $validated['violation_reason']);
-            }
-            
-            DB::commit();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Sınav sonucunuz kaydedildi',
-                'data' => [
-                    'result_id' => $result->id,
-                    'score' => $result->score,
-                    'total_questions' => $result->total_questions,
-                    'success_rate' => round($result->success_rate, 2),
-                    'is_passed' => $result->isPassed(),
-                ]
-            ], 201);
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Exam result save error: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Sınav sonucu kaydedilemedi: ' . $e->getMessage()
-            ], 500);
+            ]
+        );
+        
+        // ✅ İhlal yoksa veliye sonuç SMS'i gönder
+        if (!($validated['violation'] ?? false)) {
+            $this->sendExamResultSms($student, $exam, $result);
+        } else {
+            // İhlal varsa öğretmene bildir
+            $this->sendViolationNotification($student, $exam, $validated['violation_reason']);
         }
+        
+        DB::commit();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Sınav sonucunuz kaydedildi',
+            'data' => [
+                'result_id' => $result->id,
+                'score' => $result->score,
+                'total_questions' => $result->total_questions,
+                'success_rate' => round($result->success_rate, 2),
+                'is_passed' => $result->isPassed(),
+            ]
+        ], 201);
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Exam result save error: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Sınav sonucu kaydedilemedi: ' . $e->getMessage()
+        ], 500);
     }
+}
     
     /**
      * İhlal bildirimi gönder (Öğretmene)
