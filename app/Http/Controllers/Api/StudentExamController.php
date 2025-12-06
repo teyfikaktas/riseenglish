@@ -376,7 +376,7 @@ public function submitResult(Request $request, $examId)
     // ✅ SADECE completed_at dolu olanları kontrol et
     $existingResult = ExamResult::where('exam_id', $examId)
         ->where('student_id', $studentId)
-        ->whereNotNull('completed_at')
+        ->whereNotNull('answers')
         ->first();
     
     if ($existingResult) {
