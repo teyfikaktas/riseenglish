@@ -98,4 +98,22 @@ public function wordSets()
 {
     return $this->hasMany(WordSet::class, 'user_id');
 }
+/**
+ * Öğrencinin dahil olduğu gruplar
+ */
+public function groups()
+{
+    return $this->belongsToMany(Group::class, 'group_user')
+                ->withPivot('joined_at')
+                ->withTimestamps();
+}
+
+/**
+ * Öğretmen olarak yönettiği gruplar
+ */
+public function teachingGroups()
+{
+    return $this->hasMany(Group::class, 'teacher_id');
+}
+
 }

@@ -1,16 +1,13 @@
 <!-- resources/views/layouts/admin_topbar.blade.php -->
 <div class="sticky top-0 w-full bg-[#1a2e5a] text-white shadow-md z-50">
     <div class="container mx-auto px-4">
-        <div class="flex items-center justify-between h-24"> <!-- Toplam yükseklik h-24 (96px) -->
+        <div class="flex items-center justify-between h-24">
             <!-- Logo - Beyaz Arka Plan Eklendi -->
             <div class="flex-shrink-0 relative">
-                <!-- Beyaz arka plan sadece logo için -->
                 <div class="absolute inset-0 bg-white rounded-r-lg"></div>
                 
                 <a href="{{ url('/admin/dashboard') }}" class="flex flex-col md:flex-row items-center justify-center md:justify-start relative z-10 px-4 py-2">
-                    {{-- Logo boyutu h-14 (mobil için daha küçük) --}}
                     <img src="{{ asset('images/logo.png') }}" alt="Rise English Logo" class="h-12 md:h-16">
-                    {{-- Yazı boyutu daha küçük mobil için, masaüstü için normal --}}
                     <span class="text-center md:text-left text-sm md:text-lg font-bold md:ml-3 text-[#1a2e5a] -mt-1 md:mt-0">Yönetici Paneli</span>
                 </a>
             </div>
@@ -19,10 +16,12 @@
             <div class="hidden lg:flex items-center ml-auto mr-6 space-x-6 text-base">
                 <a href="{{ url('/admin/dashboard') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/dashboard') ? 'text-red-400' : '' }}">Dashboard</a>
                 <a href="{{ url('/admin/users') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/users*') ? 'text-red-400' : '' }}">Kullanıcılar</a>
+                <a href="{{ url('/admin/groups') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/groups*') ? 'text-red-400' : '' }}">Gruplar</a>
                 <a href="{{ url('/admin/courses') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/courses*') ? 'text-red-400' : '' }}">Kurslar</a>
 
                 <a href="{{ url('/admin/sms') }}" class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/sms*') ? 'text-red-400' : '' }}">SMS Yönetimi</a>
-  <!-- Test Yönetimi Açılır Menü -->
+                
+                <!-- Test Yönetimi Açılır Menü -->
                 <div class="relative">
                     <a href="javascript:void(0)"
                        class="text-white hover:text-red-400 font-medium transition duration-200 {{ request()->is('admin/test*') ? 'text-red-400' : '' }} flex items-center"
@@ -47,7 +46,7 @@
                             </a>
                         </div>
                     </div>
-                                        </div>
+                </div>
 
                 <!-- Kaynaklar Yönetimi Açılır Menü -->
                 <div class="relative">
@@ -126,6 +125,7 @@
     <div class="lg:hidden admin-mobile-menu hidden px-4 py-2 bg-[#283b6a] border-t border-blue-800">
         <a href="{{ url('/admin/dashboard') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/dashboard') ? 'text-red-400' : '' }}">Dashboard</a>
         <a href="{{ url('/admin/users') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/users*') ? 'text-red-400' : '' }}">Kullanıcılar</a>
+        <a href="{{ url('/admin/groups') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/groups*') ? 'text-red-400' : '' }}">Gruplar</a>
         <a href="{{ url('/admin/courses') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/courses*') ? 'text-red-400' : '' }}">Kurslar</a>
 
         <!-- Özel Dersler Mobil Menü -->
@@ -134,11 +134,10 @@
                 <span>Özel Dersler</span>
                 <i class="fas fa-chevron-down text-xs"></i>
             </div>
-             {{-- Bu kısım için dinamik içerik gerekebilir, örnek olarak placeholder bıraktım --}}
             <div id="private-lessons-submenu" class="hidden pl-4 pt-2">
-                 <a href="#" class="block py-2 text-white hover:text-red-400 font-medium">Özel Ders Listesi</a>
-                 <a href="#" class="block py-2 text-white hover:text-red-400 font-medium">Yeni Özel Ders</a>
-             </div>
+                <a href="#" class="block py-2 text-white hover:text-red-400 font-medium">Özel Ders Listesi</a>
+                <a href="#" class="block py-2 text-white hover:text-red-400 font-medium">Yeni Özel Ders</a>
+            </div>
         </div>
 
         <a href="{{ url('/admin/contacts') }}" class="block py-2 text-white hover:text-red-400 font-medium {{ request()->is('admin/contacts*') ? 'text-red-400' : '' }}">
@@ -181,14 +180,12 @@
 
         if (adminMobileMenuButton && adminMobileMenu) {
             adminMobileMenuButton.addEventListener('click', function(event) {
-                event.stopPropagation(); // Buton tıklamasının document'e gitmesini engelle
+                event.stopPropagation();
                 adminMobileMenu.classList.toggle('hidden');
             });
         }
 
-        // Document click event to close dropdowns and mobile menu when clicking outside
         document.addEventListener('click', function(event) {
-            // Desktop dropdowns
             const dropdowns = document.querySelectorAll('.absolute > [id$="-dropdown"]');
             dropdowns.forEach(function(dropdown) {
                 const parentRelative = dropdown.closest('.relative');
@@ -197,19 +194,16 @@
                 }
             });
 
-            // Mobile menu
             if (adminMobileMenu && !adminMobileMenu.classList.contains('hidden') && !adminMobileMenu.contains(event.target) && adminMobileMenuButton && !adminMobileMenuButton.contains(event.target)) {
                  adminMobileMenu.classList.add('hidden');
             }
         });
     });
 
-    // Mobile submenu toggle function
     function toggleMobileSubMenu(id) {
         const submenu = document.getElementById(id);
         if (submenu) {
             submenu.classList.toggle('hidden');
-            // İkonu değiştir (isteğe bağlı)
             const icon = submenu.previousElementSibling.querySelector('i');
             if (icon) {
                 icon.classList.toggle('fa-chevron-down');
@@ -218,21 +212,17 @@
         }
     }
 
-    // Dropdown toggle function for desktop
     function toggleDropdown(id) {
-        // Fonksiyon çağrıldığında event objesine erişim sağlamak için parametre ekleyelim
-        event.stopPropagation(); // Olayın document'e yayılmasını hemen engelle
+        event.stopPropagation();
         const dropdown = document.getElementById(id);
         if (dropdown) {
             const isHidden = dropdown.classList.contains('hidden');
-            // Önce tüm *diğer* dropdown'ları kapat
             const allDropdowns = document.querySelectorAll('.absolute > [id$="-dropdown"]');
             allDropdowns.forEach(function(item) {
                 if (item.id !== id && !item.classList.contains('hidden')) {
                     item.classList.add('hidden');
                 }
             });
-            // Tıklananı aç/kapat
             dropdown.classList.toggle('hidden');
         }
     }

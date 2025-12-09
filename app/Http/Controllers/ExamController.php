@@ -27,6 +27,13 @@ public function create()
             ->orderBy('name')
             ->get();
         
+        // Grupları çek (aktif gruplar ve öğrencileriyle)
+        $groups = \App\Models\Group::where('is_active', true)
+            ->with(['students', 'teacher'])
+            ->withCount('students')
+            ->orderBy('name')
+            ->get();
+        
         // Öğretmenin ve genel setleri
         $teacherWordSets = WordSet::where('is_active', 1)
             ->where(function($query) use ($userId) {
@@ -48,7 +55,7 @@ public function create()
                 ];
             });
         
-        return view('exams.create', compact('teacherWordSets', 'students'));
+        return view('exams.create', compact('teacherWordSets', 'students', 'groups'));
         
     } catch (\Exception $e) {
         Log::error('Exam Create Error: ' . $e->getMessage());

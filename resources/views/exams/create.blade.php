@@ -63,6 +63,34 @@
                 </div>
             </div>
 
+            <!-- Grup Seçimi -->
+            @if(isset($groups) && count($groups) > 0)
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-[#1a2e5a] mb-4">Hızlı Grup Seçimi</h2>
+                <p class="text-sm text-gray-600 mb-4">Bir gruba tıklayarak o gruptaki tüm öğrencileri seçebilirsiniz</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    @foreach($groups as $group)
+                        <button type="button" 
+                                class="group-select-btn text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#1a2e5a] hover:bg-blue-50 transition-all cursor-pointer"
+                                data-group-id="{{ $group->id }}"
+                                data-student-ids="{{ $group->students->pluck('id')->join(',') }}">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold text-gray-900">{{ $group->name }}</span>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{{ $group->students_count }} öğrenci</span>
+                            </div>
+                            @if($group->teacher)
+                            <p class="text-xs text-gray-500">Öğretmen: {{ $group->teacher->name }}</p>
+                            @endif
+                            @if($group->description)
+                            <p class="text-xs text-gray-400 mt-1">{{ Str::limit($group->description, 50) }}</p>
+                            @endif
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             <!-- Öğrenci Seçimi -->
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-xl font-bold text-[#1a2e5a] mb-4">Öğrencileri ve Setlerini Seçin</h2>
@@ -88,6 +116,7 @@
                     <div id="students-list" class="space-y-4 max-h-[600px] overflow-y-auto border border-gray-200 rounded-lg p-4">
                         @foreach($students as $student)
                             <div class="student-item border-2 border-gray-200 rounded-lg p-4" 
+                                 data-student-id="{{ $student->id }}"
                                  data-student-name="{{ strtolower($student->name) }}" 
                                  data-student-email="{{ strtolower($student->email) }}">
                                 
@@ -188,6 +217,38 @@
 </div>
 
 <script>
+// Grup seçimi - Gruba tıklayınca o gruptaki tüm öğrencileri seç
+document.querySelectorAll('.group-select-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const studentIds = this.getAttribute('data-student-ids').split(',').filter(id => id);
+        
+        // Önce tüm öğrencilerin seçimini kaldır
+        document.querySelectorAll('.student-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        
+        // Gruptaki öğrencileri seç
+        studentIds.forEach(studentId => {
+            const studentItem = document.querySelector(`.student-item[data-student-id="${studentId}"]`);
+            if (studentItem) {
+                const checkbox = studentItem.querySelector('.student-checkbox');
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            }
+        });
+        
+        // Buton animasyonu
+        this.classList.add('bg-green-100', 'border-green-500');
+        setTimeout(() => {
+            this.classList.remove('bg-green-100', 'border-green-500');
+        }, 500);
+        
+        // "Tüm öğrencileri seç" checkbox'ını güncelle
+        updateSelectAllCheckbox();
+    });
+});
+
 // Tüm öğrencileri seç
 document.getElementById('select-all-students')?.addEventListener('change', function() {
     const visibleCheckboxes = document.querySelectorAll('.student-item:not(.hidden) .student-checkbox');
@@ -196,13 +257,16 @@ document.getElementById('select-all-students')?.addEventListener('change', funct
 
 // Tekil öğrenci seçimi
 document.querySelectorAll('.student-checkbox').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        const all = document.querySelectorAll('.student-item:not(.hidden) .student-checkbox');
-        const checked = document.querySelectorAll('.student-item:not(.hidden) .student-checkbox:checked');
-        const selectAll = document.getElementById('select-all-students');
-        if (selectAll) selectAll.checked = all.length === checked.length;
-    });
+    checkbox.addEventListener('change', updateSelectAllCheckbox);
 });
+
+// "Tüm öğrencileri seç" checkbox'ını güncelle
+function updateSelectAllCheckbox() {
+    const all = document.querySelectorAll('.student-item:not(.hidden) .student-checkbox');
+    const checked = document.querySelectorAll('.student-item:not(.hidden) .student-checkbox:checked');
+    const selectAll = document.getElementById('select-all-students');
+    if (selectAll) selectAll.checked = all.length === checked.length && all.length > 0;
+}
 
 // Öğrenci arama
 document.getElementById('student-search')?.addEventListener('input', function() {
@@ -233,12 +297,7 @@ document.getElementById('student-search')?.addEventListener('input', function() 
     }
 
     // "Tüm öğrencileri seç" checkbox'ını güncelle
-    const visibleCheckboxes = document.querySelectorAll('.student-item:not(.hidden) .student-checkbox');
-    const checkedVisible = document.querySelectorAll('.student-item:not(.hidden) .student-checkbox:checked');
-    const selectAll = document.getElementById('select-all-students');
-    if (selectAll && visibleCheckboxes.length > 0) {
-        selectAll.checked = visibleCheckboxes.length === checkedVisible.length;
-    }
+    updateSelectAllCheckbox();
 });
 </script>
 @endsection

@@ -59,6 +59,7 @@
                         <label for="parent_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Veli Telefon Numarası (Öğrenciler için)</label>
                         <input type="text" name="parent_phone_number" id="parent_phone_number" value="{{ old('parent_phone_number', $user->parent_phone_number) }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     </div>
+                    
                     <!-- İkinci Veli Telefon Numarası (Öğrenciler için) -->
                     <div>
                         <label for="parent_phone_number_2" class="block text-sm font-medium text-gray-700 mb-1">İkinci Veli Telefon Numarası</label>
@@ -92,6 +93,48 @@
                         @endforeach
                     </div>
                 </div>
+
+                <!-- Gruplar (Sadece öğrenciler için) -->
+                <div class="mb-6" id="groups-section">
+                    <div class="mb-2">
+                        <label class="block text-sm font-medium text-gray-700">
+                            Gruplar <span class="text-gray-500 text-xs">(Öğrenci rolü seçili ise görünür)</span>
+                        </label>
+                    </div>
+                    
+                    <!-- Grup Arama -->
+                    @if(!$groups->isEmpty())
+                    <div class="mb-4">
+                        <input type="text" id="groupSearch" placeholder="Grup ara..." class="w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                    </div>
+                    @endif
+                    
+                    <div id="groupsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach ($groups as $group)
+                        <div class="group-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50" data-group-name="{{ strtolower($group->name) }}" data-teacher-name="{{ $group->teacher ? strtolower($group->teacher->name) : '' }}">
+                            <input type="checkbox" name="groups[]" id="group_{{ $group->id }}" value="{{ $group->id }}" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" {{ in_array($group->id, old('groups', $userGroups)) ? 'checked' : '' }}>
+                            <label for="group_{{ $group->id }}" class="ml-2 text-sm text-gray-700 flex-1 cursor-pointer">
+                                <span class="font-medium">{{ $group->name }}</span>
+                                @if($group->teacher)
+                                <span class="block text-xs text-gray-500">Öğretmen: {{ $group->teacher->name }}</span>
+                                @endif
+                                @if($group->description)
+                                <span class="block text-xs text-gray-400">{{ Str::limit($group->description, 40) }}</span>
+                                @endif
+                            </label>
+                        </div>
+                        @endforeach
+                        @if($groups->isEmpty())
+                        <p id="noGroupsMsg" class="text-gray-500 text-sm col-span-full">
+                            Henüz grup oluşturulmamış. <a href="{{ route('admin.groups.index') }}" class="text-blue-600 hover:underline">Grup Yönetimi</a> sayfasından grup oluşturabilirsiniz.
+                        </p>
+                        @endif
+                    </div>
+                    
+                    <div id="noResultsMsg" class="hidden text-gray-500 text-sm mt-4">
+                        Arama sonucu bulunamadı.
+                    </div>
+                </div>
                 
                 <div class="flex justify-end space-x-3">
                     <button type="button" onclick="window.location='{{ route('admin.users.show', $user->id) }}'" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg">
@@ -112,29 +155,70 @@
 
 @section('scripts')
 <script>
-    // Rol seçimi kontrolü
-    document.addEventListener('DOMContentLoaded', function () {
-        const roleCheckboxes = document.querySelectorAll('input[name="roles[]"]');
-        const submitButton = document.querySelector('button[type="submit"]');
-        
-        function checkRoles() {
-            const checkedRoles = document.querySelectorAll('input[name="roles[]"]:checked');
+document.addEventListener('DOMContentLoaded', function () {
+    const roleCheckboxes = document.querySelectorAll('input[name="roles[]"]');
+    const submitButton = document.querySelector('button[type="submit"]');
+    const groupsSection = document.getElementById('groups-section');
+    const groupSearch = document.getElementById('groupSearch');
+    const groupItems = document.querySelectorAll('.group-item');
+    const noResultsMsg = document.getElementById('noResultsMsg');
+    
+    // Grup arama fonksiyonu
+    if (groupSearch) {
+        groupSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            let visibleCount = 0;
             
-            if (checkedRoles.length === 0) {
-                submitButton.disabled = true;
-                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+            groupItems.forEach(item => {
+                const groupName = item.dataset.groupName;
+                const teacherName = item.dataset.teacherName;
+                
+                if (groupName.includes(searchTerm) || teacherName.includes(searchTerm)) {
+                    item.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+            
+            // Sonuç bulunamadı mesajı
+            if (visibleCount === 0 && searchTerm !== '') {
+                noResultsMsg.classList.remove('hidden');
             } else {
-                submitButton.disabled = false;
-                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                noResultsMsg.classList.add('hidden');
             }
-        }
-        
-        roleCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', checkRoles);
         });
+    }
+    
+    // Rol kontrolü
+    function checkRoles() {
+        const checkedRoles = document.querySelectorAll('input[name="roles[]"]:checked');
         
-        // Sayfa yüklendiğinde kontrol et
-        checkRoles();
+        if (checkedRoles.length === 0) {
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            submitButton.disabled = false;
+            submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Öğrenci rolü seçiliyse grup seçimini göster
+        const isStudent = Array.from(checkedRoles).some(cb => cb.value === 'ogrenci');
+        if (isStudent) {
+            groupsSection.classList.remove('opacity-50');
+            if (groupSearch) groupSearch.disabled = false;
+        } else {
+            groupsSection.classList.add('opacity-50');
+            if (groupSearch) groupSearch.disabled = true;
+        }
+    }
+    
+    roleCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', checkRoles);
     });
+    
+    // Sayfa yüklendiğinde kontrol et
+    checkRoles();
+});
 </script>
 @endsection

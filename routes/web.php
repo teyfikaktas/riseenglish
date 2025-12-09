@@ -175,6 +175,7 @@ Route::get('/oturum-ac', function() {
     // Giriş yapmamışsa, login view'ını göster
     return view('auth.login');
 });
+
 Route::get('/belge/{token}', [App\Http\Controllers\PublicDocumentController::class, 'show'])
     ->name('public.document.show');
 Route::get('/home', function () {
@@ -243,6 +244,7 @@ Route::prefix('ogrenci')->name('ogrenci.')->group(function () {
     Route::get('/ogrenme-paneli/sorular', [App\Http\Controllers\Student\LearningPanelController::class, 'questions'])
         ->name('learning-panel.questions');
 });
+
 // Yönetici rotaları - Laravel 12 tarzında middleware kullanımı
 Route::middleware(['auth', 'role:yonetici'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -251,7 +253,14 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         // ANA DASHBOARD
         // ==========================================
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        
+        // ==========================================
+// GRUP YÖNETİMİ
+// ==========================================
+Route::resource('groups', App\Http\Controllers\Admin\AdminGroupController::class);
+Route::post('/groups/{group}/add-student', [App\Http\Controllers\Admin\AdminGroupController::class, 'addStudent'])
+    ->name('groups.add-student');
+Route::delete('/groups/{group}/students/{user}', [App\Http\Controllers\Admin\AdminGroupController::class, 'removeStudent'])
+    ->name('groups.remove-student');
         // ==========================================
         // TEST YÖNETİMİ SİSTEMİ
         // ==========================================
@@ -261,7 +270,9 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         
         // Test Kategorileri - ✅ Tam namespace ile
         Route::resource('test-categories', AdminTestCategoryController::class);
-        
+        Route::post('/groups', [App\Http\Controllers\Admin\AdminGroupController::class, 'store'])
+    ->name('groups.store');
+
         // Testler - ✅ Tam namespace ile
         Route::resource('tests', AdminTestController::class);
         Route::get('/tests/{test}/sorular', [AdminTestController::class, 'manageQuestions'])->name('tests.manage-questions');

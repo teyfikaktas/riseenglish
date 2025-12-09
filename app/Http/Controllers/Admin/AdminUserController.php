@@ -124,27 +124,32 @@ class AdminUserController extends Controller
         return view('admin.users.show', compact('user', 'enrolledCourses', 'taughtCourses'));
     }
 
-    /**
-     * Kullanıcı düzenleme formunu göster
-     */
-    public function edit(User $user)
-    {
-        // Role modelini kullanmak yerine, sisteminizdeki rol bilgilerini çekin
-        $roles = [
-            ['id' => 'yonetici', 'name' => 'Yönetici'],
-            ['id' => 'ogretmen', 'name' => 'Öğretmen'],
-            ['id' => 'ogrenci', 'name' => 'Öğrenci']
-        ];
-        
-        // Kullanıcının rollerini çek
-        $userRoles = $user->getRoleNames()->toArray(); // eğer Spatie permission paketi kullanıyorsanız
-        
-        return view('admin.users.edit', compact('user', 'roles', 'userRoles'));
-    }
+// AdminUserController.php içine ekle
 
-/**
- * Kullanıcı bilgilerini güncelle
- */
+public function edit(User $user)
+{
+    $roles = [
+        ['id' => 'yonetici', 'name' => 'Yönetici'],
+        ['id' => 'ogretmen', 'name' => 'Öğretmen'],
+        ['id' => 'ogrenci', 'name' => 'Öğrenci']
+    ];
+    
+    // Kullanıcının rollerini çek
+    $userRoles = $user->getRoleNames()->toArray();
+    
+    // Tüm grupları çek
+    $groups = \App\Models\Group::with('teacher')->where('is_active', true)->get();
+    
+    // Kullanıcının gruplarını çek
+    $userGroups = $user->groups->pluck('id')->toArray();
+    
+    // Öğretmenleri çek (grup oluşturma için)
+    $teachers = User::role('ogretmen')->get();
+    
+    return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'groups', 'userGroups', 'teachers'));
+}
+
+
 public function update(Request $request, User $user)
 {
     $request->validate([
@@ -158,8 +163,10 @@ public function update(Request $request, User $user)
         ],
         'phone' => 'nullable|string|max:20',
         'parent_phone_number' => 'nullable|string|max:20',
-        'parent_phone_number_2' => 'nullable|string|max:20', // Eklendi
+        'parent_phone_number_2' => 'nullable|string|max:20',
         'roles' => 'required|array|min:1',
+        'groups' => 'nullable|array',
+        'groups.*' => 'exists:groups,id',
     ]);
 
     $user->update([
@@ -167,7 +174,7 @@ public function update(Request $request, User $user)
         'email' => $request->email,
         'phone' => $request->phone,
         'parent_phone_number' => $request->parent_phone_number,
-        'parent_phone_number_2' => $request->parent_phone_number_2, // Eklendi
+        'parent_phone_number_2' => $request->parent_phone_number_2,
     ]);
 
     if ($request->filled('password')) {
@@ -181,6 +188,13 @@ public function update(Request $request, User $user)
     }
 
     $user->syncRoles($request->roles);
+    
+    // Grupları senkronize et
+    if ($request->has('groups')) {
+        $user->groups()->sync($request->groups);
+    } else {
+        $user->groups()->detach();
+    }
 
     return redirect()->route('admin.users.show', $user)
         ->with('success', 'Kullanıcı başarıyla güncellendi.');
