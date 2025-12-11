@@ -246,6 +246,8 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         
         Route::resource('users', \App\Http\Controllers\Admin\AdminUserController::class);
         Route::post('/users/{user}/approve', [\App\Http\Controllers\Admin\AdminUserController::class, 'approve'])->name('users.approve');
+        Route::post('/users/{user}/unapprove', [AdminUserController::class, 'unapprove'])
+    ->name('admin.users.unapprove');
         Route::get('/users/{user}/manage-courses', [\App\Http\Controllers\Admin\AdminUserController::class, 'manageCourses'])->name('users.manageCourses');
         Route::post('/users/{user}/enroll-course', [\App\Http\Controllers\Admin\AdminUserController::class, 'enrollCourse'])->name('users.enrollCourse');
         Route::put('/users/{user}/courses/{course}', [\App\Http\Controllers\Admin\AdminUserController::class, 'updateCourseEnrollment'])->name('users.updateCourseEnrollment');

@@ -25,6 +25,12 @@
         </div>
     @endif
     
+    @if(session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {{ session('error') }}
+        </div>
+    @endif
+    
     <!-- Filtreler ve Arama -->
     <div class="bg-white rounded-lg shadow-md mb-6 p-4">
         <form action="{{ route('admin.users.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -131,15 +137,26 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex items-center space-x-2">
-                                    @if($user->hasRole('ogrenci') && !$user->teacher_approved)
-                                        <form action="{{ route('admin.users.approve', $user) }}" method="POST" style="display: inline;">
-                                            @csrf
-                                            <button type="submit" class="text-green-600 hover:text-green-900" title="Onayla" onclick="return confirm('Bu öğrenciyi onaylamak istediğinizden emin misiniz?')">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </button>
-                                        </form>
+                                    @if($user->hasRole('ogrenci'))
+                                        @if($user->teacher_approved)
+                                            <form action="{{ route('admin.users.unapprove', $user) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" class="text-orange-600 hover:text-orange-900" title="Onayı Kaldır" onclick="return confirm('Bu öğrencinin onayını kaldırmak istediğinizden emin misiniz?')">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <form action="{{ route('admin.users.approve', $user) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" class="text-green-600 hover:text-green-900" title="Onayla" onclick="return confirm('Bu öğrenciyi onaylamak istediğinizden emin misiniz?')">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @endif
                                     @endif
                                     
                                     <a href="{{ route('admin.users.show', $user) }}" class="text-blue-600 hover:text-blue-900" title="Detay">

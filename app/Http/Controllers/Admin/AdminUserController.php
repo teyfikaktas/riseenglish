@@ -162,6 +162,21 @@ public function approve(User $user)
     
     return back()->with('success', $user->name . ' başarıyla onaylandı!');
 }
+// AdminUserController.php - approve metodundan sonra ekle
+
+public function unapprove(User $user)
+{
+    if (!$user->hasRole('ogrenci')) {
+        return back()->with('error', 'Sadece öğrencilerin onayı kaldırılabilir.');
+    }
+    
+    $user->teacher_approved = false;
+    $user->approved_at = null;
+    $user->approved_by = null;
+    $user->save();
+    
+    return back()->with('success', $user->name . ' öğrencisinin onayı kaldırıldı!');
+}
 public function update(Request $request, User $user)
 {
     $request->validate([
