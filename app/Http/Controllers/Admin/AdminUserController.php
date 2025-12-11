@@ -8,7 +8,7 @@ use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-
+use Carbon\Carbon;
 class AdminUserController extends Controller
 {
     /**
@@ -149,7 +149,19 @@ public function edit(User $user)
     return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'groups', 'userGroups', 'teachers'));
 }
 
-
+public function approve(User $user)
+{
+    if (!$user->hasRole('ogrenci')) {
+        return back()->with('error', 'Sadece öğrenciler onaylanabilir.');
+    }
+    
+    $user->teacher_approved = true;
+    $user->approved_at = now();
+    $user->approved_by = auth()->id();
+    $user->save();
+    
+    return back()->with('success', $user->name . ' başarıyla onaylandı!');
+}
 public function update(Request $request, User $user)
 {
     $request->validate([
