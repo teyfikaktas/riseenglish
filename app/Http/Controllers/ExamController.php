@@ -63,20 +63,61 @@ public function create()
     }
 }
     
-    public function store(Request $request)
-    {
-        try {
-            $validated = $request->validate([
-                'exam_name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'start_time' => 'required|date',
-                'time_per_question' => 'required|integer|min:5|max:300',
-                'word_sets' => 'required|array|min:1',
-                'word_sets.*' => 'exists:word_sets,id',
-                'students' => 'required|array|min:1',
-                'students.*' => 'exists:users,id',
-            ]);
+public function store(Request $request)
+{
+    try {
+        $validated = $request->validate([
+            'exam_name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_time' => 'required|date',
+            'time_per_question' => 'required|integer|min:5|max:300',
+            'word_sets' => 'required|array|min:1',
+            'word_sets.*' => 'exists:word_sets,id',
+            'students' => 'required|array|min:1',
+            'students.*' => 'exists:users,id',
+            'is_recurring' => 'nullable|boolean',
+            'end_date' => 'nullable|date|after:start_time',
+        ]);
+        
+        // Eğer tekrarlayan sınav seçilmişse
+        if ($request->has('is_recurring') && $request->is_recurring && $request->end_date) {
+            $startDate = \Carbon\Carbon::parse($validated['start_time']);
+            $endDate = \Carbon\Carbon::parse($validated['end_date']);
             
+            $createdExams = [];
+            $currentDate = $startDate->copy();
+            
+            // Her gün için sınav oluştur
+            while ($currentDate->lte($endDate)) {
+                $exam = Exam::create([
+                    'teacher_id' => auth()->id(),
+                    'name' => $validated['exam_name'] . ' - ' . $currentDate->isoFormat('D MMMM'),
+                    'description' => $validated['description'],
+                    'start_time' => $currentDate->format('Y-m-d H:i:s'),
+                    'time_per_question' => $validated['time_per_question'],
+                    'is_active' => true,
+                ]);
+                
+                $exam->wordSets()->attach($validated['word_sets']);
+                $exam->students()->attach($validated['students']);
+                
+                $createdExams[] = $exam;
+                
+                // Bir sonraki güne geç
+                $currentDate->addDay();
+            }
+            
+            // Toplu SMS gönder - TEK SMS
+            if (!empty($createdExams)) {
+                $this->sendBulkExamCreatedSms($createdExams, $validated['students']);
+            }
+            
+            return redirect()
+                ->route('word-sets.index')
+                ->with('success', count($createdExams) . ' adet sınav başarıyla oluşturuldu ve SMS bildirimleri gönderildi!');
+            
+        } else {
+            // Tek sınav oluştur (mevcut mantık)
             $exam = Exam::create([
                 'teacher_id' => auth()->id(),
                 'name' => $validated['exam_name'],
@@ -89,19 +130,119 @@ public function create()
             $exam->wordSets()->attach($validated['word_sets']);
             $exam->students()->attach($validated['students']);
             
-            // ✅ Öğrencilere ve velilerine SMS gönder
             $this->sendExamCreatedSms($exam, $validated['students']);
             
             return redirect()
                 ->route('word-sets.index')
                 ->with('success', 'Sınav başarıyla oluşturuldu ve SMS bildirimleri gönderildi!');
-                
-        } catch (\Exception $e) {
-            Log::error('Exam Store Error: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Sınav oluşturulurken bir hata oluştu');
         }
+                
+    } catch (\Exception $e) {
+        Log::error('Exam Store Error: ' . $e->getMessage());
+        return back()->withInput()->with('error', 'Sınav oluşturulurken bir hata oluştu');
     }
-    
+}
+
+/**
+ * Toplu sınav oluşturulduğunda tek SMS gönder
+ */
+private function sendBulkExamCreatedSms($exams, $studentIds)
+{
+    try {
+        $teacher = auth()->user();
+        $firstExam = $exams[0];
+        $lastExam = end($exams);
+        
+        $startDate = \Carbon\Carbon::parse($firstExam->start_time)->locale('tr');
+        $endDate = \Carbon\Carbon::parse($lastExam->start_time)->locale('tr');
+        
+        $formattedStart = $startDate->isoFormat('D MMMM');
+        $formattedEnd = $endDate->isoFormat('D MMMM');
+        $examTime = $startDate->format('H:i');
+        
+        foreach ($studentIds as $studentId) {
+            $student = User::find($studentId);
+            if (!$student) continue;
+            
+            $phoneNumbers = [];
+            
+            if (!empty($student->phone)) {
+                $phoneNumbers[] = ['number' => $student->phone, 'type' => 'Öğrenci', 'name' => $student->name];
+            }
+            if (!empty($student->parent_phone_number)) {
+                $phoneNumbers[] = ['number' => $student->parent_phone_number, 'type' => '1. Veli', 'name' => $student->name];
+            }
+            if (!empty($student->parent_phone_number_2)) {
+                $phoneNumbers[] = ['number' => $student->parent_phone_number_2, 'type' => '2. Veli', 'name' => $student->name];
+            }
+            
+            if (empty($phoneNumbers)) {
+                Log::warning('Bulk exam SMS: Telefon numarası bulunamadı', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name
+                ]);
+                continue;
+            }
+            
+            foreach ($phoneNumbers as $phone) {
+                try {
+                    if ($phone['type'] === 'Öğrenci') {
+                        $smsContent = sprintf(
+                            "Sayın %s, %s-%s tarihleri arasında her gün saat %s'te '%s' sınavı yapılacaktır (Toplam %d gün). Öğretmen: %s - Rise English",
+                            $student->name,
+                            $formattedStart,
+                            $formattedEnd,
+                            $examTime,
+                            $validated['exam_name'] ?? 'Quiz',
+                            count($exams),
+                            $teacher->name
+                        );
+                    } else {
+                        $smsContent = sprintf(
+                            "Sayın Veli, %s adlı öğrenciniz için %s-%s tarihleri arasında her gün saat %s'te '%s' sınavı yapılacaktır (Toplam %d gün). Öğretmen: %s - Rise English",
+                            $student->name,
+                            $formattedStart,
+                            $formattedEnd,
+                            $examTime,
+                            $validated['exam_name'] ?? 'Quiz',
+                            count($exams),
+                            $teacher->name
+                        );
+                    }
+                    
+                    $smsResult = \App\Services\SmsService::sendSms($phone['number'], $smsContent);
+                    
+                    if ($smsResult) {
+                        Log::info('Bulk exam SMS gönderildi', [
+                            'student_id' => $student->id,
+                            'student_name' => $student->name,
+                            'exam_count' => count($exams),
+                            'recipient_type' => $phone['type'],
+                            'recipient_phone' => $phone['number'],
+                            'date_range' => "{$formattedStart} - {$formattedEnd}"
+                        ]);
+                    } else {
+                        Log::error('Bulk exam SMS gönderilemedi', [
+                            'student_id' => $student->id,
+                            'recipient_type' => $phone['type'],
+                            'recipient_phone' => $phone['number']
+                        ]);
+                    }
+                    
+                } catch (\Exception $e) {
+                    Log::error('Bulk exam SMS hatası', [
+                        'student_id' => $student->id,
+                        'recipient_type' => $phone['type'],
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
+        
+    } catch (\Exception $e) {
+        Log::error('Bulk exam SMS process error: ' . $e->getMessage());
+    }
+}
     /**
      * Sınav oluşturulduğunda öğrencilere ve velilerine SMS gönder
      */

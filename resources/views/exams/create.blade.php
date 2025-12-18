@@ -23,6 +23,18 @@
                 <h2 class="text-xl font-bold text-[#1a2e5a] mb-4">Sınav Bilgileri</h2>
                 
                 <div class="space-y-4">
+                    <!-- Toplu Sınav Oluştur -->
+                    <div>
+                        <label class="flex items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200 cursor-pointer hover:bg-blue-100">
+                            <input type="checkbox" 
+                                   id="is_recurring"
+                                   name="is_recurring" 
+                                   value="1"
+                                   class="w-5 h-5 text-[#1a2e5a] rounded focus:ring-[#1a2e5a]">
+                            <span class="ml-3 font-semibold text-gray-900">📅 Toplu Sınav Oluştur (Her Gün)</span>
+                        </label>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Sınav Adı</label>
                         <input type="text" 
@@ -46,6 +58,16 @@
                                name="start_time" 
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a2e5a] focus:border-transparent"
                                required>
+                    </div>
+
+                    <!-- Bitiş Tarihi (Toplu sınav için) -->
+                    <div id="end_date_container" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Bitiş Tarihi ve Saati</label>
+                        <input type="datetime-local" 
+                               name="end_date" 
+                               id="end_date"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a2e5a] focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Başlangıç ve bitiş tarihi arasındaki her gün sınav oluşturulacak</p>
                     </div>
 
                     <div>
@@ -217,32 +239,46 @@
 </div>
 
 <script>
-// Grup seçimi - Gruba tıklayınca o gruptaki tüm öğrencileri seç
+// Grup seçimi - Toggle yapısı
 document.querySelectorAll('.group-select-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const studentIds = this.getAttribute('data-student-ids').split(',').filter(id => id);
         
-        // Önce tüm öğrencilerin seçimini kaldır
-        document.querySelectorAll('.student-checkbox').forEach(cb => {
-            cb.checked = false;
-        });
+        // Grup seçili mi kontrol et
+        const isGroupSelected = this.classList.contains('group-selected');
         
-        // Gruptaki öğrencileri seç
-        studentIds.forEach(studentId => {
-            const studentItem = document.querySelector(`.student-item[data-student-id="${studentId}"]`);
-            if (studentItem) {
-                const checkbox = studentItem.querySelector('.student-checkbox');
-                if (checkbox) {
-                    checkbox.checked = true;
+        if (isGroupSelected) {
+            // Grup seçiliyse, seçimi kaldır
+            studentIds.forEach(studentId => {
+                const studentItem = document.querySelector(`.student-item[data-student-id="${studentId}"]`);
+                if (studentItem) {
+                    const checkbox = studentItem.querySelector('.student-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
                 }
-            }
-        });
-        
-        // Buton animasyonu
-        this.classList.add('bg-green-100', 'border-green-500');
-        setTimeout(() => {
-            this.classList.remove('bg-green-100', 'border-green-500');
-        }, 500);
+            });
+            
+            // Buton stilini kaldır
+            this.classList.remove('group-selected', 'bg-green-100', 'border-green-500');
+            this.classList.add('border-gray-200');
+            
+        } else {
+            // Grup seçili değilse, seç
+            studentIds.forEach(studentId => {
+                const studentItem = document.querySelector(`.student-item[data-student-id="${studentId}"]`);
+                if (studentItem) {
+                    const checkbox = studentItem.querySelector('.student-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                }
+            });
+            
+            // Buton stilini ekle
+            this.classList.add('group-selected', 'bg-green-100', 'border-green-500');
+            this.classList.remove('border-gray-200');
+        }
         
         // "Tüm öğrencileri seç" checkbox'ını güncelle
         updateSelectAllCheckbox();
@@ -298,6 +334,20 @@ document.getElementById('student-search')?.addEventListener('input', function() 
 
     // "Tüm öğrencileri seç" checkbox'ını güncelle
     updateSelectAllCheckbox();
+});
+
+// Toplu sınav checkbox toggle
+document.getElementById('is_recurring')?.addEventListener('change', function() {
+    const endDateContainer = document.getElementById('end_date_container');
+    const endDateInput = document.getElementById('end_date');
+    
+    if (this.checked) {
+        endDateContainer.classList.remove('hidden');
+        endDateInput.required = true;
+    } else {
+        endDateContainer.classList.add('hidden');
+        endDateInput.required = false;
+    }
 });
 </script>
 @endsection
