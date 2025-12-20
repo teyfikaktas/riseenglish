@@ -13,52 +13,51 @@ use Carbon\Carbon;
 
 class StudentExamController extends Controller
 {
-    /**
-     * Öğrenciye atanan sınavları listele
-     */
-    public function index(Request $request)
-    {
-        $studentId = auth()->id();
-        
-        $exams = Exam::whereHas('students', function($query) use ($studentId) {
-                $query->where('users.id', $studentId);
-            })
-            ->with(['teacher:id,name', 'wordSets:id,name'])
-            ->withCount('wordSets')
-            ->select('id', 'teacher_id', 'name', 'description', 'start_time', 'time_per_question', 'is_active')
-            ->orderBy('start_time', 'desc')
-            ->get()
-            ->map(function($exam) use ($studentId) {
-                // Tamamlanma durumunu kontrol et
-                $isCompleted = ExamResult::where('exam_id', $exam->id)
-                    ->where('student_id', $studentId)
-                    ->whereNotNull('completed_at')
-                    ->exists();
-                
-                return [
-                    'id' => $exam->id,
-                    'name' => $exam->name,
-                    'description' => $exam->description,
-                    'teacher_name' => $exam->teacher->name,
-                    'start_time' => $exam->start_time->toIso8601String(),
-                    'time_per_question' => $exam->time_per_question,
-                    'is_active' => $exam->is_active,
-                    'is_completed' => $isCompleted,
-                    'word_set_count' => $exam->word_sets_count,
-                    'word_sets' => $exam->wordSets->map(function($set) {
-                        return [
-                            'id' => $set->id,
-                            'name' => $set->name,
-                        ];
-                    }),
-                ];
-            });
-        
-        return response()->json([
-            'success' => true,
-            'data' => $exams
-        ]);
-    }
+    
+public function index(Request $request)
+{
+    $studentId = auth()->id();
+    
+    $exams = Exam::whereHas('students', function($query) use ($studentId) {
+            $query->where('users.id', $studentId);
+        })
+        ->with(['teacher:id,name', 'wordSets:id,name'])
+        ->withCount('wordSets')
+        ->select('id', 'teacher_id', 'name', 'description', 'start_time', 'time_per_question', 'is_active')
+        ->orderBy('is_active', 'desc')  // 👈 Önce aktifler (1, 0 sırası)
+        ->orderBy('start_time', 'desc') // 👈 Sonra her grup kendi içinde en yeniden eskiye
+        ->get()
+        ->map(function($exam) use ($studentId) {
+            // Tamamlanma durumunu kontrol et
+            $isCompleted = ExamResult::where('exam_id', $exam->id)
+                ->where('student_id', $studentId)
+                ->whereNotNull('completed_at')
+                ->exists();
+            
+            return [
+                'id' => $exam->id,
+                'name' => $exam->name,
+                'description' => $exam->description,
+                'teacher_name' => $exam->teacher->name,
+                'start_time' => $exam->start_time->toIso8601String(),
+                'time_per_question' => $exam->time_per_question,
+                'is_active' => $exam->is_active,
+                'is_completed' => $isCompleted,
+                'word_set_count' => $exam->word_sets_count,
+                'word_sets' => $exam->wordSets->map(function($set) {
+                    return [
+                        'id' => $set->id,
+                        'name' => $set->name,
+                    ];
+                }),
+            ];
+        });
+    
+    return response()->json([
+        'success' => true,
+        'data' => $exams
+    ]);
+}
     
     /**
      * ✅ Sınava giriş kontrolü ve log kaydetme
