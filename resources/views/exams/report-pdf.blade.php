@@ -11,7 +11,12 @@
             margin: 0;
             padding: 0;
             color: #333;
-            background-color: #f9fafb;
+            background-image: url('{{ public_path('images/bgreport.jpg') }}');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: left top;
+            position: relative;
         }
 
         /* Kapak sayfası */
@@ -21,6 +26,22 @@
             flex-direction: column;
             page-break-after: always;
             padding: 60px;
+        }
+
+        /* Motto stili */
+        .motto-container {
+            text-align: center;
+            margin: 40px 0;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .motto-container .red {
+            color: #e63946;
+        }
+
+        .motto-container .blue {
+            color: #1a2e5a;
         }
 
         /* Header */
@@ -85,22 +106,6 @@
             margin-top: 5px;
         }
 
-        /* Motto */
-        .motto-container {
-            text-align: center;
-            margin: 40px 0;
-            font-weight: bold;
-            font-size: 24px;
-        }
-
-        .motto-container .red {
-            color: #e63946;
-        }
-
-        .motto-container .blue {
-            color: #1a2e5a;
-        }
-
         /* Kapak detay tablosu */
         .cover-details {
             margin: 40px auto;
@@ -147,10 +152,11 @@
 
         /* Ana rapor container */
         .report-container {
-            max-width: 750px;
-            margin: 30px auto;
-            padding: 30px;
-            background-color: white;
+            max-width: 650px;
+            margin: 30px 50px;
+            padding: 10px;
+            position: center;
+            background-color: rgba(255, 255, 255, 0.2);
             border-radius: 8px;
         }
 
@@ -185,7 +191,7 @@
             padding: 15px;
             text-align: center;
             border-radius: 5px;
-            background-color: #f9fafb;
+            background-color: rgba(249, 250, 251, 0.95);
             border: 2px solid #eee;
             width: 33.33%;
         }
@@ -230,6 +236,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+            background-color: rgba(255, 255, 255, 0.95);
         }
 
         .results-table th {
@@ -244,70 +251,11 @@
             padding: 12px;
             border-bottom: 1px solid #eee;
             font-size: 13px;
+            background-color: rgba(255, 255, 255, 0.95);
         }
 
-        .results-table tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-
-        .results-table tr:hover {
-            background-color: #f3f4f6;
-        }
-
-        /* Badge stilleri */
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .badge-success {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-
-        .badge-danger {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-
-        .badge-warning {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-
-        /* Sıralama rozetleri */
-        .rank-badge {
-            display: inline-block;
-            width: 28px;
-            height: 28px;
-            line-height: 28px;
-            text-align: center;
-            border-radius: 50%;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .rank-1 { 
-            background-color: #ffd700; 
-            color: #000; 
-        }
-        
-        .rank-2 { 
-            background-color: #c0c0c0; 
-            color: #000; 
-        }
-        
-        .rank-3 { 
-            background-color: #cd7f32; 
-            color: #fff; 
-        }
-        
-        .rank-other { 
-            background-color: #e5e7eb; 
-            color: #6b7280; 
+        .results-table tr:nth-child(even) td {
+            background-color: rgba(249, 250, 251, 0.95);
         }
 
         /* Footer */
@@ -318,6 +266,9 @@
             font-size: 11px;
             color: #666;
             text-align: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
         }
 
         .footer-logo {
@@ -329,7 +280,7 @@
         .empty-state {
             text-align: center;
             padding: 40px;
-            background-color: #f9fafb;
+            background-color: rgba(249, 250, 251, 0.95);
             border-radius: 8px;
             border: 2px dashed #ddd;
         }
@@ -346,6 +297,17 @@
             font-style: italic;
         }
 
+        /* Alt logo */
+        .bottom-logo {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .bottom-logo img {
+            max-width: 600px;
+            height: auto;
+        }
+
         /* Yazdırma ayarları */
         @page {
             size: A4;
@@ -356,6 +318,13 @@
             body {
                 margin: 0;
                 padding: 0;
+            }
+            
+            .report-container {
+                width: 100%;
+                max-width: 100%;
+                padding: 40px;
+                margin: 40px 0;
             }
         }
     </style>
@@ -517,6 +486,11 @@
             <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
             <p><strong>© {{ date('Y') }} Rise English</strong> - Tüm Hakları Saklıdır</p>
             <p>Oluşturma Tarihi: {{ now()->locale('tr')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
+        </div>
+
+        <!-- Alt logo -->
+        <div class="bottom-logo">
+            <img src="{{ public_path('images/rs.jpg') }}" alt="RS Logo">
         </div>
     </div>
 </body>
