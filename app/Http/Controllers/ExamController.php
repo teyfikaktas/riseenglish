@@ -103,19 +103,28 @@ public function create()
         return back()->with('error', 'Bir hata oluştu');
     }
 }
-        /**
-     * Öğretmenin sınavlarını listele
-     */
-    public function index()
-    {
-        $exams = Exam::where('teacher_id', auth()->id())
-            ->with(['students', 'wordSets'])
-            ->withCount('students')
-            ->orderBy('start_time', 'desc')
-            ->paginate(20);
-            
-        return view('exams.index', compact('exams'));
+public function index(Request $request)
+{
+    $query = Exam::where('teacher_id', auth()->id())
+        ->withCount('students')
+        ->with('wordSets');
+    
+    // Arama
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhereDate('start_time', 'like', "%{$search}%");
+        });
     }
+    
+    $exams = $query->orderBy('is_active', 'desc')
+        ->orderBy('start_time', 'desc')
+        ->paginate(10);
+    
+    return view('exams.index', compact('exams'));
+}
     
 public function store(Request $request)
 {

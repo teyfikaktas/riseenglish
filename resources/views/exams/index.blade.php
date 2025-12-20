@@ -25,6 +25,30 @@
             </div>
         </div>
 
+        <!-- Search Bar -->
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <form method="GET" action="{{ route('exams.index') }}" class="flex gap-3">
+                <div class="flex-1 relative">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ request('search') }}"
+                           placeholder="Sınav adı, açıklama veya tarih ile ara..." 
+                           class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e63946] focus:border-transparent">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <button type="submit" class="bg-[#e63946] hover:bg-[#d62836] text-white font-semibold px-6 py-3 rounded-lg transition shadow-md">
+                    Ara
+                </button>
+                @if(request('search'))
+                    <a href="{{ route('exams.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-6 py-3 rounded-lg transition shadow-md">
+                        Temizle
+                    </a>
+                @endif
+            </form>
+        </div>
+
         <!-- Success/Error Messages -->
         @if(session('success'))
             <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-md" role="alert">
@@ -45,6 +69,15 @@
                     </svg>
                     <p class="font-semibold">{{ session('error') }}</p>
                 </div>
+            </div>
+        @endif
+
+        <!-- Search Results Info -->
+        @if(request('search'))
+            <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 rounded-lg shadow-md">
+                <p class="font-semibold">
+                    "{{ request('search') }}" için {{ $exams->total() }} sonuç bulundu.
+                </p>
             </div>
         @endif
 
@@ -149,24 +182,6 @@
         Rapor İndir
     </a>
 
-                                    <!-- Düzenle -->
-                                    {{-- <a href="{{ route('exams.edit', $exam) }}" 
-                                       class="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition shadow-md">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                        </svg>
-                                        Düzenle
-                                    </a> --}}
-
-                                    <!-- Aktif/Pasif Toggle -->
-                                    {{-- <button onclick="toggleActive({{ $exam->id }}, {{ $exam->is_active ? 'true' : 'false' }})"
-                                            class="inline-flex items-center justify-center gap-2 {{ $exam->is_active ? 'bg-gray-500 hover:bg-gray-600' : 'bg-green-500 hover:bg-green-600' }} text-white font-semibold py-2 px-4 rounded-lg transition shadow-md">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
-                                        </svg>
-                                        {{ $exam->is_active ? 'Pasif Yap' : 'Aktif Yap' }}
-                                    </button> --}}
-
                                     <!-- Sil -->
                                     <button onclick="deleteExam({{ $exam->id }}, '{{ $exam->name }}')"
                                             class="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition shadow-md">
@@ -184,7 +199,7 @@
 
             <!-- Pagination -->
             <div class="mt-8">
-                {{ $exams->links() }}
+                {{ $exams->appends(['search' => request('search')])->links() }}
             </div>
 
         @else
@@ -196,15 +211,24 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-3">Henüz Sınav Oluşturmadınız</h3>
-                    <p class="text-gray-600 mb-6">Öğrencileriniz için ilk sınavınızı oluşturarak başlayın.</p>
-                    <a href="{{ route('exams.create') }}" 
-                       class="inline-flex items-center gap-2 bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                        </svg>
-                        İlk Sınavımı Oluştur
-                    </a>
+                    @if(request('search'))
+                        <h3 class="text-2xl font-bold text-gray-800 mb-3">Sonuç Bulunamadı</h3>
+                        <p class="text-gray-600 mb-6">"{{ request('search') }}" için hiçbir sınav bulunamadı.</p>
+                        <a href="{{ route('exams.index') }}" 
+                           class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition">
+                            Tüm Sınavları Göster
+                        </a>
+                    @else
+                        <h3 class="text-2xl font-bold text-gray-800 mb-3">Henüz Sınav Oluşturmadınız</h3>
+                        <p class="text-gray-600 mb-6">Öğrencileriniz için ilk sınavınızı oluşturarak başlayın.</p>
+                        <a href="{{ route('exams.create') }}" 
+                           class="inline-flex items-center gap-2 bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            İlk Sınavımı Oluştur
+                        </a>
+                    @endif
                 </div>
             </div>
         @endif
@@ -252,30 +276,6 @@ function deleteExam(examId, examName) {
 
 function closeDeleteModal() {
     document.getElementById('deleteModal').classList.add('hidden');
-}
-
-function toggleActive(examId, isActive) {
-    if (confirm(isActive ? 'Sınavı pasif yapmak istediğinizden emin misiniz?' : 'Sınavı aktif yapmak istediğinizden emin misiniz?')) {
-        fetch(`/exams/${examId}/toggle-active`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Bir hata oluştu!');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Bir hata oluştu!');
-        });
-    }
 }
 
 // Close modal on escape key
