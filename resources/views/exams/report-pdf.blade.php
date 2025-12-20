@@ -451,29 +451,16 @@
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th style="width: 60px; text-align: center;">Sıra</th>
                             <th>Öğrenci Adı</th>
                             <th style="width: 100px; text-align: center;">Doğru</th>
                             <th style="width: 100px; text-align: center;">Yanlış</th>
                             <th style="width: 100px; text-align: center;">Boş</th>
                             <th style="width: 100px; text-align: center;">Puan</th>
-                            <th style="width: 120px; text-align: center;">Durum</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($completedResults->sortByDesc('score') as $index => $result)
+                        @foreach($completedResults->sortByDesc('score') as $result)
                             <tr>
-                                <td style="text-align: center;">
-                                    @if($index + 1 == 1)
-                                        <span class="rank-badge rank-1">🥇</span>
-                                    @elseif($index + 1 == 2)
-                                        <span class="rank-badge rank-2">🥈</span>
-                                    @elseif($index + 1 == 3)
-                                        <span class="rank-badge rank-3">🥉</span>
-                                    @else
-                                        <span class="rank-badge rank-other">{{ $index + 1 }}</span>
-                                    @endif
-                                </td>
                                 <td><strong>{{ $result->student->name }}</strong></td>
                                 <td style="text-align: center; color: #16a34a; font-weight: bold;">
                                     {{ $result->getCorrectAnswersCount() }}
@@ -486,15 +473,6 @@
                                 </td>
                                 <td style="text-align: center; font-size: 16px; font-weight: bold;">
                                     {{ number_format($result->score, 0) }}
-                                </td>
-                                <td style="text-align: center;">
-                                    @if($result->score >= 70)
-                                        <span class="badge badge-success">✓ Başarılı</span>
-                                    @elseif($result->score >= 50)
-                                        <span class="badge badge-warning">~ Orta</span>
-                                    @else
-                                        <span class="badge badge-danger">✗ Başarısız</span>
-                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -511,19 +489,13 @@
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th style="width: 60px; text-align: center;">Sıra</th>
                             <th>Öğrenci Adı</th>
-                            <th style="text-align: center;">Durum</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($notEnteredStudents as $index => $student)
+                        @foreach($notEnteredStudents as $student)
                             <tr>
-                                <td style="text-align: center;">{{ $index + 1 }}</td>
                                 <td>{{ $student->name }}</td>
-                                <td style="text-align: center;">
-                                    <span class="badge badge-danger">✗ Girmedi</span>
-                                </td>
                             </tr>
                         @endforeach
                     </tbody>
