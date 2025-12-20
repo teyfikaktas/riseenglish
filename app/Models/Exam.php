@@ -45,6 +45,12 @@ class Exam extends Model
             ->withTimestamps();
     }
 
+    // ✅ YENİ - Sınav sonuçları ilişkisi
+    public function results()
+    {
+        return $this->hasMany(ExamResult::class);
+    }
+
     // Sınavdaki tüm kelimeleri al (seçilen setlerden)
     public function getAllWords()
     {

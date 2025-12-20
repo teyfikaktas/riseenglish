@@ -632,217 +632,223 @@
             </svg>
         </div>
 
-        <div class="relative py-20 overflow-hidden"
-            style="background-image: url('{{ asset('images/free.jpg') }}'); background-size: cover; background-position: center; background-blend-mode: multiply;">
+<div class="relative py-20 overflow-hidden hero-section">
+    <!-- Placeholder gradient - Hemen yüklenir -->
+    <div class="absolute inset-0 bg-gradient-to-br from-[#1a2e5a] via-[#2d4373] to-[#1a2e5a]"></div>
+    
+    <!-- Asıl arka plan resmi - Lazy load -->
+    <div class="absolute inset-0 hero-bg opacity-0 transition-opacity duration-700" 
+         data-bg="{{ asset('images/free.webp') }}"
+         data-bg-fallback="{{ asset('images/free.jpg') }}">
+    </div>
 
+    <div class="absolute inset-0 bg-black opacity-30"></div>
 
-            <div class="absolute inset-0 bg-black opacity-30"></div>
+    <div class="container mx-auto px-6 relative z-10">
+        <div class="flex flex-col md:flex-row items-center md:space-x-12"> <!-- space-x eklendi -->
+            <div class="w-full md:w-1/2 text-center md:text-left mb-12 md:mb-0">
+                @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
+                    <div class="mb-6"> <!-- mb-4 -> mb-6 artırıldı -->
+                        <span
+                            class="bg-[#e63946] text-white text-xl px-4 py-2 rounded-lg shadow-lg inline-block transform -rotate-2 hover:rotate-0 transition-transform duration-300 font-bold">
+                            <i class="fas fa-graduation-cap mr-2"></i>KURSLARINIZ
+                        </span>
+                    </div>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+                        Öğrenmeye <span class="text-[#e63946]">Devam</span> Edin!
+                    </h1>
+                    <p class="text-xl text-white mb-8 max-w-lg mx-auto md:mx-0">
+                        Eğitim yolculuğunuzda size yardımcı olmak için buradayız. Kurslarınıza hemen erişin.
+                    </p>
+                @else
+                    <!-- GİRİŞ YAPMAYAN KULLANICI İÇİN STANDART MESAJ -->
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+                        Rise English ile <span class="text-[#e63946]">Öğrenmeye</span> Başlayın
+                    </h1>
+                    <p class="text-xl text-white mb-8 max-w-lg mx-auto md:mx-0">
+                        Eğitim platformumuzda profesyonel eğitmenlerle yeni beceriler kazanın ve kariyerinizde bir
+                        adım
+                        öne çıkın.
+                    </p>
+                @endif
 
-            <div class="container mx-auto px-6 relative z-10">
-                <div class="flex flex-col md:flex-row items-center md:space-x-12"> <!-- space-x eklendi -->
-                    <div class="w-full md:w-1/2 text-center md:text-left mb-12 md:mb-0">
-                        @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
-                            <div class="mb-6"> <!-- mb-4 -> mb-6 artırıldı -->
-                                <span
-                                    class="bg-[#e63946] text-white text-xl px-4 py-2 rounded-lg shadow-lg inline-block transform -rotate-2 hover:rotate-0 transition-transform duration-300 font-bold">
-                                    <i class="fas fa-graduation-cap mr-2"></i>KURSLARINIZ
-                                </span>
-                            </div>
-                            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                                Öğrenmeye <span class="text-[#e63946]">Devam</span> Edin!
-                            </h1>
-                            <p class="text-xl text-white mb-8 max-w-lg mx-auto md:mx-0">
-                                Eğitim yolculuğunuzda size yardımcı olmak için buradayız. Kurslarınıza hemen erişin.
-                            </p>
-                        @else
-                            <!-- GİRİŞ YAPMAYAN KULLANICI İÇİN STANDART MESAJ -->
-                            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                                Rise English ile <span class="text-[#e63946]">Öğrenmeye</span> Başlayın
-                            </h1>
-                            <p class="text-xl text-white mb-8 max-w-lg mx-auto md:mx-0">
-                                Eğitim platformumuzda profesyonel eğitmenlerle yeni beceriler kazanın ve kariyerinizde bir
-                                adım
-                                öne çıkın.
-                            </p>
-                        @endif
+                <div class="relative rounded-xl overflow-hidden shadow-xl mb-8 mt-8"> <!-- mt-8 eklendi -->
+                    <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
+                        <div class="video-thumbnail absolute inset-0" data-video-id="VRqM2zyqJeI">
+                            <img src="https://i.ytimg.com/vi/VRqM2zyqJeI/hqdefault.jpg" alt="Rise English Tanıtım"
+                                class="w-full h-full object-cover">
 
-                        <div class="relative rounded-xl overflow-hidden shadow-xl mb-8 mt-8"> <!-- mt-8 eklendi -->
-                            <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
-                                <div class="video-thumbnail absolute inset-0" data-video-id="VRqM2zyqJeI">
-                                    <img src="https://i.ytimg.com/vi/VRqM2zyqJeI/hqdefault.jpg" alt="Rise English Tanıtım"
-                                        class="w-full h-full object-cover">
-
-                                    <div
-                                        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-[#e63946] flex items-center justify-center z-10 shadow-lg">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-
-                                    <div class="absolute inset-0  bg-opacity-30"></div>
-                                </div>
-                                <div class="video-iframe-container absolute inset-0 hidden"></div>
-                            </div>
-
-                            <div class="absolute top-4 right-4">
-                                <div class="bg-[#e63946] text-white text-sm font-bold py-1 px-3 rounded-full shadow-lg">
-                                    <i class="fas fa-play-circle mr-1"></i> Tanıtım Videosu
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Buton Bölümü - En Altta -->
-                        <div class="flex flex-col sm:flex-row justify-center md:justify-start gap-4 mt-8">
-                            <!-- mt-8 eklendi -->
-                            @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
-                                <!-- Giriş yapmış öğrenci için kurslarım butonu -->
-                                <a href="{{ url('/ogrenci/kurslarim') }}"
-                                    class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-                                    <i class="fas fa-book-reader mr-2"></i>Kurslarıma Git
-                                </a>
-                                <a href="{{ url('/egitimler') }}"
-                                    class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-                                    <i class="fas fa-book-open mr-2"></i>Yeni Eğitimler
-                                </a>
-                            @else
-                                <!-- Giriş yapmamış kullanıcı için standart butonlar -->
-                                <a href="{{ url('/egitimler') }}"
-                                    class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-                                    Eğitimleri Keşfet
-                                </a>
-                                <a href="{{ url('/kayit-ol') }}"
-                                    class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-                                    Hemen Başla
-                                </a>
-                            @endif
-                        </div>
-
-                        <!-- Giriş yapmamış kullanıcılar için indirim banner'ı -->
-                        @if (!auth()->check() || !auth()->user()->hasRole('ogrenci'))
                             <div
-                                class="mt-6 bg-gradient-to-r from-[#e63946] to-[#d62836] rounded-lg p-3 shadow-lg transform -rotate-1 hover:rotate-0 transition-transform duration-300 mx-auto sm:mx-0 max-w-xs">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <div class="text-white font-bold text-lg">%40 İNDİRİM</div>
-                                        <div class="text-xs text-white opacity-90">Tüm eğitimlerde geçerli</div>
-                                    </div>
-                                    <div class="bg-white text-[#e63946] text-xs font-bold py-1 px-3 rounded-full shadow">
-                                        RiseEnglish
-                                    </div>
-                                </div>
-                                <div class="w-full h-1 bg-white bg-opacity-30 mt-2 rounded-full overflow-hidden">
-                                    <div class="w-1/2 h-full bg-white rounded-full animate-pulse"></div>
-                                </div>
+                                class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-[#e63946] flex items-center justify-center z-10 shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                             </div>
-                        @endif
+
+                            <div class="absolute inset-0  bg-opacity-30"></div>
+                        </div>
+                        <div class="video-iframe-container absolute inset-0 hidden"></div>
                     </div>
 
-                    <div class="w-full md:w-1/2">
-                        <div class="relative">
-                            <!-- Tüm kullanıcılar için İdiom görsel -->
-                            <div class="w-full bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
-                                <!-- Üst başlık - Genel site tasarımına uygun -->
-                                <div class="p-4 bg-[#1a2e5a] text-center relative">
-                                    <h2 class="text-2xl font-bold text-white">IDIOM OF THE DAY</h2>
+                    <div class="absolute top-4 right-4">
+                        <div class="bg-[#e63946] text-white text-sm font-bold py-1 px-3 rounded-full shadow-lg">
+                            <i class="fas fa-play-circle mr-1"></i> Tanıtım Videosu
+                        </div>
+                    </div>
+                </div>
 
-                                    <div class="absolute -right-2 top-2 transform rotate-12">
-                                        <div
-                                            class="bg-[#e63946] text-white text-xs font-bold py-1 px-3 rounded-full shadow-lg">
-                                            RiseEnglish
-                                        </div>
+                <!-- Buton Bölümü - En Altta -->
+                <div class="flex flex-col sm:flex-row justify-center md:justify-start gap-4 mt-8">
+                    <!-- mt-8 eklendi -->
+                    @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
+                        <!-- Giriş yapmış öğrenci için kurslarım butonu -->
+                        <a href="{{ url('/ogrenci/kurslarim') }}"
+                            class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                            <i class="fas fa-book-reader mr-2"></i>Kurslarıma Git
+                        </a>
+                        <a href="{{ url('/egitimler') }}"
+                            class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                            <i class="fas fa-book-open mr-2"></i>Yeni Eğitimler
+                        </a>
+                    @else
+                        <!-- Giriş yapmamış kullanıcı için standart butonlar -->
+                        <a href="{{ url('/egitimler') }}"
+                            class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                            Eğitimleri Keşfet
+                        </a>
+                        <a href="{{ url('/kayit-ol') }}"
+                            class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                            Hemen Başla
+                        </a>
+                    @endif
+                </div>
+
+                <!-- Giriş yapmamış kullanıcılar için indirim banner'ı -->
+                @if (!auth()->check() || !auth()->user()->hasRole('ogrenci'))
+                    <div
+                        class="mt-6 bg-gradient-to-r from-[#e63946] to-[#d62836] rounded-lg p-3 shadow-lg transform -rotate-1 hover:rotate-0 transition-transform duration-300 mx-auto sm:mx-0 max-w-xs">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-white font-bold text-lg">%40 İNDİRİM</div>
+                                <div class="text-xs text-white opacity-90">Tüm eğitimlerde geçerli</div>
+                            </div>
+                            <div class="bg-white text-[#e63946] text-xs font-bold py-1 px-3 rounded-full shadow">
+                                RiseEnglish
+                            </div>
+                        </div>
+                        <div class="w-full h-1 bg-white bg-opacity-30 mt-2 rounded-full overflow-hidden">
+                            <div class="w-1/2 h-full bg-white rounded-full animate-pulse"></div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="w-full md:w-1/2">
+                <div class="relative">
+                    <!-- Tüm kullanıcılar için İdiom görsel -->
+                    <div class="w-full bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
+                        <!-- Üst başlık - Genel site tasarımına uygun -->
+                        <div class="p-4 bg-[#1a2e5a] text-center relative">
+                            <h2 class="text-2xl font-bold text-white">IDIOM OF THE DAY</h2>
+
+                            <div class="absolute -right-2 top-2 transform rotate-12">
+                                <div
+                                    class="bg-[#e63946] text-white text-xs font-bold py-1 px-3 rounded-full shadow-lg">
+                                    RiseEnglish
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- İdiom Gösterim Alanı -->
+                        <div class="p-6 bg-gray-50">
+                            @if (isset($dailyIdiom))
+                                <!-- İngilizce İdiom -->
+                                <div class="bg-white rounded-lg p-4 mb-4 shadow-md border-l-4 border-[#e63946]">
+                                    <div class="text-xl font-bold text-[#1a2e5a] mb-1">
+                                        "{{ $dailyIdiom->english_phrase }}"</div>
+                                    <div class="text-md text-gray-500 italic">
+                                        {{ $dailyIdiom->turkish_translation }}
                                     </div>
                                 </div>
 
-                                <!-- İdiom Gösterim Alanı -->
-                                <div class="p-6 bg-gray-50">
-                                    @if (isset($dailyIdiom))
-                                        <!-- İngilizce İdiom -->
-                                        <div class="bg-white rounded-lg p-4 mb-4 shadow-md border-l-4 border-[#e63946]">
-                                            <div class="text-xl font-bold text-[#1a2e5a] mb-1">
-                                                "{{ $dailyIdiom->english_phrase }}"</div>
-                                            <div class="text-md text-gray-500 italic">
-                                                {{ $dailyIdiom->turkish_translation }}
-                                            </div>
-                                        </div>
-
-                                        <!-- Örnek Cümleler -->
-                                        <div class="bg-white rounded-lg p-4 shadow-md border-l-4 border-[#1a2e5a]">
-                                            <div class="text-lg font-bold text-[#1a2e5a]">Örnek Cümleler:</div>
-                                            <div class="text-md text-gray-600 mt-2">- {{ $dailyIdiom->example_sentence_1 }}
-                                            </div>
-                                            @if ($dailyIdiom->example_sentence_2)
-                                                <div class="text-md text-gray-600">- {{ $dailyIdiom->example_sentence_2 }}
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        <!-- Karakter Görseli - Ortalanmış -->
-                                        <div class="relative mt-6 flex justify-center">
-                                            @if ($dailyIdiom->image_path)
-                                                <img src="{{ asset('storage/' . $dailyIdiom->image_path) }}"
-                                                    alt="İdiom Görseli" class="h-80 object-contain z-10">
-                                            @else
-                                                <img src="{{ asset('images/1.jpg') }}" alt="Varsayılan İdiom Görseli"
-                                                    class="h-80 object-contain z-10">
-                                            @endif
-                                            <div class="absolute top-0 right-10 animate-bounce z-20">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#e63946]"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <!-- Veri yoksa gösterilecek alan -->
-                                        <div class="bg-white rounded-lg p-4 shadow-md text-center">
-                                            <div class="text-lg text-gray-500 italic">Bugün için deyim bulunamadı.</div>
+                                <!-- Örnek Cümleler -->
+                                <div class="bg-white rounded-lg p-4 shadow-md border-l-4 border-[#1a2e5a]">
+                                    <div class="text-lg font-bold text-[#1a2e5a]">Örnek Cümleler:</div>
+                                    <div class="text-md text-gray-600 mt-2">- {{ $dailyIdiom->example_sentence_1 }}
+                                    </div>
+                                    @if ($dailyIdiom->example_sentence_2)
+                                        <div class="text-md text-gray-600">- {{ $dailyIdiom->example_sentence_2 }}
                                         </div>
                                     @endif
                                 </div>
 
-                                <!-- Alt Banner -->
-                                <div class="py-3 px-4 bg-gray-100 text-center relative border-t border-gray-200">
-                                    <span class="inline-block text-[#1a2e5a] font-medium">
-                                        Günlük İngilizce Deyimi
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Kullanıcı türüne göre farklı bilgi kutuları -->
-                            @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
-                                <!-- Aktif kurs sayısı kutusu - Giriş yapmış öğrenci için -->
-                                <div
-                                    class="absolute -top-4 -left-4 bg-[#1a2e5a] text-white rounded-lg p-3 shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-book-open mr-2"></i>
-                                        <div>
-                                            <div class="text-lg font-bold">Aktif Kurslar</div>
-                                            <div class="text-2xl font-extrabold">
-                                                {{ auth()->user()->enrolledCourses()->where('is_active', true)->count() }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Kişiselleştirilmiş animasyonlu vurgu kutusu - Giriş yapmış öğrenci için -->
-                                <div class="absolute -bottom-4 -right-4 bg-white rounded-lg p-4 shadow-lg">
-                                    <div class="flex items-center">
-                                        <div class="bg-[#e63946] rounded-full h-4 w-4 mr-2 animate-pulse"></div>
-                                        <span class="font-bold text-[#1a2e5a]">Eğitiminize Devam Edin!</span>
+                                <!-- Karakter Görseli - Ortalanmış -->
+                                <div class="relative mt-6 flex justify-center">
+                                    @if ($dailyIdiom->image_path)
+                                        <img src="{{ asset('storage/' . $dailyIdiom->image_path) }}"
+                                            alt="İdiom Görseli" class="h-80 object-contain z-10">
+                                    @else
+                                        <img src="{{ asset('images/1.jpg') }}" alt="Varsayılan İdiom Görseli"
+                                            class="h-80 object-contain z-10">
+                                    @endif
+                                    <div class="absolute top-0 right-10 animate-bounce z-20">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#e63946]"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                        </svg>
                                     </div>
                                 </div>
                             @else
+                                <!-- Veri yoksa gösterilecek alan -->
+                                <div class="bg-white rounded-lg p-4 shadow-md text-center">
+                                    <div class="text-lg text-gray-500 italic">Bugün için deyim bulunamadı.</div>
+                                </div>
                             @endif
                         </div>
+
+                        <!-- Alt Banner -->
+                        <div class="py-3 px-4 bg-gray-100 text-center relative border-t border-gray-200">
+                            <span class="inline-block text-[#1a2e5a] font-medium">
+                                Günlük İngilizce Deyimi
+                            </span>
+                        </div>
                     </div>
+
+                    <!-- Kullanıcı türüne göre farklı bilgi kutuları -->
+                    @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
+                        <!-- Aktif kurs sayısı kutusu - Giriş yapmış öğrenci için -->
+                        <div
+                            class="absolute -top-4 -left-4 bg-[#1a2e5a] text-white rounded-lg p-3 shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                            <div class="flex items-center">
+                                <i class="fas fa-book-open mr-2"></i>
+                                <div>
+                                    <div class="text-lg font-bold">Aktif Kurslar</div>
+                                    <div class="text-2xl font-extrabold">
+                                        {{ auth()->user()->enrolledCourses()->where('is_active', true)->count() }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kişiselleştirilmiş animasyonlu vurgu kutusu - Giriş yapmış öğrenci için -->
+                        <div class="absolute -bottom-4 -right-4 bg-white rounded-lg p-4 shadow-lg">
+                            <div class="flex items-center">
+                                <div class="bg-[#e63946] rounded-full h-4 w-4 mr-2 animate-pulse"></div>
+                                <span class="font-bold text-[#1a2e5a]">Eğitiminize Devam Edin!</span>
+                            </div>
+                        </div>
+                    @else
+                    @endif
                 </div>
             </div>
         </div>
+    </div>
+</div>
         <div class="relative bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] py-16 overflow-hidden">
             <div class="absolute inset-0 opacity-10">
                 <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -1592,6 +1598,25 @@
     <script>
         // Düzeltilmiş Video Slider JavaScript - Tam Versiyon
         document.addEventListener('DOMContentLoaded', function() {
+
+                const heroBg = document.querySelector('.hero-bg');
+    if (heroBg) {
+        const img = new Image();
+        img.onload = function() {
+            heroBg.style.backgroundImage = `url('${this.src}')`;
+            heroBg.style.backgroundSize = 'cover';
+            heroBg.style.backgroundPosition = 'center';
+            heroBg.style.backgroundBlendMode = 'multiply';
+            setTimeout(() => heroBg.style.opacity = '1', 50);
+        };
+        img.onerror = function() {
+            const fallback = heroBg.getAttribute('data-bg-fallback');
+            if (fallback && this.src !== fallback) {
+                this.src = fallback;
+            }
+        };
+        img.src = heroBg.getAttribute('data-bg');
+    }
             // Success message auto-hide functionality
             initSuccessMessage();
 

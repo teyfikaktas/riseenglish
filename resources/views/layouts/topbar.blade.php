@@ -61,7 +61,7 @@
                     </div>
                 @endguest
             </div>
-            <!-- Part 2: Desktop Links -->
+            
             <!-- Desktop Links -->
             <div class="flex items-center ml-auto mr-1 gap-1 text-xs">
                 <!-- Ana Sayfa -->
@@ -97,15 +97,30 @@
                     </svg>
                     <span>Eğitimler</span>
                 </a>
-                    <a href="{{ route('ogrenci.learning-panel.index') }}"
-                        class="menu-link {{ request()->is('ogrenci/ogrenme-paneli') || request()->is('ogrenci/ogrenme-paneli/*') ? 'active' : '' }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
+
+                <!-- SINAVLAR (Öğretmen için) - YENİ EKLENEN -->
+                @if (auth()->check() && auth()->user()->hasRole('ogretmen'))
+                    <a href="{{ route('exams.index') }}"
+                        class="menu-link {{ request()->is('exams*') ? 'active' : '' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                         </svg>
-                        <span>Öğrenme Paneli</span>
+                        <span>Sınavlar</span>
                     </a>
+                @endif
+
+                <!-- Öğrenme Paneli -->
+                <a href="{{ route('ogrenci.learning-panel.index') }}"
+                    class="menu-link {{ request()->is('ogrenci/ogrenme-paneli') || request()->is('ogrenci/ogrenme-paneli/*') ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    </svg>
+                    <span>Öğrenme Paneli</span>
+                </a>
 
                 <!-- İletişim -->
                 <a href="{{ url('/iletisim') }}" class="menu-link {{ request()->is('iletisim') ? 'active' : '' }}">
@@ -142,7 +157,7 @@
                         <span>Zinciri Kırma Takip</span>
                     </a>
                 @endif
-                <!-- Part 3: More Desktop Links and Profile Button -->
+
                 <!-- Belgeler -->
                 @if (auth()->check() && auth()->user()->hasRole('ogretmen'))
                     <a href="{{ url('/ogretmen/belgeler') }}"
@@ -265,7 +280,7 @@
         </div>
     </div>
 </div>
-<!-- Part 4: Mobile Menu Dropdown (First Half) -->
+
 <!-- Mobile Menu Dropdown -->
 <div class="lg:hidden mobile-menu hidden bg-white border-t shadow-inner">
     <div class="py-1 divide-y divide-gray-100">
@@ -302,15 +317,31 @@
             </svg>
             <span>Eğitimler</span>
         </a>
-            <a href="{{ route('ogrenci.learning-panel.index') }}"
-                class="menu-link block border-0 bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-1 px-2 mx-1.5 my-1 rounded-md flex items-center transition text-xs {{ request()->is('ogrenci/ogrenme-paneli') || request()->is('ogrenci/ogrenme-paneli/*') ? 'active' : '' }}">
+
+        <!-- SINAVLAR (Öğretmen için) - YENİ EKLENEN MOBILE -->
+        @if (auth()->check() && auth()->user()->hasRole('ogretmen'))
+            <a href="{{ route('exams.index') }}"
+                class="menu-link block border-0 bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-1 px-2 mx-1.5 my-1 rounded-md flex items-center transition text-xs {{ request()->is('exams*') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
-                <span>Öğrenme Paneli</span>
+                <span>Sınavlar</span>
             </a>
+        @endif
+
+        <!-- Öğrenme Paneli -->
+        <a href="{{ route('ogrenci.learning-panel.index') }}"
+            class="menu-link block border-0 bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-1 px-2 mx-1.5 my-1 rounded-md flex items-center transition text-xs {{ request()->is('ogrenci/ogrenme-paneli') || request()->is('ogrenci/ogrenme-paneli/*') ? 'active' : '' }}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+            </svg>
+            <span>Öğrenme Paneli</span>
+        </a>
+
         <!-- İletişim -->
         <a href="{{ url('/iletisim') }}"
             class="menu-link block border-0 bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-1 px-2 mx-1.5 my-1 rounded-md flex items-center transition text-xs {{ request()->is('iletisim') ? 'active' : '' }}">
@@ -321,7 +352,7 @@
             </svg>
             <span>İletişim</span>
         </a>
-        <!-- Part 4: Mobile Menu Dropdown (Second Half) -->
+
         <!-- Zinciri Kırma (Öğretmen değilse) -->
         @if (!(auth()->check() && auth()->user()->hasRole('ogretmen')))
             <a href="{{ route('zinciri-kirma') }}"
@@ -393,6 +424,7 @@
                 <span>Derslerim</span>
             </a>
         @endif
+
         @auth
             <hr class="border-t border-gray-100 mx-2 my-1">
 
@@ -425,7 +457,8 @@
             <form id="logout-form-mobile" action="{{ route('logout') }}" method="POST" class="hidden">@csrf</form>
         @endauth
     </div>
-</div><!-- Part 5: Final Parts - Chain Breaker Top Bar, Styles, and JavaScript -->
+</div>
+
 <!-- Zinciri Kırma Top Bar (Sadece Öğrenciler İçin) -->
 @auth
     @if (auth()->user()->hasRole('ogrenci') && ($chainProgress = auth()->user()->chainProgress))

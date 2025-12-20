@@ -7,9 +7,50 @@ use App\Models\WordSet;
 use App\Models\User;
 use App\Models\Exam;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ExamController extends Controller
 {
+
+    /**
+ * Sınavı sil
+ */
+public function destroy(Exam $exam)
+{
+    if ($exam->teacher_id !== auth()->id()) {
+        abort(403, 'Bu sınavı silme yetkiniz yok.');
+    }
+    
+    $exam->wordSets()->detach();
+    $exam->students()->detach();
+    $exam->delete();
+    
+    return redirect()
+        ->route('exams.index')
+        ->with('success', 'Sınav başarıyla silindi!');
+}
+
+/**
+ * Sınav raporunu PDF olarak indir
+ */
+public function downloadReport(Exam $exam)
+{
+    if ($exam->teacher_id !== auth()->id()) {
+        abort(403, 'Bu sınava erişim yetkiniz yok.');
+    }
+    
+    // Sınav verilerini yükle
+    $exam->load(['students', 'wordSets', 'results.student']);
+    
+    // PDF oluştur
+    $pdf = PDF::loadView('exams.report-pdf', compact('exam'));
+    
+    // Dosya adı
+    $fileName = 'Sinav_Raporu_' . $exam->id . '_' . date('d-m-Y') . '.pdf';
+    
+    // PDF'i indir
+    return $pdf->download($fileName);
+}
 public function create()
 {
     try {
@@ -62,6 +103,19 @@ public function create()
         return back()->with('error', 'Bir hata oluştu');
     }
 }
+        /**
+     * Öğretmenin sınavlarını listele
+     */
+    public function index()
+    {
+        $exams = Exam::where('teacher_id', auth()->id())
+            ->with(['students', 'wordSets'])
+            ->withCount('students')
+            ->orderBy('start_time', 'desc')
+            ->paginate(20);
+            
+        return view('exams.index', compact('exams'));
+    }
     
 public function store(Request $request)
 {
