@@ -7,7 +7,7 @@
     <style>
         /* Genel sayfa stili */
         body {
-            font-family: 'Times New Roman', Times, serif;
+            font-family: DejaVu Sans, sans-serif;
             margin: 0;
             padding: 0;
             color: #333;
@@ -287,6 +287,11 @@
             margin-top: 5px;
         }
 
+        /* Girmedi durumu */
+        .not-entered {
+            background-color: #fee2e2 !important;
+        }
+
         /* Footer */
         .footer {
             margin-top: 40px;
@@ -411,67 +416,75 @@
     </div>
 
     <!-- 2. SAYFA - BAŞARI SIRASI -->
-    @if($completedResults->count() > 0)
-        <div class="report-container">
-            <div class="section">
-                <div class="section-title">BAŞARI SIRASI</div>
-                
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Öğrenci Adı</th>
-                            <th>Doğru</th>
-                            <th>Yanlış</th>
-                            <th>Başarı Oranı</th>
+    <div class="report-container">
+        <div class="section">
+            <div class="section-title">BAŞARI SIRASI</div>
+            
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Öğrenci Adı</th>
+                        <th>Doğru</th>
+                        <th>Yanlış</th>
+                        <th>Başarı Oranı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($completedResults->sortByDesc('score') as $index => $result)
+                        @php
+                            $correctCount = $result->getCorrectAnswersCount();
+                            $wrongCount = $result->getWrongAnswersCount();
+                            $successRate = $result->total_questions > 0 ? round(($correctCount / $result->total_questions) * 100) : 0;
+                            
+                            $rankClass = '';
+                            $rankText = '';
+                            if ($index == 0) {
+                                $rankClass = 'rank-1';
+                                $rankText = 'GÜNÜN BİRİNCİSİ';
+                            } elseif ($index == 1) {
+                                $rankClass = 'rank-2';
+                                $rankText = 'GÜNÜN İKİNCİSİ';
+                            } elseif ($index == 2) {
+                                $rankClass = 'rank-3';
+                                $rankText = 'GÜNÜN ÜÇÜNCÜSÜ';
+                            }
+                        @endphp
+                        <tr class="{{ $rankClass }}">
+                            <td>
+                                {{ $result->student->name }}
+                                @if($rankText)
+                                    <br><span class="rank-badge">{{ $rankText }}</span>
+                                @endif
+                            </td>
+                            <td>{{ $correctCount }} D</td>
+                            <td>{{ $wrongCount }} Y</td>
+                            <td>% {{ $successRate }}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($completedResults->sortByDesc('score') as $index => $result)
-                            @php
-                                $correctCount = $result->getCorrectAnswersCount();
-                                $wrongCount = $result->getWrongAnswersCount();
-                                $successRate = $result->total_questions > 0 ? round(($correctCount / $result->total_questions) * 100) : 0;
-                                
-                                $rankClass = '';
-                                $rankText = '';
-                                if ($index == 0) {
-                                    $rankClass = 'rank-1';
-                                    $rankText = 'GÜNÜN BİRİNCİSİ';
-                                } elseif ($index == 1) {
-                                    $rankClass = 'rank-2';
-                                    $rankText = 'GÜNÜN İKİNCİSİ';
-                                } elseif ($index == 2) {
-                                    $rankClass = 'rank-3';
-                                    $rankText = 'GÜNÜN ÜÇÜNCÜSÜ';
-                                }
-                            @endphp
-                            <tr class="{{ $rankClass }}">
-                                <td>
-                                    {{ $result->student->name }}
-                                    @if($rankText)
-                                        <br><span class="rank-badge">{{ $rankText }}</span>
-                                    @endif
-                                </td>
-                                <td>{{ $correctCount }} D</td>
-                                <td>{{ $wrongCount }} Y</td>
-                                <td>% {{ $successRate }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="footer">
-                <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
-                <p>© {{ date('Y') }} Rise English - Tüm Hakları Saklıdır</p>
-                <p>Oluşturma Tarihi: {{ now()->locale('tr')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
-            </div>
-
-            <!-- Alt logo -->
-            <div class="bottom-logo">
-                <img src="{{ public_path('images/rs.jpg') }}" alt="RS Logo">
-            </div>
+                    @endforeach
+                    
+                    <!-- Sınava girmeyenler -->
+                    @foreach($notEnteredStudents as $student)
+                        <tr class="not-entered">
+                            <td>{{ $student->name }}</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>GİRMEDİ</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
-    @endif
+
+        <div class="footer">
+            <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
+            <p>© {{ date('Y') }} Rise English - Tüm Hakları Saklıdır</p>
+            <p>Oluşturma Tarihi: {{ now()->locale('tr')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
+        </div>
+
+        <!-- Alt logo -->
+        <div class="bottom-logo">
+            <img src="{{ public_path('images/rs.jpg') }}" alt="RS Logo">
+        </div>
+    </div>
 </body>
-</html>
+</html>repr
