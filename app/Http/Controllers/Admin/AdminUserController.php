@@ -319,15 +319,59 @@ public function update(Request $request, User $user)
     /**
      * Kullanıcıyı sil
      */
-    public function destroy(User $user)
-    {
-        // Kullanıcının silinmesini engelleyecek ilişkiler varsa kontrol et
+public function destroy(User $user)
+{
+    try {
+        // 1. Private lesson sessions (student olarak)
+        $user->privateLessonSessions()->delete();
         
+        // 2. Word sets (oluşturduğu kelime setleri)
+        $user->wordSets()->delete();
+        
+        // 3. Chain activities (zincir aktiviteleri)
+        $user->chainActivities()->delete();
+        
+        // 4. Chain progress (zincir ilerlemesi)
+        $user->chainProgress()->delete();
+        
+        // 5. Attendances (katılımları)
+        $user->attendances()->delete();
+        
+        // 6. Assessment results (değerlendirme sonuçları)
+        $user->assessmentResults()->delete();
+        
+        // 7. Course reviews (kurs yorumları)
+        $user->courseReviews()->delete();
+        
+        // 8. Enrolled courses (kayıtlı olduğu kurslar - pivot tablo)
+        $user->enrolledCourses()->detach();
+        
+        // 9. Groups (dahil olduğu gruplar - pivot tablo)
+        $user->groups()->detach();
+        
+        // 10. Teaching courses (öğretmen ise verdiği kurslar - kurslar kalır, öğretmen boşalır)
+        $user->teachingCourses()->update(['teacher_id' => null]);
+        
+        // 11. Teaching groups (öğretmen olarak yönettiği gruplar - gruplar kalır, öğretmen boşalır)
+        $user->teachingGroups()->update(['teacher_id' => null]);
+        
+        // 12. Rolleri temizle
+        $user->syncRoles([]);
+        
+        // 13. API tokenları (Sanctum)
+        $user->tokens()->delete();
+        
+        // Son olarak user'ı sil
         $user->delete();
         
         return redirect()->route('admin.users.index')
-            ->with('success', 'Kullanıcı başarıyla silindi.');
+            ->with('success', 'Kullanıcı ve tüm ilişkili verileri başarıyla silindi.');
+            
+    } catch (\Exception $e) {
+        return redirect()->route('admin.users.index')
+            ->with('error', 'Kullanıcı silinirken bir hata oluştu: ' . $e->getMessage());
     }
+}
 
     /**
      * Kullanıcının belirli bir kurs için kayıt verilerini döndürür (JSON)

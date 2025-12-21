@@ -107,7 +107,11 @@ public function groups()
                 ->withPivot('joined_at')
                 ->withTimestamps();
 }
-
+// User.php model'ine ekle
+public function privateLessonSessions()
+{
+    return $this->hasMany(PrivateLessonSession::class, 'student_id');
+}
 /**
  * Öğretmen olarak yönettiği gruplar
  */
