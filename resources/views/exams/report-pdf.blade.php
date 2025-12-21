@@ -7,7 +7,7 @@
     <style>
         /* Genel sayfa stili */
         body {
-            font-family: DejaVu Sans, sans-serif;
+            font-family: 'Times New Roman', Times, serif;
             margin: 0;
             padding: 0;
             color: #333;
@@ -17,6 +17,11 @@
             background-attachment: fixed;
             background-position: left top;
             position: relative;
+        }
+
+        /* Tüm yazılar kalın */
+        * {
+            font-weight: bold;
         }
 
         /* Kapak sayfası */
@@ -150,31 +155,7 @@
         .cover-details-table tr:nth-child(4) td:first-child { border-left: 4px solid #f72585; }
         .cover-details-table tr:nth-child(5) td:first-child { border-left: 4px solid #e63946; }
 
-        /* Ana rapor container */
-        .report-container {
-            max-width: 650px;
-            margin: 30px 50px;
-            padding: 10px;
-            position: center;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-        }
-
-        /* Bölümler */
-        .section {
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            border-bottom: 2px solid #1a2e5a;
-            padding-bottom: 8px;
-            margin-bottom: 20px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #1a2e5a;
-        }
-
-        /* İstatistik kutuları */
+        /* İstatistik kutuları - 1. sayfa için */
         .stats-grid {
             display: table;
             width: 100%;
@@ -231,7 +212,33 @@
             color: #dc2626; 
         }
 
-        /* Sonuç tablosu */
+        /* Ana rapor container */
+        .report-container {
+            max-width: 650px;
+            margin: 30px 50px;
+            padding: 10px;
+            position: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+
+        /* Bölümler */
+        .section {
+            margin-bottom: 30px;
+            page-break-after: always;
+        }
+
+        .section-title {
+            border-bottom: 2px solid #1a2e5a;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a2e5a;
+            text-align: center;
+        }
+
+        /* Sonuç tablosu - 2. sayfa */
         .results-table {
             width: 100%;
             border-collapse: collapse;
@@ -243,19 +250,41 @@
             background-color: #1a2e5a;
             color: white;
             padding: 12px;
-            text-align: left;
-            font-size: 13px;
+            text-align: center;
+            font-size: 14px;
         }
 
         .results-table td {
             padding: 12px;
             border-bottom: 1px solid #eee;
-            font-size: 13px;
+            font-size: 14px;
             background-color: rgba(255, 255, 255, 0.95);
+            text-align: center;
         }
 
         .results-table tr:nth-child(even) td {
             background-color: rgba(249, 250, 251, 0.95);
+        }
+
+        /* Sıralama renkleri */
+        .rank-1 {
+            background-color: #FFD700 !important; /* Altın */
+        }
+
+        .rank-2 {
+            background-color: #C0C0C0 !important; /* Gümüş */
+        }
+
+        .rank-3 {
+            background-color: #CD7F32 !important; /* Bronz */
+        }
+
+        .rank-badge {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 5px;
         }
 
         /* Footer */
@@ -274,27 +303,6 @@
         .footer-logo {
             height: 40px;
             margin-bottom: 10px;
-        }
-
-        /* Boş durum */
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            background-color: rgba(249, 250, 251, 0.95);
-            border-radius: 8px;
-            border: 2px dashed #ddd;
-        }
-
-        .empty-state-icon {
-            font-size: 48px;
-            color: #9ca3af;
-            margin-bottom: 15px;
-        }
-
-        .empty-state-text {
-            color: #6b7280;
-            font-size: 14px;
-            font-style: italic;
         }
 
         /* Alt logo */
@@ -330,7 +338,7 @@
     </style>
 </head>
 <body>
-    <!-- KAPAK SAYFASI -->
+    <!-- KAPAK SAYFASI - 1. SAYFA -->
     <div class="cover-page">
         <div class="header">
             <div class="logo-container">
@@ -360,10 +368,6 @@
                     <td>{{ $exam->name }}</td>
                 </tr>
                 <tr>
-                    <td>Açıklama</td>
-                    <td>{{ $exam->description ?: 'Açıklama yok' }}</td>
-                </tr>
-                <tr>
                     <td>Tarih</td>
                     <td>{{ \Carbon\Carbon::parse($exam->start_time)->locale('tr')->isoFormat('D MMMM YYYY, dddd') }}</td>
                 </tr>
@@ -377,10 +381,7 @@
                 </tr>
             </table>
         </div>
-    </div>
 
-    <!-- ANA RAPOR SAYFASI -->
-    <div class="report-container">
         @php
             // Tamamlanmış sınavlar (completed_at dolu)
             $completedResults = $exam->results->whereNotNull('completed_at');
@@ -391,107 +392,86 @@
         @endphp
 
         <!-- Genel İstatistikler -->
-        <div class="section">
-            <div class="section-title">📊 GENEL İSTATİSTİKLER</div>
-            
-            <div class="stats-grid">
-                <div class="stat-row">
-                    <div class="stat-box total-students">
-                        <div class="stat-label">Toplam Öğrenci</div>
-                        <div class="stat-number">{{ $exam->students->count() }}</div>
-                    </div>
-                    <div class="stat-box completed">
-                        <div class="stat-label">Sınava Giren</div>
-                        <div class="stat-number">{{ $completedResults->count() }}</div>
-                    </div>
-                    <div class="stat-box not-completed">
-                        <div class="stat-label">Sınava Girmedi</div>
-                        <div class="stat-number">{{ $notEnteredStudents->count() }}</div>
-                    </div>
+        <div class="stats-grid">
+            <div class="stat-row">
+                <div class="stat-box total-students">
+                    <div class="stat-label">Toplam Öğrenci</div>
+                    <div class="stat-number">{{ $exam->students->count() }}</div>
+                </div>
+                <div class="stat-box completed">
+                    <div class="stat-label">Sınava Giren</div>
+                    <div class="stat-number">{{ $completedResults->count() }}</div>
+                </div>
+                <div class="stat-box not-completed">
+                    <div class="stat-label">Sınava Girmedi</div>
+                    <div class="stat-number">{{ $notEnteredStudents->count() }}</div>
                 </div>
             </div>
-        </div>
-
-        <!-- SINAVI TAMAMLAYANLAR -->
-        @if($completedResults->count() > 0)
-            <div class="section">
-                <div class="section-title">🏆 SINAV SONUÇLARI</div>
-                
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Öğrenci Adı</th>
-                            <th style="width: 100px; text-align: center;">Doğru</th>
-                            <th style="width: 100px; text-align: center;">Yanlış</th>
-                            <th style="width: 100px; text-align: center;">Boş</th>
-                            <th style="width: 100px; text-align: center;">Puan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($completedResults->sortByDesc('score') as $result)
-                            <tr>
-                                <td><strong>{{ $result->student->name }}</strong></td>
-                                <td style="text-align: center; color: #16a34a; font-weight: bold;">
-                                    {{ $result->getCorrectAnswersCount() }}
-                                </td>
-                                <td style="text-align: center; color: #dc2626; font-weight: bold;">
-                                    {{ $result->getWrongAnswersCount() }}
-                                </td>
-                                <td style="text-align: center; color: #6b7280; font-weight: bold;">
-                                    {{ $result->total_questions - $result->getCorrectAnswersCount() - $result->getWrongAnswersCount() }}
-                                </td>
-                                <td style="text-align: center; font-size: 16px; font-weight: bold;">
-                                    {{ number_format($result->score, 0) }}
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
-
-        <!-- HİÇ GİRMEYENLER -->
-        @if($notEnteredStudents->count() > 0)
-            <div class="section">
-                <div class="section-title">❌ SINAVA GİRMEYEN ÖĞRENCİLER</div>
-                
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Öğrenci Adı</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($notEnteredStudents as $student)
-                            <tr>
-                                <td>{{ $student->name }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
-
-        <!-- BOŞ DURUM -->
-        @if($completedResults->count() == 0 && $notEnteredStudents->count() == 0)
-            <div class="section">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📭</div>
-                    <p class="empty-state-text">Bu sınava henüz hiçbir öğrenci atanmamıştır.</p>
-                </div>
-            </div>
-        @endif
-
-        <div class="footer">
-            <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
-            <p><strong>© {{ date('Y') }} Rise English</strong> - Tüm Hakları Saklıdır</p>
-            <p>Oluşturma Tarihi: {{ now()->locale('tr')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
-        </div>
-
-        <!-- Alt logo -->
-        <div class="bottom-logo">
-            <img src="{{ public_path('images/rs.jpg') }}" alt="RS Logo">
         </div>
     </div>
+
+    <!-- 2. SAYFA - BAŞARI SIRASI -->
+    @if($completedResults->count() > 0)
+        <div class="report-container">
+            <div class="section">
+                <div class="section-title">BAŞARI SIRASI</div>
+                
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Öğrenci Adı</th>
+                            <th>Doğru</th>
+                            <th>Yanlış</th>
+                            <th>Başarı Oranı</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($completedResults->sortByDesc('score') as $index => $result)
+                            @php
+                                $correctCount = $result->getCorrectAnswersCount();
+                                $wrongCount = $result->getWrongAnswersCount();
+                                $successRate = $result->total_questions > 0 ? round(($correctCount / $result->total_questions) * 100) : 0;
+                                
+                                $rankClass = '';
+                                $rankText = '';
+                                if ($index == 0) {
+                                    $rankClass = 'rank-1';
+                                    $rankText = 'GÜNÜN BİRİNCİSİ';
+                                } elseif ($index == 1) {
+                                    $rankClass = 'rank-2';
+                                    $rankText = 'GÜNÜN İKİNCİSİ';
+                                } elseif ($index == 2) {
+                                    $rankClass = 'rank-3';
+                                    $rankText = 'GÜNÜN ÜÇÜNCÜSÜ';
+                                }
+                            @endphp
+                            <tr class="{{ $rankClass }}">
+                                <td>
+                                    {{ $result->student->name }}
+                                    @if($rankText)
+                                        <br><span class="rank-badge">{{ $rankText }}</span>
+                                    @endif
+                                </td>
+                                <td>{{ $correctCount }} D</td>
+                                <td>{{ $wrongCount }} Y</td>
+                                <td>% {{ $successRate }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="footer">
+                <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
+                <p>© {{ date('Y') }} Rise English - Tüm Hakları Saklıdır</p>
+                <p>Oluşturma Tarihi: {{ now()->locale('tr')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
+            </div>
+
+            <!-- Alt logo -->
+            <div class="bottom-logo">
+                <img src="{{ public_path('images/rs.jpg') }}" alt="RS Logo">
+            </div>
+        </div>
+    @endif
 </body>
 </html>
