@@ -430,23 +430,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($rankedResults as $index => $item)
-                        @php
-                            $result = $item['result'];
-                            $badge = $result->getRankBadge($index);
-                        @endphp
-                        <tr class="{{ $badge['class'] }}">
-                            <td>
-                                {{ $result->student->name }}
-                                @if($badge['text'])
-                                    <br><span class="rank-badge">{{ $badge['text'] }}</span>
-                                @endif
-                            </td>
-                            <td>{{ $item['correctCount'] }} D</td>
-                            <td>{{ $item['wrongCount'] }} Y</td>
-                            <td>% {{ $item['successRate'] }}</td>
-                        </tr>
-                    @endforeach
+@foreach($rankedResults as $index => $item)
+    @php
+        $result = $item['result'];
+        $badge = $result->getRankBadge($item['rank']);
+    @endphp
+    <tr class="{{ $badge['class'] }}">
+        <td>
+            {{ $result->student->name }}
+            @if($badge['text'])
+                <br><span class="rank-badge">{{ $badge['text'] }}</span>
+            @endif
+        </td>
+        <td>{{ $item['correctCount'] }} D</td>
+        <td>{{ $item['wrongCount'] }} Y</td>
+        <td>% {{ $item['successRate'] }}</td>
+    </tr>
+@endforeach
                     
                     <!-- Sınava girmeyenler -->
                     @foreach($notEnteredStudents as $student)
