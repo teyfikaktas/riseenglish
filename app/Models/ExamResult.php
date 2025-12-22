@@ -70,53 +70,44 @@ class ExamResult extends Model
         return round(($this->getCorrectAnswersCount() / $this->total_questions) * 100);
     }
     
-// ✅ YENİ: Sıralı sonuçları getir (eşit puanlarda aynı sıra)
-public static function getRankedResults($examId)
-{
-    $results = self::where('exam_id', $examId)
-        ->whereNotNull('completed_at')
-        ->with('student')
-        ->get();
-    
-    // Her sonuç için skorları hesapla
-    $rankedResults = $results->map(function($result) {
-        return [
-            'result' => $result,
-            'correctCount' => $result->getCorrectAnswersCount(),
-            'wrongCount' => $result->getWrongAnswersCount(),
-            'successRate' => $result->calculateSuccessRate()
-        ];
-    });
-    
-    // Sırala: Önce başarı oranı, sonra doğru sayısı
-    $sorted = $rankedResults->sortByDesc(function($item) {
-        return [$item['successRate'], $item['correctCount']];
-    })->values();
-    
-    // Sıralama ekle (eşit puanlarda aynı sıra)
-    $currentRank = 0;
-    $previousRate = null;
-    $previousCorrect = null;
-    $skipCount = 0;
-    
-    foreach($sorted as $index => $item) {
-        // Eğer puan farklıysa sırayı güncelle
-        if ($previousRate !== $item['successRate'] || $previousCorrect !== $item['correctCount']) {
-            $currentRank = $index + 1 + $skipCount;
-            $skipCount = 0;
-        } else {
-            // Aynı puan, aynı sıra
-            $skipCount++;
-        }
+    public static function getRankedResults($examId)
+    {
+        $results = self::where('exam_id', $examId)
+            ->whereNotNull('completed_at')
+            ->with('student')
+            ->get();
         
-        $sorted[$index]['rank'] = $currentRank;
-        $previousRate = $item['successRate'];
-        $previousCorrect = $item['correctCount'];
+        // Her sonuç için skorları hesapla
+        $rankedResults = $results->map(function($result) {
+            return [
+                'result' => $result,
+                'correctCount' => $result->getCorrectAnswersCount(),
+                'wrongCount' => $result->getWrongAnswersCount(),
+                'successRate' => $result->calculateSuccessRate()
+            ];
+        });
+        
+        // Sırala
+        $sorted = $rankedResults->sortByDesc(function($item) {
+            return [$item['successRate'], $item['correctCount']];
+        })->values();
+        
+        // Sıralama ekle - MAP ile yeni collection oluştur
+        $currentRank = 0;
+        $previousRate = null;
+        $previousCorrect = null;
+        
+        return $sorted->map(function($item, $index) use (&$currentRank, &$previousRate, &$previousCorrect) {
+            if ($previousRate !== $item['successRate'] || $previousCorrect !== $item['correctCount']) {
+                $currentRank = $index + 1;
+            }
+            
+            $previousRate = $item['successRate'];
+            $previousCorrect = $item['correctCount'];
+            
+            return array_merge($item, ['rank' => $currentRank]);
+        });
     }
-    
-    return $sorted;
-}
-
 // ✅ GÜNCELLE: Sıra badge'ini al (rank parametresi alacak)
 public function getRankBadge($rank)
 {
