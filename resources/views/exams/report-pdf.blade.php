@@ -343,6 +343,15 @@
     </style>
 </head>
 <body>
+    @php
+        // Sıralı sonuçları al
+        $rankedResults = \App\Models\ExamResult::getRankedResults($exam->id);
+        
+        // Hiç girmemiş öğrenciler
+        $enteredStudentIds = $exam->results->pluck('student_id');
+        $notEnteredStudents = $exam->students->whereNotIn('id', $enteredStudentIds);
+    @endphp
+
     <!-- KAPAK SAYFASI - 1. SAYFA -->
     <div class="cover-page">
         <div class="header">
@@ -387,15 +396,6 @@
             </table>
         </div>
 
-        @php
-            // Tamamlanmış sınavlar (completed_at dolu)
-            $completedResults = $exam->results->whereNotNull('completed_at');
-            
-            // Hiç girmemiş öğrenciler (exam_results tablosunda kayıt yok)
-            $enteredStudentIds = $exam->results->pluck('student_id');
-            $notEnteredStudents = $exam->students->whereNotIn('id', $enteredStudentIds);
-        @endphp
-
         <!-- Genel İstatistikler -->
         <div class="stats-grid">
             <div class="stat-row">
@@ -405,7 +405,7 @@
                 </div>
                 <div class="stat-box completed">
                     <div class="stat-label">Sınava Giren</div>
-                    <div class="stat-number">{{ $completedResults->count() }}</div>
+                    <div class="stat-number">{{ $rankedResults->count() }}</div>
                 </div>
                 <div class="stat-box not-completed">
                     <div class="stat-label">Sınava Girmedi</div>
@@ -430,35 +430,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($completedResults->sortByDesc('score') as $index => $result)
+                    @foreach($rankedResults as $index => $item)
                         @php
-                            $correctCount = $result->getCorrectAnswersCount();
-                            $wrongCount = $result->getWrongAnswersCount();
-                            $successRate = $result->total_questions > 0 ? round(($correctCount / $result->total_questions) * 100) : 0;
-                            
-                            $rankClass = '';
-                            $rankText = '';
-                            if ($index == 0) {
-                                $rankClass = 'rank-1';
-                                $rankText = 'GÜNÜN BİRİNCİSİ';
-                            } elseif ($index == 1) {
-                                $rankClass = 'rank-2';
-                                $rankText = 'GÜNÜN İKİNCİSİ';
-                            } elseif ($index == 2) {
-                                $rankClass = 'rank-3';
-                                $rankText = 'GÜNÜN ÜÇÜNCÜSÜ';
-                            }
+                            $result = $item['result'];
+                            $badge = $result->getRankBadge($index);
                         @endphp
-                        <tr class="{{ $rankClass }}">
+                        <tr class="{{ $badge['class'] }}">
                             <td>
                                 {{ $result->student->name }}
-                                @if($rankText)
-                                    <br><span class="rank-badge">{{ $rankText }}</span>
+                                @if($badge['text'])
+                                    <br><span class="rank-badge">{{ $badge['text'] }}</span>
                                 @endif
                             </td>
-                            <td>{{ $correctCount }} D</td>
-                            <td>{{ $wrongCount }} Y</td>
-                            <td>% {{ $successRate }}</td>
+                            <td>{{ $item['correctCount'] }} D</td>
+                            <td>{{ $item['wrongCount'] }} Y</td>
+                            <td>% {{ $item['successRate'] }}</td>
                         </tr>
                     @endforeach
                     
@@ -487,4 +473,4 @@
         </div>
     </div>
 </body>
-</html>repr
+</html>
