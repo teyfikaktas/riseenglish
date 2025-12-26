@@ -196,7 +196,7 @@
         </a>
         <a href="{{ route('word-sets.export-english', $wordSet) }}" 
            class="bg-[#e63946] hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1">
-            🇬🇧 Kelime
+            en Kelime
         </a>
     </div>
     @endif
