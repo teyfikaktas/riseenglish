@@ -113,7 +113,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{wordSet}/kelime/{userWord}', [WordSetsController::class, 'deleteWord'])->name('delete-word');
     });
 });
-
+Route::get('/word-sets/{wordSet}/export-all', [WordSetsController::class, 'exportPdfAll'])->name('word-sets.export-all');
+Route::get('/word-sets/{wordSet}/export-turkish', [WordSetsController::class, 'exportPdfTurkish'])->name('word-sets.export-turkish');
+Route::get('/word-sets/{wordSet}/export-english', [WordSetsController::class, 'exportPdfEnglish'])->name('word-sets.export-english');
 Route::middleware(['auth'])->group(function () {
     Route::get('/categories/{lang}', function($lang) {
         $userId = auth()->id();

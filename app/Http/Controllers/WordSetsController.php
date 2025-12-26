@@ -26,7 +26,56 @@ class WordSetsController extends Controller
     {
         return view('word-sets.create');
     }
+// PDF Export - Tümü (Kelime + Türkçe)
+public function exportPdfAll(WordSet $wordSet)
+{
+    if ($wordSet->user_id !== Auth::id()) {
+        abort(403);
+    }
 
+    $words = $wordSet->userWords()->orderBy('created_at', 'desc')->get();
+    $exportType = 'all';
+    $title = $wordSet->name . ' - Kelime Listesi';
+
+    $pdf = \PDF::loadView('word-sets.pdf-export', compact('wordSet', 'words', 'exportType', 'title'));
+    $pdf->setPaper('a4');
+
+    return $pdf->download('kelime_listesi_' . $wordSet->id . '.pdf');
+}
+
+// PDF Export - Sadece Türkçe
+public function exportPdfTurkish(WordSet $wordSet)
+{
+    if ($wordSet->user_id !== Auth::id()) {
+        abort(403);
+    }
+
+    $words = $wordSet->userWords()->orderBy('created_at', 'desc')->get();
+    $exportType = 'turkish';
+    $title = $wordSet->name . ' - Türkçe Anlamlar';
+
+    $pdf = \PDF::loadView('word-sets.pdf-export', compact('wordSet', 'words', 'exportType', 'title'));
+    $pdf->setPaper('a4');
+
+    return $pdf->download('turkce_anlamlar_' . $wordSet->id . '.pdf');
+}
+
+// PDF Export - Sadece Kelime
+public function exportPdfEnglish(WordSet $wordSet)
+{
+    if ($wordSet->user_id !== Auth::id()) {
+        abort(403);
+    }
+
+    $words = $wordSet->userWords()->orderBy('created_at', 'desc')->get();
+    $exportType = 'english';
+    $title = $wordSet->name . ' - Kelimeler';
+
+    $pdf = \PDF::loadView('word-sets.pdf-export', compact('wordSet', 'words', 'exportType', 'title'));
+    $pdf->setPaper('a4');
+
+    return $pdf->download('kelimeler_' . $wordSet->id . '.pdf');
+}
     // Yeni set kaydetme
     public function store(Request $request)
     {
