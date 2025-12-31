@@ -190,20 +190,21 @@ Route::get('/onay-bekleniyor', function() {
 Route::get('/standard-home', [App\Http\Controllers\HomeController::class, 'index'])
     ->middleware(['auth', 'verified.phone', 'teacher.approved'])
     ->name('standard.home');
-
 Route::middleware(['auth', 'role:ogretmen'])->group(function () {
+    Route::get('/exams/daily-report', [ExamController::class, 'downloadDailyReport'])
+        ->name('exams.daily-report');
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
+    Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
-     Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
+    
+    // SONRA WILDCARD ROUTE'LAR
     Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('exams.show');
     Route::get('/exams/{exam}/edit', [ExamController::class, 'edit'])->name('exams.edit');
     Route::put('/exams/{exam}', [ExamController::class, 'update'])->name('exams.update');
     Route::delete('/exams/{exam}', [ExamController::class, 'destroy'])->name('exams.destroy');
     Route::post('/exams/{exam}/toggle-active', [ExamController::class, 'toggleActive'])->name('exams.toggle-active');
-        Route::get('/exams/{exam}/report', [ExamController::class, 'downloadReport'])->name('exams.report');
-
+    Route::get('/exams/{exam}/report', [ExamController::class, 'downloadReport'])->name('exams.report');
 });
-
 Route::get('/kayit-ol', [CustomRegisterController::class, 'create'])->name('register');
 Route::post('/kayit-ol', [CustomRegisterController::class, 'store']);
 Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');

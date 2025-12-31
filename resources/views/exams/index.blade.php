@@ -24,7 +24,34 @@
                 </a>
             </div>
         </div>
-
+ <!-- Günlük Rapor İndir Bölümü -->
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <form method="GET" action="{{ route('exams.daily-report') }}" class="flex flex-col sm:flex-row gap-3 items-end">
+                <div class="flex-1">
+                    <label for="daily_report_date" class="block text-sm font-medium text-gray-700 mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Günlük Rapor Tarihi
+                    </label>
+                    <input type="date" 
+                           name="date" 
+                           id="daily_report_date"
+                           value="{{ date('Y-m-d') }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                </div>
+                <button type="submit" 
+                        class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd" />
+                    </svg>
+                    Günlük Rapor İndir
+                </button>
+            </form>
+            <p class="text-xs text-gray-500 mt-2">
+                Seçilen tarihteki tüm sınavların ve öğrencilerin sonuçlarını tek PDF'te indirir.
+            </p>
+        </div>
         <!-- Search Bar -->
         <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
             <form method="GET" action="{{ route('exams.index') }}" class="flex gap-3">
@@ -80,7 +107,51 @@
                 </p>
             </div>
         @endif
+<!-- BUGÜNÜN SINAVLARI -->
+@if($todayExams->count() > 0)
+    <div class="bg-amber-50 border border-amber-300 rounded-xl p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-amber-800">Bugünün Sınavları</h2>
+            <span class="bg-amber-500 text-white text-sm font-medium px-3 py-1 rounded-full">{{ $todayExams->count() }}</span>
+        </div>
+        
+        <div class="space-y-3">
+            @foreach($todayExams as $exam)
+                <div class="bg-white rounded-lg p-4 border border-amber-200">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="font-semibold text-gray-800">{{ $exam->name }}</h3>
+                                @if($exam->is_active)
+                                    <span class="text-xs px-2 py-0.5 rounded bg-green-100 text-green-700">Aktif</span>
+                                @else
+                                    <span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">Pasif</span>
+                                @endif
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                                <span class="font-medium text-amber-700">{{ \Carbon\Carbon::parse($exam->start_time)->format('H:i') }}</span>
+                                <span>{{ $exam->students_count }} Öğrenci</span>
+                                <span>{{ $exam->wordSets->count() }} Set</span>
+                            </div>
+                        </div>
 
+                        <div class="flex gap-2">
+                            <a href="{{ route('exams.report', $exam) }}" 
+                               class="bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium py-2 px-3 rounded-lg">
+                                Rapor
+                            </a>
+                            <button onclick="deleteExam({{ $exam->id }}, '{{ $exam->name }}')"
+                                    class="bg-red-500 hover:bg-red-600 text-white text-sm font-medium py-2 px-3 rounded-lg">
+                                Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
         <!-- Sınavlar Listesi -->
         @if($exams->count() > 0)
             <div class="grid gap-6">

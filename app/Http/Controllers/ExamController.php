@@ -11,7 +11,46 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ExamController extends Controller
 {
-
+public function index(Request $request)
+{
+    $today = \Carbon\Carbon::today();
+    
+    // Bugünün sınavları (ayrı query, pagination yok)
+    $todayExamsQuery = Exam::where('teacher_id', auth()->id())
+        ->whereDate('start_time', $today)
+        ->withCount('students')
+        ->with('wordSets');
+    
+    // Diğer sınavlar (paginated)
+    $query = Exam::where('teacher_id', auth()->id())
+        ->whereDate('start_time', '!=', $today)
+        ->withCount('students')
+        ->with('wordSets');
+    
+    // Arama
+    if ($request->filled('search')) {
+        $search = $request->search;
+        
+        $todayExamsQuery->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
+        
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhereDate('start_time', 'like', "%{$search}%");
+        });
+    }
+    
+    $todayExams = $todayExamsQuery->orderBy('start_time', 'asc')->get();
+    
+    $exams = $query->orderBy('is_active', 'desc')
+        ->orderBy('start_time', 'desc')
+        ->paginate(10);
+    
+    return view('exams.index', compact('exams', 'todayExams'));
+}
     /**
  * Sınavı sil
  */
@@ -29,7 +68,53 @@ public function destroy(Exam $exam)
         ->route('exams.index')
         ->with('success', 'Sınav başarıyla silindi!');
 }
-
+/**
+ * Günlük sınav raporunu PDF olarak indir
+ * Seçilen tarihteki TÜM sınavların tüm öğrenci sonuçlarını içerir
+ */
+public function downloadDailyReport(Request $request)
+{
+    $request->validate([
+        'date' => 'required|date'
+    ]);
+    
+    $date = \Carbon\Carbon::parse($request->date);
+    
+    // O güne ait tüm sınavları çek (bu öğretmenin)
+    $exams = Exam::where('teacher_id', auth()->id())
+        ->whereDate('start_time', $date->toDateString())
+        ->with(['students', 'wordSets', 'results.student'])
+        ->orderBy('start_time')
+        ->get();
+    
+    if ($exams->isEmpty()) {
+        return back()->with('error', 'Seçilen tarihte sınav bulunamadı.');
+    }
+    
+    // Tüm öğrencileri topla (unique)
+    $allStudents = collect();
+    foreach ($exams as $exam) {
+        foreach ($exam->students as $student) {
+            if (!$allStudents->contains('id', $student->id)) {
+                $allStudents->push($student);
+            }
+        }
+    }
+    $allStudents = $allStudents->sortBy('name');
+    
+    // PDF oluştur
+    $pdf = PDF::loadView('exams.daily-report-pdf', [
+        'exams' => $exams,
+        'allStudents' => $allStudents,
+        'date' => $date,
+        'teacher' => auth()->user()
+    ]);
+    
+    // Dosya adı
+    $fileName = 'Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf';
+    
+    return $pdf->download($fileName);
+}
 /**
  * Sınav raporunu PDF olarak indir
  */
@@ -103,29 +188,7 @@ public function create()
         return back()->with('error', 'Bir hata oluştu');
     }
 }
-public function index(Request $request)
-{
-    $query = Exam::where('teacher_id', auth()->id())
-        ->withCount('students')
-        ->with('wordSets');
-    
-    // Arama
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%")
-              ->orWhereDate('start_time', 'like', "%{$search}%");
-        });
-    }
-    
-    $exams = $query->orderBy('is_active', 'desc')
-        ->orderBy('start_time', 'desc')
-        ->paginate(10);
-    
-    return view('exams.index', compact('exams'));
-}
-    
+
 public function store(Request $request)
 {
     try {
