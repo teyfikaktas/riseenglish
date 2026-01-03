@@ -86,11 +86,8 @@ public function downloadDailyReport(Request $request)
           ->where('teacher_id', $teacherId);
     })
     ->with(['student', 'exam'])
-    ->get()
-    ->sortByDesc(function($result) {
-        $total = $result->correct_count + $result->wrong_count;
-        return $total > 0 ? ($result->correct_count / $total) * 100 : 0;
-    });
+    ->orderByDesc('success_rate')
+    ->get();
     
     if ($results->isEmpty()) {
         return back()->with('error', 'Seçilen tarihte sınav sonucu bulunamadı.');

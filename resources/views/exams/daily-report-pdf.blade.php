@@ -193,8 +193,9 @@
             @foreach($results as $index => $result)
                 @php
                     $rank = $index + 1;
-                    $total = $result->correct_count + $result->wrong_count;
-                    $successRate = $total > 0 ? round(($result->correct_count / $total) * 100) : 0;
+                    $dogru = $result->score;
+                    $yanlis = $result->total_questions - $result->score;
+                    $successRate = round($result->success_rate);
                     
                     $rowClass = '';
                     if ($rank == 1) $rowClass = 'rank-1';
@@ -205,8 +206,8 @@
                     <td>{{ $rank }}</td>
                     <td class="student-name">{{ $result->student->name }}</td>
                     <td class="exam-name">{{ $result->exam->name }}</td>
-                    <td>{{ $result->correct_count }}</td>
-                    <td>{{ $result->wrong_count }}</td>
+                    <td>{{ $dogru }}</td>
+                    <td>{{ $yanlis }}</td>
                     <td>%{{ $successRate }}</td>
                 </tr>
             @endforeach
