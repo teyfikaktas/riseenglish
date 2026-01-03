@@ -287,9 +287,9 @@
                         $successRate = round($result->success_rate);
                         
                         $rowClass = '';
-                        if ($rank == 1) $rowClass = 'rank-1';
-                        elseif ($rank == 2) $rowClass = 'rank-1';
-                        elseif ($rank == 3) $rowClass = 'rank-1';
+                        if ($rank == 1) $rowClass = 'rank-3';
+                        elseif ($rank == 2) $rowClass = 'rank-3';
+                        elseif ($rank == 3) $rowClass = 'rank-3';
                     @endphp
                     <tr class="{{ $rowClass }}">
                         <td>{{ $rank }}</td>
