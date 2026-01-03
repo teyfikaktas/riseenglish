@@ -70,7 +70,6 @@ public function destroy(Exam $exam)
 }
 /**
  * Günlük sınav raporunu PDF olarak indir
- * Seçilen tarihteki TÜM sınavların tüm öğrenci sonuçlarını içerir
  */
 public function downloadDailyReport(Request $request)
 {
@@ -79,38 +78,31 @@ public function downloadDailyReport(Request $request)
     ]);
     
     $date = \Carbon\Carbon::parse($request->date);
+    $teacherId = auth()->id();
     
-    // O güne ait tüm sınavları çek (bu öğretmenin)
-    $exams = Exam::where('teacher_id', auth()->id())
-        ->whereDate('start_time', $date->toDateString())
-        ->with(['students', 'wordSets', 'results.student'])
-        ->orderBy('start_time')
-        ->get();
+    // O günün tüm sınav sonuçlarını direkt çek
+    $results = \App\Models\ExamResult::whereHas('exam', function($q) use ($date, $teacherId) {
+        $q->whereDate('start_time', $date->toDateString())
+          ->where('teacher_id', $teacherId);
+    })
+    ->with(['student', 'exam'])
+    ->get()
+    ->sortByDesc(function($result) {
+        $total = $result->correct_count + $result->wrong_count;
+        return $total > 0 ? ($result->correct_count / $total) * 100 : 0;
+    });
     
-    if ($exams->isEmpty()) {
-        return back()->with('error', 'Seçilen tarihte sınav bulunamadı.');
+    if ($results->isEmpty()) {
+        return back()->with('error', 'Seçilen tarihte sınav sonucu bulunamadı.');
     }
-    
-    // Tüm öğrencileri topla (unique)
-    $allStudents = collect();
-    foreach ($exams as $exam) {
-        foreach ($exam->students as $student) {
-            if (!$allStudents->contains('id', $student->id)) {
-                $allStudents->push($student);
-            }
-        }
-    }
-    $allStudents = $allStudents->sortBy('name');
     
     // PDF oluştur
     $pdf = PDF::loadView('exams.daily-report-pdf', [
-        'exams' => $exams,
-        'allStudents' => $allStudents,
+        'results' => $results,
         'date' => $date,
         'teacher' => auth()->user()
     ]);
     
-    // Dosya adı
     $fileName = 'Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf';
     
     return $pdf->download($fileName);

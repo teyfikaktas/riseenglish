@@ -21,7 +21,6 @@
             font-weight: bold;
         }
 
-        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -76,7 +75,6 @@
             font-size: 16px;
         }
 
-        /* Motto */
         .motto-container {
             text-align: center;
             margin: 30px 0;
@@ -91,7 +89,6 @@
             color: #1a2e5a;
         }
 
-        /* Sonuç tablosu */
         .results-table {
             width: 100%;
             border-collapse: collapse;
@@ -129,30 +126,18 @@
             color: #666;
         }
 
-        /* Sıralama renkleri */
-        .rank-1 {
+        .rank-1 td {
             background-color: #FFD700 !important;
         }
 
-        .rank-2 {
+        .rank-2 td {
             background-color: #C0C0C0 !important;
         }
 
-        .rank-3 {
+        .rank-3 td {
             background-color: #CD7F32 !important;
         }
 
-        /* Girmedi durumu */
-        .not-entered {
-            background-color: #fee2e2 !important;
-        }
-
-        .not-entered td {
-            background-color: #fee2e2 !important;
-            color: #dc2626;
-        }
-
-        /* Footer */
         .footer {
             margin-top: 40px;
             padding-top: 20px;
@@ -193,34 +178,6 @@
         <span class="red">Rise</span> <span class="blue">English</span>
     </div>
 
-    @php
-        // O günün tüm sonuçlarını çek
-        $allResults = \App\Models\ExamResult::whereHas('exam', function($q) use ($date, $teacher) {
-            $q->whereDate('start_time', $date->toDateString())
-              ->where('teacher_id', $teacher->id);
-        })
-        ->with(['student', 'exam'])
-        ->get()
-        ->sortByDesc(function($result) {
-            $total = $result->correct_count + $result->wrong_count;
-            return $total > 0 ? ($result->correct_count / $total) * 100 : 0;
-        });
-        
-        // Sınava girmeyenleri bul
-        $notEnteredStudents = collect();
-        foreach($exams as $exam) {
-            $enteredIds = $exam->results->pluck('student_id')->toArray();
-            foreach($exam->students as $student) {
-                if (!in_array($student->id, $enteredIds)) {
-                    $notEnteredStudents->push([
-                        'student' => $student,
-                        'exam' => $exam
-                    ]);
-                }
-            }
-        }
-    @endphp
-
     <table class="results-table">
         <thead>
             <tr>
@@ -233,9 +190,9 @@
             </tr>
         </thead>
         <tbody>
-            @php $rank = 1; @endphp
-            @foreach($allResults as $result)
+            @foreach($results as $index => $result)
                 @php
+                    $rank = $index + 1;
                     $total = $result->correct_count + $result->wrong_count;
                     $successRate = $total > 0 ? round(($result->correct_count / $total) * 100) : 0;
                     
@@ -251,19 +208,6 @@
                     <td>{{ $result->correct_count }}</td>
                     <td>{{ $result->wrong_count }}</td>
                     <td>%{{ $successRate }}</td>
-                </tr>
-                @php $rank++; @endphp
-            @endforeach
-
-            {{-- Sınava girmeyenler --}}
-            @foreach($notEnteredStudents as $item)
-                <tr class="not-entered">
-                    <td>-</td>
-                    <td class="student-name">{{ $item['student']->name }}</td>
-                    <td class="exam-name">{{ $item['exam']->name }}</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>GİRMEDİ</td>
                 </tr>
             @endforeach
         </tbody>
