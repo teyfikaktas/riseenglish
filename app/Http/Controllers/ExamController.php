@@ -1,278 +1,491 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rise English - Günlük Sınav Raporu</title>
-    <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            margin: 0;
-            padding: 40px;
-            color: #333;
-            background-image: url('{{ public_path('images/bgreport.jpg') }}');
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            background-position: left top;
-        }
+<?php
 
-        * {
-            font-weight: bold;
-        }
+namespace App\Http\Controllers;
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #1a2e5a;
-            padding-bottom: 15px;
-            margin-bottom: 30px;
-        }
+use Illuminate\Http\Request;
+use App\Models\WordSet;
+use App\Models\User;
+use App\Models\Exam;
+use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .logo {
-            height: 50px;
-            margin-right: 15px;
-        }
-
-        .company-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .company-name {
-            color: #1a2e5a;
-            font-weight: bold;
-            font-size: 16px;
-            margin: 0;
-        }
-
-        .company-details {
-            font-size: 10px;
-            color: #666;
-            margin: 3px 0 0 0;
-        }
-
-        .document-info {
-            text-align: right;
-        }
-
-        .document-title {
-            margin: 0;
-            color: #1a2e5a;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .document-date {
-            margin: 5px 0 0 0;
-            color: #e63946;
-            font-size: 16px;
-        }
-
-        /* Motto */
-        .motto-container {
-            text-align: center;
-            margin: 30px 0;
-            font-size: 20px;
-        }
-
-        .motto-container .red {
-            color: #e63946;
-        }
-
-        .motto-container .blue {
-            color: #1a2e5a;
-        }
-
-        /* Sonuç tablosu */
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background-color: rgba(255, 255, 255, 0.95);
-        }
-
-        .results-table th {
-            background-color: #1a2e5a;
-            color: white;
-            padding: 12px;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        .results-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #eee;
-            font-size: 12px;
-            background-color: rgba(255, 255, 255, 0.95);
-            text-align: center;
-        }
-
-        .results-table tr:nth-child(even) td {
-            background-color: rgba(249, 250, 251, 0.95);
-        }
-
-        .student-name {
-            text-align: left !important;
-        }
-
-        .exam-name {
-            text-align: left !important;
-            font-size: 11px;
-            color: #666;
-        }
-
-        /* Sıralama renkleri */
-        .rank-1 {
-            background-color: #FFD700 !important;
-        }
-
-        .rank-2 {
-            background-color: #C0C0C0 !important;
-        }
-
-        .rank-3 {
-            background-color: #CD7F32 !important;
-        }
-
-        /* Girmedi durumu */
-        .not-entered {
-            background-color: #fee2e2 !important;
-        }
-
-        .not-entered td {
-            background-color: #fee2e2 !important;
-            color: #dc2626;
-        }
-
-        /* Footer */
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #ddd;
-            font-size: 11px;
-            color: #666;
-            text-align: center;
-        }
-
-        .footer-logo {
-            height: 40px;
-            margin-bottom: 10px;
-        }
-
-        @page {
-            size: A4;
-            margin: 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="logo-container">
-            <img src="{{ public_path('images/logo.png') }}" alt="Rise English Logo" class="logo">
-            <div class="company-info">
-                <p class="company-name">RISE ENGLISH</p>
-                <p class="company-details">Profesyonel Dil Eğitimi</p>
-            </div>
-        </div>
-        <div class="document-info">
-            <h1 class="document-title">GÜNLÜK SINAV RAPORU</h1>
-            <p class="document-date">{{ $date->locale('tr')->isoFormat('D MMMM YYYY, dddd') }}</p>
-        </div>
-    </div>
-
-    <div class="motto-container">
-        <span class="red">Struggle</span> <span class="blue">Now</span> · 
-        <span class="red">Rise</span> <span class="blue">English</span>
-    </div>
-
-    @php
-        // O günün tüm sonuçlarını çek
-        $allResults = \App\Models\ExamResult::whereHas('exam', function($q) use ($date, $teacher) {
-            $q->whereDate('start_time', $date->toDateString())
-              ->where('teacher_id', $teacher->id);
-        })
-        ->with(['student', 'exam'])
-        ->get()
-        ->sortByDesc(function($result) {
-            $total = $result->correct_count + $result->wrong_count;
-            return $total > 0 ? ($result->correct_count / $total) * 100 : 0;
+class ExamController extends Controller
+{
+public function index(Request $request)
+{
+    $today = \Carbon\Carbon::today();
+    
+    // Bugünün sınavları (ayrı query, pagination yok)
+    $todayExamsQuery = Exam::where('teacher_id', auth()->id())
+        ->whereDate('start_time', $today)
+        ->withCount('students')
+        ->with('wordSets');
+    
+    // Diğer sınavlar (paginated)
+    $query = Exam::where('teacher_id', auth()->id())
+        ->whereDate('start_time', '!=', $today)
+        ->withCount('students')
+        ->with('wordSets');
+    
+    // Arama
+    if ($request->filled('search')) {
+        $search = $request->search;
+        
+        $todayExamsQuery->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
         });
         
-        // Sınava girmeyenleri bul
-        $notEnteredStudents = collect();
-        foreach($exams as $exam) {
-            $enteredIds = $exam->results->pluck('student_id')->toArray();
-            foreach($exam->students as $student) {
-                if (!in_array($student->id, $enteredIds)) {
-                    $notEnteredStudents->push([
-                        'student' => $student,
-                        'exam' => $exam
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhereDate('start_time', 'like', "%{$search}%");
+        });
+    }
+    
+    $todayExams = $todayExamsQuery->orderBy('start_time', 'asc')->get();
+    
+    $exams = $query->orderBy('is_active', 'desc')
+        ->orderBy('start_time', 'desc')
+        ->paginate(10);
+    
+    return view('exams.index', compact('exams', 'todayExams'));
+}
+    /**
+ * Sınavı sil
+ */
+public function destroy(Exam $exam)
+{
+    if ($exam->teacher_id !== auth()->id()) {
+        abort(403, 'Bu sınavı silme yetkiniz yok.');
+    }
+    
+    $exam->wordSets()->detach();
+    $exam->students()->detach();
+    $exam->delete();
+    
+    return redirect()
+        ->route('exams.index')
+        ->with('success', 'Sınav başarıyla silindi!');
+}
+/**
+ * Günlük sınav raporunu PDF olarak indir
+ * Seçilen tarihteki TÜM sınavların tüm öğrenci sonuçlarını içerir
+ */
+public function downloadDailyReport(Request $request)
+{
+    $request->validate([
+        'date' => 'required|date'
+    ]);
+    
+    $date = \Carbon\Carbon::parse($request->date);
+    
+    // O güne ait tüm sınavları çek (bu öğretmenin)
+    $exams = Exam::where('teacher_id', auth()->id())
+        ->whereDate('start_time', $date->toDateString())
+        ->with(['students', 'wordSets', 'results.student'])
+        ->orderBy('start_time')
+        ->get();
+    
+    if ($exams->isEmpty()) {
+        return back()->with('error', 'Seçilen tarihte sınav bulunamadı.');
+    }
+    
+    // Tüm öğrencileri topla (unique)
+    $allStudents = collect();
+    foreach ($exams as $exam) {
+        foreach ($exam->students as $student) {
+            if (!$allStudents->contains('id', $student->id)) {
+                $allStudents->push($student);
+            }
+        }
+    }
+    $allStudents = $allStudents->sortBy('name');
+    
+    // PDF oluştur
+    $pdf = PDF::loadView('exams.daily-report-pdf', [
+        'exams' => $exams,
+        'allStudents' => $allStudents,
+        'date' => $date,
+        'teacher' => auth()->user()
+    ]);
+    
+    // Dosya adı
+    $fileName = 'Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf';
+    
+    return $pdf->download($fileName);
+}
+/**
+ * Sınav raporunu PDF olarak indir
+ */
+public function downloadReport(Exam $exam)
+{
+    if ($exam->teacher_id !== auth()->id()) {
+        abort(403, 'Bu sınava erişim yetkiniz yok.');
+    }
+    
+    // Sınav verilerini yükle
+    $exam->load(['students', 'wordSets', 'results.student']);
+    
+    // PDF oluştur
+    $pdf = PDF::loadView('exams.report-pdf', compact('exam'));
+    
+    // Dosya adı
+    $fileName = 'Sinav_Raporu_' . $exam->id . '_' . date('d-m-Y') . '.pdf';
+    
+    // PDF'i indir
+    return $pdf->download($fileName);
+}
+public function create()
+{
+    try {
+        $userId = auth()->id();
+        
+        // Öğrencileri ve onların setlerini çek
+        $students = User::role('ogrenci')
+            ->with(['wordSets' => function($query) {
+                $query->where('is_active', 1)
+                      ->withCount('words')
+                      ->select('id', 'name', 'description', 'color', 'user_id', 'word_count', 'created_at')
+                      ->orderBy('created_at', 'desc');
+            }])
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+        
+        // Grupları çek (aktif gruplar ve öğrencileriyle)
+        $groups = \App\Models\Group::where('is_active', true)
+            ->with(['students', 'teacher'])
+            ->withCount('students')
+            ->orderBy('name')
+            ->get();
+        
+        // Öğretmenin ve genel setleri
+        $teacherWordSets = WordSet::where('is_active', 1)
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', 1)
+                      ->orWhere('user_id', 36)
+                      ->orWhere('user_id', $userId);
+            })
+            ->withCount('words')
+            ->select('id', 'name', 'description', 'color', 'user_id', 'word_count')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($set) use ($userId) {
+                return [
+                    'id' => $set->id,
+                    'name' => $set->name,
+                    'description' => $set->description,
+                    'color' => $set->color,
+                    'word_count' => $set->words_count ?? $set->word_count,
+                ];
+            });
+        
+        return view('exams.create', compact('teacherWordSets', 'students', 'groups'));
+        
+    } catch (\Exception $e) {
+        Log::error('Exam Create Error: ' . $e->getMessage());
+        return back()->with('error', 'Bir hata oluştu');
+    }
+}
+
+public function store(Request $request)
+{
+    try {
+        $validated = $request->validate([
+            'exam_name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_time' => 'required|date',
+            'time_per_question' => 'required|integer|min:5|max:300',
+            'word_sets' => 'required|array|min:1',
+            'word_sets.*' => 'exists:word_sets,id',
+            'students' => 'required|array|min:1',
+            'students.*' => 'exists:users,id',
+            'is_recurring' => 'nullable|boolean',
+            'end_date' => 'nullable|date|after:start_time',
+        ]);
+        
+        // Eğer tekrarlayan sınav seçilmişse
+        if ($request->has('is_recurring') && $request->is_recurring && $request->end_date) {
+            $startDate = \Carbon\Carbon::parse($validated['start_time']);
+            $endDate = \Carbon\Carbon::parse($validated['end_date']);
+            
+            $createdExams = [];
+            $currentDate = $startDate->copy();
+            
+            // Her gün için sınav oluştur
+            while ($currentDate->lte($endDate)) {
+                $exam = Exam::create([
+                    'teacher_id' => auth()->id(),
+                    'name' => $validated['exam_name'] . ' - ' . $currentDate->isoFormat('D MMMM'),
+                    'description' => $validated['description'],
+                    'start_time' => $currentDate->format('Y-m-d H:i:s'),
+                    'time_per_question' => $validated['time_per_question'],
+                    'is_active' => true,
+                ]);
+                
+                $exam->wordSets()->attach($validated['word_sets']);
+                $exam->students()->attach($validated['students']);
+                
+                $createdExams[] = $exam;
+                
+                // Bir sonraki güne geç
+                $currentDate->addDay();
+            }
+            
+            // Toplu SMS gönder - TEK SMS
+            if (!empty($createdExams)) {
+                $this->sendBulkExamCreatedSms($createdExams, $validated['students']);
+            }
+            
+            return redirect()
+                ->route('word-sets.index')
+                ->with('success', count($createdExams) . ' adet sınav başarıyla oluşturuldu ve SMS bildirimleri gönderildi!');
+            
+        } else {
+            // Tek sınav oluştur (mevcut mantık)
+            $exam = Exam::create([
+                'teacher_id' => auth()->id(),
+                'name' => $validated['exam_name'],
+                'description' => $validated['description'],
+                'start_time' => $validated['start_time'],
+                'time_per_question' => $validated['time_per_question'],
+                'is_active' => true,
+            ]);
+            
+            $exam->wordSets()->attach($validated['word_sets']);
+            $exam->students()->attach($validated['students']);
+            
+            $this->sendExamCreatedSms($exam, $validated['students']);
+            
+            return redirect()
+                ->route('word-sets.index')
+                ->with('success', 'Sınav başarıyla oluşturuldu ve SMS bildirimleri gönderildi!');
+        }
+                
+    } catch (\Exception $e) {
+        Log::error('Exam Store Error: ' . $e->getMessage());
+        return back()->withInput()->with('error', 'Sınav oluşturulurken bir hata oluştu');
+    }
+}
+
+/**
+ * Toplu sınav oluşturulduğunda tek SMS gönder
+ */
+private function sendBulkExamCreatedSms($exams, $studentIds)
+{
+    try {
+        $teacher = auth()->user();
+        $firstExam = $exams[0];
+        $lastExam = end($exams);
+        
+        $startDate = \Carbon\Carbon::parse($firstExam->start_time)->locale('tr');
+        $endDate = \Carbon\Carbon::parse($lastExam->start_time)->locale('tr');
+        
+        $formattedStart = $startDate->isoFormat('D MMMM');
+        $formattedEnd = $endDate->isoFormat('D MMMM');
+        $examTime = $startDate->format('H:i');
+        
+        foreach ($studentIds as $studentId) {
+            $student = User::find($studentId);
+            if (!$student) continue;
+            
+            $phoneNumbers = [];
+            
+            if (!empty($student->phone)) {
+                $phoneNumbers[] = ['number' => $student->phone, 'type' => 'Öğrenci', 'name' => $student->name];
+            }
+            if (!empty($student->parent_phone_number)) {
+                $phoneNumbers[] = ['number' => $student->parent_phone_number, 'type' => '1. Veli', 'name' => $student->name];
+            }
+            if (!empty($student->parent_phone_number_2)) {
+                $phoneNumbers[] = ['number' => $student->parent_phone_number_2, 'type' => '2. Veli', 'name' => $student->name];
+            }
+            
+            if (empty($phoneNumbers)) {
+                Log::warning('Bulk exam SMS: Telefon numarası bulunamadı', [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name
+                ]);
+                continue;
+            }
+            
+            foreach ($phoneNumbers as $phone) {
+                try {
+                    if ($phone['type'] === 'Öğrenci') {
+                        $smsContent = sprintf(
+                            "Sayın %s, %s-%s tarihleri arasında her gün saat %s'te '%s' sınavı yapılacaktır (Toplam %d gün). Öğretmen: %s - Rise English",
+                            $student->name,
+                            $formattedStart,
+                            $formattedEnd,
+                            $examTime,
+                            $validated['exam_name'] ?? 'Quiz',
+                            count($exams),
+                            $teacher->name
+                        );
+                    } else {
+                        $smsContent = sprintf(
+                            "Sayın Veli, %s adlı öğrenciniz için %s-%s tarihleri arasında her gün saat %s'te '%s' sınavı yapılacaktır (Toplam %d gün). Öğretmen: %s - Rise English",
+                            $student->name,
+                            $formattedStart,
+                            $formattedEnd,
+                            $examTime,
+                            $validated['exam_name'] ?? 'Quiz',
+                            count($exams),
+                            $teacher->name
+                        );
+                    }
+                    
+                    $smsResult = \App\Services\SmsService::sendSms($phone['number'], $smsContent);
+                    
+                    if ($smsResult) {
+                        Log::info('Bulk exam SMS gönderildi', [
+                            'student_id' => $student->id,
+                            'student_name' => $student->name,
+                            'exam_count' => count($exams),
+                            'recipient_type' => $phone['type'],
+                            'recipient_phone' => $phone['number'],
+                            'date_range' => "{$formattedStart} - {$formattedEnd}"
+                        ]);
+                    } else {
+                        Log::error('Bulk exam SMS gönderilemedi', [
+                            'student_id' => $student->id,
+                            'recipient_type' => $phone['type'],
+                            'recipient_phone' => $phone['number']
+                        ]);
+                    }
+                    
+                } catch (\Exception $e) {
+                    Log::error('Bulk exam SMS hatası', [
+                        'student_id' => $student->id,
+                        'recipient_type' => $phone['type'],
+                        'error' => $e->getMessage()
                     ]);
                 }
             }
         }
-    @endphp
-
-    <table class="results-table">
-        <thead>
-            <tr>
-                <th style="width: 5%;">#</th>
-                <th style="width: 30%;">Öğrenci</th>
-                <th style="width: 25%;">Sınav</th>
-                <th style="width: 10%;">Doğru</th>
-                <th style="width: 10%;">Yanlış</th>
-                <th style="width: 20%;">Başarı</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $rank = 1; @endphp
-            @foreach($allResults as $result)
-                @php
-                    $total = $result->correct_count + $result->wrong_count;
-                    $successRate = $total > 0 ? round(($result->correct_count / $total) * 100) : 0;
-                    
-                    $rowClass = '';
-                    if ($rank == 1) $rowClass = 'rank-1';
-                    elseif ($rank == 2) $rowClass = 'rank-2';
-                    elseif ($rank == 3) $rowClass = 'rank-3';
-                @endphp
-                <tr class="{{ $rowClass }}">
-                    <td>{{ $rank }}</td>
-                    <td class="student-name">{{ $result->student->name }}</td>
-                    <td class="exam-name">{{ $result->exam->name }}</td>
-                    <td>{{ $result->correct_count }}</td>
-                    <td>{{ $result->wrong_count }}</td>
-                    <td>%{{ $successRate }}</td>
-                </tr>
-                @php $rank++; @endphp
-            @endforeach
-
-            {{-- Sınava girmeyenler --}}
-            @foreach($notEnteredStudents as $item)
-                <tr class="not-entered">
-                    <td>-</td>
-                    <td class="student-name">{{ $item['student']->name }}</td>
-                    <td class="exam-name">{{ $item['exam']->name }}</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>GİRMEDİ</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <div class="footer">
-        <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
-        <p>© {{ date('Y') }} Rise English - Tüm Hakları Saklıdır</p>
-        <p>Oluşturma: {{ now()->locale('tr')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
-    </div>
-</body>
-</html>
+        
+    } catch (\Exception $e) {
+        Log::error('Bulk exam SMS process error: ' . $e->getMessage());
+    }
+}
+    /**
+     * Sınav oluşturulduğunda öğrencilere ve velilerine SMS gönder
+     */
+    private function sendExamCreatedSms($exam, $studentIds)
+    {
+        try {
+            $teacher = auth()->user();
+            $examDate = \Carbon\Carbon::parse($exam->start_time)->locale('tr');
+            $formattedDate = $examDate->isoFormat('D MMMM YYYY, dddd HH:mm');
+            
+            // Her öğrenci için SMS gönder
+            foreach ($studentIds as $studentId) {
+                $student = User::find($studentId);
+                
+                if (!$student) {
+                    continue;
+                }
+                
+                // Telefon numaralarını topla
+                $phoneNumbers = [];
+                
+                // Öğrencinin kendi telefonu
+                if (!empty($student->phone)) {
+                    $phoneNumbers[] = [
+                        'number' => $student->phone,
+                        'type' => 'Öğrenci',
+                        'name' => $student->name
+                    ];
+                }
+                
+                // 1. Veli
+                if (!empty($student->parent_phone_number)) {
+                    $phoneNumbers[] = [
+                        'number' => $student->parent_phone_number,
+                        'type' => '1. Veli',
+                        'name' => $student->name
+                    ];
+                }
+                
+                // 2. Veli
+                if (!empty($student->parent_phone_number_2)) {
+                    $phoneNumbers[] = [
+                        'number' => $student->parent_phone_number_2,
+                        'type' => '2. Veli',
+                        'name' => $student->name
+                    ];
+                }
+                
+                if (empty($phoneNumbers)) {
+                    Log::warning('Exam created SMS: Telefon numarası bulunamadı', [
+                        'student_id' => $student->id,
+                        'student_name' => $student->name,
+                        'exam_id' => $exam->id
+                    ]);
+                    continue;
+                }
+                
+                // Her telefon numarasına SMS gönder
+                foreach ($phoneNumbers as $phone) {
+                    try {
+                        // SMS içeriğini hazırla
+                        if ($phone['type'] === 'Öğrenci') {
+                            $smsContent = sprintf(
+                                "Sayın %s, '%s' sınavı %s tarihinde yapılacaktır. Öğretmen: %s. - Rise English",
+                                $student->name,
+                                $exam->name,
+                                $formattedDate,
+                                $teacher->name
+                            );
+                        } else {
+                            $smsContent = sprintf(
+                                "Sayın Veli, %s adlı öğrenciniz için '%s' sınavı %s tarihinde yapılacaktır. Öğretmen: %s. - Rise English",
+                                $student->name,
+                                $exam->name,
+                                $formattedDate,
+                                $teacher->name
+                            );
+                        }
+                        
+                        // SMS gönder
+                        $smsResult = \App\Services\SmsService::sendSms($phone['number'], $smsContent);
+                        
+                        if ($smsResult) {
+                            Log::info('Exam created SMS gönderildi', [
+                                'student_id' => $student->id,
+                                'student_name' => $student->name,
+                                'recipient_type' => $phone['type'],
+                                'recipient_phone' => $phone['number'],
+                                'exam_id' => $exam->id,
+                                'exam_name' => $exam->name,
+                                'teacher_name' => $teacher->name,
+                                'exam_date' => $formattedDate
+                            ]);
+                        } else {
+                            Log::error('Exam created SMS gönderilemedi', [
+                                'student_id' => $student->id,
+                                'student_name' => $student->name,
+                                'recipient_type' => $phone['type'],
+                                'recipient_phone' => $phone['number']
+                            ]);
+                        }
+                        
+                    } catch (\Exception $e) {
+                        Log::error('Exam created SMS hatası', [
+                            'student_id' => $student->id,
+                            'student_name' => $student->name,
+                            'recipient_type' => $phone['type'],
+                            'recipient_phone' => $phone['number'],
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Exam created SMS process error: ' . $e->getMessage());
+            // SMS hatası sınav oluşturulmasını etkilemesin
+        }
+    }
+}
