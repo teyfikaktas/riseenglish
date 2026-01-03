@@ -80,24 +80,44 @@ public function downloadDailyReport(Request $request)
     $date = \Carbon\Carbon::parse($request->date);
     $teacherId = auth()->id();
     
-    // O günün tüm sınav sonuçlarını direkt çek
+    // O güne ait sınavları çek
+    $exams = Exam::where('teacher_id', $teacherId)
+        ->whereDate('start_time', $date->toDateString())
+        ->with('students')
+        ->get();
+    
+    if ($exams->isEmpty()) {
+        return back()->with('error', 'Seçilen tarihte sınav bulunamadı.');
+    }
+    
+    // Toplam atanan öğrenci sayısı
+    $totalAssigned = 0;
+    foreach ($exams as $exam) {
+        $totalAssigned += $exam->students->count();
+    }
+    
+    // O günün tüm sınav sonuçlarını çek (success_rate > 0 olanlar - yani gerçekten girenler)
     $results = \App\Models\ExamResult::whereHas('exam', function($q) use ($date, $teacherId) {
         $q->whereDate('start_time', $date->toDateString())
           ->where('teacher_id', $teacherId);
     })
+    ->where('score', '>', 0) // 0 puan olanları gösterme
     ->with(['student', 'exam'])
     ->orderByDesc('success_rate')
     ->get();
     
-    if ($results->isEmpty()) {
-        return back()->with('error', 'Seçilen tarihte sınav sonucu bulunamadı.');
-    }
+    // Giren ve girmeyen sayıları
+    $enteredCount = $results->count();
+    $notEnteredCount = $totalAssigned - $enteredCount;
+    if ($notEnteredCount < 0) $notEnteredCount = 0;
     
     // PDF oluştur
     $pdf = PDF::loadView('exams.daily-report-pdf', [
         'results' => $results,
         'date' => $date,
-        'teacher' => auth()->user()
+        'teacher' => auth()->user(),
+        'enteredCount' => $enteredCount,
+        'notEnteredCount' => $notEnteredCount
     ]);
     
     $fileName = 'Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf';

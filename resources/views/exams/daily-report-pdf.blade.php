@@ -8,7 +8,7 @@
         body {
             font-family: DejaVu Sans, sans-serif;
             margin: 0;
-            padding: 40px;
+            padding: 0;
             color: #333;
             background-image: url('{{ public_path('images/bgreport.jpg') }}');
             background-size: 100% 100%;
@@ -19,6 +19,11 @@
 
         * {
             font-weight: bold;
+        }
+
+        .cover-page {
+            min-height: 100vh;
+            padding: 60px;
         }
 
         .header {
@@ -89,6 +94,55 @@
             color: #1a2e5a;
         }
 
+        /* İstatistik kutuları */
+        .stats-grid {
+            display: table;
+            width: 60%;
+            margin: 20px auto;
+            border-spacing: 10px;
+        }
+
+        .stat-row {
+            display: table-row;
+        }
+
+        .stat-box {
+            display: table-cell;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px;
+            background-color: rgba(249, 250, 251, 0.95);
+            border: 2px solid #eee;
+            width: 50%;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .completed { 
+            border-top: 4px solid #16a34a; 
+        }
+        .completed .stat-number { 
+            color: #16a34a; 
+        }
+
+        .not-completed { 
+            border-top: 4px solid #dc2626; 
+        }
+        .not-completed .stat-number { 
+            color: #dc2626; 
+        }
+
         .results-table {
             width: 100%;
             border-collapse: collapse;
@@ -145,6 +199,9 @@
             font-size: 11px;
             color: #666;
             text-align: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
         }
 
         .footer-logo {
@@ -152,72 +209,109 @@
             margin-bottom: 10px;
         }
 
+        .bottom-logo {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .bottom-logo img {
+            max-width: 600px;
+            height: auto;
+        }
+
         @page {
             size: A4;
             margin: 0;
         }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo-container">
-            <img src="{{ public_path('images/logo.png') }}" alt="Rise English Logo" class="logo">
-            <div class="company-info">
-                <p class="company-name">RISE ENGLISH</p>
-                <p class="company-details">Profesyonel Dil Eğitimi</p>
+    <div class="cover-page">
+        <div class="header">
+            <div class="logo-container">
+                <img src="{{ public_path('images/logo.png') }}" alt="Rise English Logo" class="logo">
+                <div class="company-info">
+                    <p class="company-name">RISE ENGLISH</p>
+                    <p class="company-details">Profesyonel Dil Eğitimi</p>
+                    <p class="company-details">www.risenglish.com</p>
+                </div>
+            </div>
+            <div class="document-info">
+                <h1 class="document-title">GÜNLÜK SINAV RAPORU</h1>
+                <p class="document-date">{{ $date->locale('tr')->isoFormat('D MMMM YYYY, dddd') }}</p>
             </div>
         </div>
-        <div class="document-info">
-            <h1 class="document-title">GÜNLÜK SINAV RAPORU</h1>
-            <p class="document-date">{{ $date->locale('tr')->isoFormat('D MMMM YYYY, dddd') }}</p>
+
+        <div class="motto-container">
+            <span class="red">Struggle</span> <span class="blue">Now</span> · 
+            <span class="red">Rise</span> <span class="blue">English</span>
         </div>
-    </div>
 
-    <div class="motto-container">
-        <span class="red">Struggle</span> <span class="blue">Now</span> · 
-        <span class="red">Rise</span> <span class="blue">English</span>
-    </div>
+        <!-- İstatistik Kutuları -->
+        <div class="stats-grid">
+            <div class="stat-row">
+                <div class="stat-box completed">
+                    <div class="stat-label">Sınava Giren</div>
+                    <div class="stat-number">{{ $enteredCount }}</div>
+                </div>
+                <div class="stat-box not-completed">
+                    <div class="stat-label">Sınava Girmedi</div>
+                    <div class="stat-number">{{ $notEnteredCount }}</div>
+                </div>
+            </div>
+        </div>
 
-    <table class="results-table">
-        <thead>
-            <tr>
-                <th style="width: 5%;">#</th>
-                <th style="width: 30%;">Öğrenci</th>
-                <th style="width: 25%;">Sınav</th>
-                <th style="width: 10%;">Doğru</th>
-                <th style="width: 10%;">Yanlış</th>
-                <th style="width: 20%;">Başarı</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($results as $index => $result)
-                @php
-                    $rank = $index + 1;
-                    $dogru = $result->score;
-                    $yanlis = $result->total_questions - $result->score;
-                    $successRate = round($result->success_rate);
-                    
-                    $rowClass = '';
-                    if ($rank == 1) $rowClass = 'rank-1';
-                    elseif ($rank == 2) $rowClass = 'rank-2';
-                    elseif ($rank == 3) $rowClass = 'rank-3';
-                @endphp
-                <tr class="{{ $rowClass }}">
-                    <td>{{ $rank }}</td>
-                    <td class="student-name">{{ $result->student->name }}</td>
-                    <td class="exam-name">{{ $result->exam->name }}</td>
-                    <td>{{ $dogru }}</td>
-                    <td>{{ $yanlis }}</td>
-                    <td>%{{ $successRate }}</td>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 30%;">Öğrenci</th>
+                    <th style="width: 10%;">Doğru</th>
+                    <th style="width: 10%;">Yanlış</th>
+                    <th style="width: 20%;">Başarı</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @php $rank = 1; @endphp
+                @foreach($results as $result)
+                    @php
+                        $dogru = $result->score;
+                        $yanlis = $result->total_questions - $result->score;
+                        $successRate = round($result->success_rate);
+                        
+                        $rowClass = '';
+                        if ($rank == 1) $rowClass = 'rank-1';
+                        elseif ($rank == 2) $rowClass = 'rank-1';
+                        elseif ($rank == 3) $rowClass = 'rank-1';
+                    @endphp
+                    <tr class="{{ $rowClass }}">
+                        <td>{{ $rank }}</td>
+                        <td class="student-name">{{ $result->student->name }}</td>
+                        <td>{{ $dogru }}</td>
+                        <td>{{ $yanlis }}</td>
+                        <td>%{{ $successRate }}</td>
+                    </tr>
+                    @php $rank++; @endphp
+                @endforeach
+            </tbody>
+        </table>
 
-    <div class="footer">
-        <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
-        <p>© {{ date('Y') }} Rise English - Tüm Hakları Saklıdır</p>
-        <p>Oluşturma: {{ now()->locale('tr')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
+        <div class="footer">
+            <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
+            <p>© {{ date('Y') }} Rise English - Tüm Hakları Saklıdır</p>
+            <p>Oluşturma: {{ now()->locale('tr')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
+        </div>
+
+        <div class="bottom-logo">
+            <img src="{{ public_path('images/rs.jpg') }}" alt="RS Logo">
+        </div>
     </div>
 </body>
 </html>
