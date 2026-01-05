@@ -68,9 +68,6 @@ public function destroy(Exam $exam)
         ->route('exams.index')
         ->with('success', 'Sınav başarıyla silindi!');
 }
-/**
- * Günlük sınav raporunu PDF olarak indir
- */
 public function downloadDailyReport(Request $request)
 {
     $request->validate([
@@ -90,30 +87,32 @@ public function downloadDailyReport(Request $request)
         return back()->with('error', 'Seçilen tarihte sınav bulunamadı.');
     }
     
-    // Toplam atanan öğrenci sayısı
-    $totalAssigned = 0;
-    foreach ($exams as $exam) {
-        $totalAssigned += $exam->students->count();
-    }
-    
-    // O günün tüm sınav sonuçlarını çek (success_rate > 0 olanlar - yani gerçekten girenler)
-    $results = \App\Models\ExamResult::whereHas('exam', function($q) use ($date, $teacherId) {
+    // Sınava giren sonuçlar (score > 0)
+    $enteredResults = \App\Models\ExamResult::whereHas('exam', function($q) use ($date, $teacherId) {
         $q->whereDate('start_time', $date->toDateString())
           ->where('teacher_id', $teacherId);
     })
-    ->where('score', '>', 0) // 0 puan olanları gösterme
+    ->where('score', '>', 0)
     ->with(['student', 'exam'])
     ->orderByDesc('success_rate')
     ->get();
     
-    // Giren ve girmeyen sayıları
-    $enteredCount = $results->count();
-    $notEnteredCount = $totalAssigned - $enteredCount;
-    if ($notEnteredCount < 0) $notEnteredCount = 0;
+    // Sınava girmeyenler (score = 0)
+    $notEnteredResults = \App\Models\ExamResult::whereHas('exam', function($q) use ($date, $teacherId) {
+        $q->whereDate('start_time', $date->toDateString())
+          ->where('teacher_id', $teacherId);
+    })
+    ->where('score', '=', 0)
+    ->with(['student', 'exam'])
+    ->get();
+    
+    $enteredCount = $enteredResults->count();
+    $notEnteredCount = $notEnteredResults->count();
     
     // PDF oluştur
     $pdf = PDF::loadView('exams.daily-report-pdf', [
-        'results' => $results,
+        'enteredResults' => $enteredResults,
+        'notEnteredResults' => $notEnteredResults,
         'date' => $date,
         'teacher' => auth()->user(),
         'enteredCount' => $enteredCount,

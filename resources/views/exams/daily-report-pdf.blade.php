@@ -143,6 +143,24 @@
             color: #dc2626; 
         }
 
+        .section-title {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            padding-left: 10px;
+            border-left: 4px solid;
+        }
+
+        .section-title.entered {
+            color: #16a34a;
+            border-left-color: #16a34a;
+        }
+
+        .section-title.not-entered {
+            color: #dc2626;
+            border-left-color: #dc2626;
+        }
+
         .results-table {
             width: 100%;
             border-collapse: collapse;
@@ -172,12 +190,6 @@
 
         .student-name {
             text-align: left !important;
-        }
-
-        .exam-name {
-            text-align: left !important;
-            font-size: 11px;
-            color: #666;
         }
 
         .rank-1 td {
@@ -268,6 +280,9 @@
             </div>
         </div>
 
+        <!-- Sınava Girenler -->
+        @if($enteredCount > 0)
+        <h2 class="section-title entered">✓ Sınava Giren Öğrenciler</h2>
         <table class="results-table">
             <thead>
                 <tr>
@@ -280,15 +295,15 @@
             </thead>
             <tbody>
                 @php $rank = 1; @endphp
-                @foreach($results as $result)
+                @foreach($enteredResults as $result)
                     @php
                         $dogru = $result->score;
                         $yanlis = $result->total_questions - $result->score;
                         $successRate = round($result->success_rate);
                         
                         $rowClass = '';
-                        if ($rank == 1) $rowClass = 'rank-3';
-                        elseif ($rank == 2) $rowClass = 'rank-3';
+                        if ($rank == 1) $rowClass = 'rank-1';
+                        elseif ($rank == 2) $rowClass = 'rank-2';
                         elseif ($rank == 3) $rowClass = 'rank-3';
                     @endphp
                     <tr class="{{ $rowClass }}">
@@ -302,6 +317,30 @@
                 @endforeach
             </tbody>
         </table>
+        @endif
+
+        <!-- Sınava Girmeyenler -->
+        @if($notEnteredCount > 0)
+        <h2 class="section-title not-entered">✗ Sınava Girmeyen Öğrenciler</h2>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">#</th>
+                    <th style="width: 40%;">Öğrenci</th>
+                    <th style="width: 50%;">Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($notEnteredResults as $index => $result)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td class="student-name">{{ $result->student->name }}</td>
+                        <td style="color: #dc2626;">Sınava Girmedi</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @endif
 
         <div class="footer">
             <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
