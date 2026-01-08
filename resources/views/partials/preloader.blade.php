@@ -44,7 +44,7 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 100vw;
+  max-width: 100%;
   padding: 0 16px;
   box-sizing: border-box;
   overflow: hidden;
@@ -58,7 +58,6 @@
   justify-content: center;
   position: relative;
   width: 100%;
-  max-width: 100%;
 }
 
 #preloader .letter {
@@ -140,9 +139,9 @@
 
 #preloader .tagline p {
   color: rgba(255, 255, 255, 0.7);
-  font-size: clamp(11px, 3vw, 18px);
+  font-size: clamp(12px, 3.5vw, 18px);
   line-height: 1.35;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   margin: 0;
   padding: 0 8px;
   overflow-wrap: anywhere;
@@ -157,7 +156,7 @@
 
 #preloader .tagline .loading-text {
   color: rgba(255, 255, 255, 0.5);
-  font-size: clamp(10px, 2.5vw, 14px);
+  font-size: clamp(11px, 3.0vw, 14px);
   line-height: 1.3;
   margin-top: 0.5rem;
 }
@@ -193,41 +192,6 @@ body.preloader-active {
 .page-content.loaded {
   opacity: 1;
 }
-
-/* Mobile-specific overrides */
-@media (max-width: 480px) {
-  #preloader .tagline {
-    margin-top: 1.5rem;
-  }
-  
-  #preloader .tagline p {
-    font-size: clamp(10px, 3.2vw, 14px);
-    letter-spacing: 0.01em;
-  }
-  
-  #preloader .tagline .loading-text {
-    font-size: clamp(9px, 2.8vw, 12px);
-  }
-}
-
-@media (max-width: 350px) {
-  #preloader .logo-container {
-    padding: 0 8px;
-  }
-  
-  #preloader .tagline {
-    padding: 0 8px;
-    margin-top: 1rem;
-  }
-  
-  #preloader .tagline p {
-    font-size: 10px;
-  }
-  
-  #preloader .tagline .loading-text {
-    font-size: 9px;
-  }
-}
 </style>
 
 <script>
@@ -258,31 +222,22 @@ body.preloader-active {
   const comLetters = [];
   let fontSize = 48;
 
-  // Ekran genişliğine göre maksimum font size belirle
-  function getMaxFontSize() {
+  // Ekran genişliğine göre font size - BASİT VE NET
+  function getFontSize() {
     const w = window.innerWidth;
     if (w <= 320) return 24;
     if (w <= 375) return 28;
     if (w <= 414) return 32;
-    if (w <= 480) return 38;
-    if (w <= 600) return 44;
-    if (w <= 768) return 54;
+    if (w <= 480) return 36;
+    if (w <= 600) return 42;
+    if (w <= 768) return 48;
     return 72;
   }
 
-  // Ekran genişliğine göre minimum font size belirle
-  function getMinFontSize() {
-    const w = window.innerWidth;
-    if (w <= 320) return 14;
-    if (w <= 375) return 16;
-    if (w <= 480) return 18;
-    return 20;
-  }
-
-  function getCharWidth(char, size) {
+  function getCharWidth(char) {
     const test = document.createElement('span');
     test.style.cssText =
-      `font-size:${size}px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;` +
+      `font-size:${fontSize}px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;` +
       `position:absolute;visibility:hidden;white-space:pre;letter-spacing:-0.025em;`;
     test.textContent = char === ' ' ? '\u00A0' : char;
     document.body.appendChild(test);
@@ -291,8 +246,8 @@ body.preloader-active {
     return width;
   }
 
-  function calculatePositions(text, size) {
-    const widths = [...text].map(c => getCharWidth(c, size));
+  function calculatePositions(text) {
+    const widths = [...text].map(c => getCharWidth(c));
     const totalWidth = widths.reduce((a, b) => a + b, 0);
     const positions = [];
     let x = -totalWidth / 2;
@@ -301,30 +256,6 @@ body.preloader-active {
       x += widths[i];
     }
     return { positions, totalWidth, widths };
-  }
-
-  // Binary search ile font size'ı container'a sığdır
-  function fitFontSizeToWidth(text, maxWidth) {
-    const minSize = getMinFontSize();
-    const maxSize = getMaxFontSize();
-    
-    let lo = minSize;
-    let hi = maxSize;
-    let best = minSize;
-
-    while (lo <= hi) {
-      const mid = Math.floor((lo + hi) / 2);
-      const { totalWidth } = calculatePositions(text, mid);
-      
-      if (totalWidth <= maxWidth) {
-        best = mid;
-        lo = mid + 1;
-      } else {
-        hi = mid - 1;
-      }
-    }
-    
-    return best;
   }
 
   function clearLogo() {
@@ -338,35 +269,23 @@ body.preloader-active {
   function init() {
     clearLogo();
 
-    // Container genişliğini al, yoksa window genişliğini kullan
-    const containerWidth = container.clientWidth || window.innerWidth;
-    
-    // Mobilde daha fazla padding bırak
-    const paddingAmount = window.innerWidth <= 480 ? 48 : 32;
-    const safeWidth = Math.max(100, containerWidth - paddingAmount);
+    // Font size'ı ekran genişliğine göre al
+    fontSize = getFontSize();
 
-    // Font size'ı hesapla
-    fontSize = fitFontSizeToWidth(initialText, safeWidth);
-
-    // Logo yüksekliğini ayarla
     logo.style.height = (fontSize * 1.4) + 'px';
     logo.style.fontSize = fontSize + 'px';
 
-    // Cursor boyutunu ayarla
     if (cursor) {
       cursor.style.height = (fontSize * 0.8) + 'px';
       cursor.style.width = Math.max(2, Math.floor(fontSize * 0.06)) + 'px';
     }
 
-    const { positions: initialPositions, totalWidth } = calculatePositions(initialText, fontSize);
-    const displayWidth = Math.min(totalWidth, safeWidth);
+    const { positions: initialPositions, totalWidth } = calculatePositions(initialText);
 
-    // Loading bar genişliğini ayarla
     if (loadingBar) {
-      loadingBar.style.width = displayWidth + 'px';
+      loadingBar.style.width = totalWidth + 'px';
     }
 
-    // Harfleri oluştur
     [...initialText].forEach((char, i) => {
       const span = document.createElement('span');
       span.className = 'letter';
@@ -377,7 +296,6 @@ body.preloader-active {
       letters.push(span);
     });
 
-    // .com harflerini oluştur
     const comText = ".com";
     [...comText].forEach((char) => {
       const span = document.createElement('span');
@@ -388,10 +306,9 @@ body.preloader-active {
       comLetters.push(span);
     });
 
-    // Cursor pozisyonunu ayarla
     if (cursor) {
       cursor.style.right = 'auto';
-      cursor.style.left = `calc(50% + ${displayWidth / 2 + 8}px)`;
+      cursor.style.left = `calc(50% + ${totalWidth / 2 + 8}px)`;
     }
   }
 
@@ -404,12 +321,7 @@ body.preloader-active {
 
   function morph() {
     const finalText = "RisEnglish";
-    const { positions: finalPositions, totalWidth: finalWidthRaw } = calculatePositions(finalText, fontSize);
-    
-    const containerWidth = container.clientWidth || window.innerWidth;
-    const paddingAmount = window.innerWidth <= 480 ? 48 : 32;
-    const safeWidth = Math.max(100, containerWidth - paddingAmount);
-    const finalWidth = Math.min(finalWidthRaw, safeWidth);
+    const { positions: finalPositions, totalWidth: finalWidth } = calculatePositions(finalText);
 
     if (loadingBar) loadingBar.style.width = finalWidth + 'px';
 
@@ -430,12 +342,7 @@ body.preloader-active {
 
   function showCom() {
     const fullText = "RisEnglish.com";
-    const { positions, totalWidth: totalWidthRaw } = calculatePositions(fullText, fontSize);
-    
-    const containerWidth = container.clientWidth || window.innerWidth;
-    const paddingAmount = window.innerWidth <= 480 ? 48 : 32;
-    const safeWidth = Math.max(100, containerWidth - paddingAmount);
-    const totalWidth = Math.min(totalWidthRaw, safeWidth);
+    const { positions, totalWidth } = calculatePositions(fullText);
 
     let convergingIndex = 0;
     finalMapping.forEach(([initialIdx, finalPos]) => {
@@ -503,7 +410,7 @@ body.preloader-active {
         letters.forEach(l => l.classList.add('visible'));
       }
       if (taglineShown && tagline) tagline.classList.add('show');
-    }, 100);
+    }, 80);
   }
 
   window.addEventListener('resize', onResize, { passive: true });
