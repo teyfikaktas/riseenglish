@@ -13,7 +13,7 @@ use Carbon\Carbon;
 
 class StudentExamController extends Controller
 {
-    
+
 public function index(Request $request)
 {
     $studentId = auth()->id();
@@ -26,6 +26,10 @@ public function index(Request $request)
     
     $exams = Exam::whereHas('students', function($query) use ($studentId) {
             $query->where('users.id', $studentId);
+        })
+        ->where(function($query) {
+            $query->where('is_active', true) // ✅ Aktif olanlar
+                  ->orWhere('start_time', '>=', now()->subDays(3)); // ✅ veya son 3 gün
         })
         ->with(['teacher:id,name', 'wordSets:id,name'])
         ->withCount('wordSets')
@@ -42,7 +46,7 @@ public function index(Request $request)
                 'start_time' => $exam->start_time->toIso8601String(),
                 'time_per_question' => $exam->time_per_question,
                 'is_active' => $exam->is_active,
-                'is_completed' => in_array($exam->id, $completedExamIds), // ✅ Array lookup
+                'is_completed' => in_array($exam->id, $completedExamIds),
                 'word_set_count' => $exam->word_sets_count,
                 'word_sets' => $exam->wordSets->map(fn($set) => [
                     'id' => $set->id,
