@@ -5,8 +5,11 @@
     <div class="logo" id="logo">
       <span class="cursor" id="cursor"></span>
     </div>
+
     <div class="tagline" id="tagline">
-      <p>Level up your English</p>
+      <p>Bu bir <span class="hakan-hoca">Hakan Hoca</span> dil öğrenme platformudur</p>
+      <p class="loading-text">Yükleniyor...</p>
+
       <div class="loading-bar" id="loadingBar">
         <div class="progress" id="progress"></div>
       </div>
@@ -17,8 +20,7 @@
 <style>
 #preloader {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -45,10 +47,13 @@
   max-width: 100%;
   padding: 0 16px;
   box-sizing: border-box;
+
+  /* iOS/Android: animasyon kaynaklı taşmaları kesin keser */
+  overflow: hidden;
 }
 
 #preloader .logo {
-  font-weight: bold;
+  font-weight: 700;
   font-family: system-ui, -apple-system, sans-serif;
   letter-spacing: -0.025em;
   display: flex;
@@ -65,6 +70,7 @@
   white-space: pre;
   opacity: 0;
   transform: translateY(20px);
+  will-change: transform, opacity, left;
 }
 
 #preloader .letter.visible {
@@ -125,6 +131,9 @@
   width: 100%;
   padding: 0 16px;
   box-sizing: border-box;
+
+  /* okunabilirlik ve taşma kontrolü */
+  max-width: 34rem;
 }
 
 #preloader .tagline.show {
@@ -132,18 +141,30 @@
   transform: translateY(0);
 }
 
+/* iOS + Android: metin her zaman kırılabilir ve ölçeklenebilir */
 #preloader .tagline p {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.875rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: clamp(12px, 3.5vw, 18px);
+  line-height: 1.35;
+  letter-spacing: 0.03em; /* 0.05em küçük ekranda taşma yapabilir */
   margin: 0;
+  padding: 0 8px;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
-@media (min-width: 768px) {
-  #preloader .tagline p {
-    font-size: 1.125rem;
-  }
+#preloader .tagline .hakan-hoca {
+  color: #ff4757;
+  font-weight: 700;
+}
+
+#preloader .tagline .loading-text {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: clamp(11px, 3.0vw, 14px);
+  line-height: 1.3;
+  margin-top: 0.5rem;
 }
 
 #preloader .loading-bar {
@@ -153,6 +174,9 @@
   border-radius: 2px;
   overflow: hidden;
   transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* width JS ile set ediliyor, yine de güvenlik için */
+  max-width: 100%;
 }
 
 #preloader .loading-bar .progress {
@@ -179,7 +203,7 @@ body.preloader-active {
 </style>
 
 <script>
-(function() {
+(function () {
   document.body.classList.add('preloader-active');
 
   const logo = document.getElementById('logo');
@@ -188,8 +212,9 @@ body.preloader-active {
   const progress = document.getElementById('progress');
   const loadingBar = document.getElementById('loadingBar');
   const preloader = document.getElementById('preloader');
+  const container = document.querySelector('#preloader .logo-container');
 
-  if (!logo || !preloader) return;
+  if (!logo || !preloader || !container) return;
 
   const initialText = "Rise Your English";
   const finalMapping = [
@@ -203,50 +228,24 @@ body.preloader-active {
 
   const letters = [];
   const comLetters = [];
-  let fontSize;
+  let fontSize = 48;
 
-  // Gerçek metin genişliğini ölçerek font boyutunu hesapla
-  function calculateOptimalFontSize() {
-    const screenWidth = window.innerWidth;
-    const availableWidth = screenWidth - 40; // 20px padding her taraftan
-    const testText = initialText; // "Rise Your English" - en uzun metin
-    
-    // Binary search ile doğru font boyutunu bul
-    let minFont = 12;
-    let maxFont = screenWidth >= 768 ? 72 : 50;
-    let optimalFont = minFont;
-    
-    while (minFont <= maxFont) {
-      const midFont = Math.floor((minFont + maxFont) / 2);
-      
-      // Bu font boyutuyla metin genişliğini ölç
-      const test = document.createElement('span');
-      test.style.cssText = `font-size:${midFont}px;font-weight:bold;font-family:system-ui,-apple-system,sans-serif;position:absolute;visibility:hidden;white-space:nowrap;letter-spacing:-0.025em;`;
-      test.textContent = testText;
-      document.body.appendChild(test);
-      const textWidth = test.offsetWidth;
-      document.body.removeChild(test);
-      
-      if (textWidth <= availableWidth) {
-        optimalFont = midFont;
-        minFont = midFont + 1;
-      } else {
-        maxFont = midFont - 1;
-      }
-    }
-    
-    console.log('Preloader Debug:', {
-      screenWidth,
-      availableWidth,
-      finalFontSize: optimalFont
-    });
-    
-    return optimalFont;
+  // (Eski yöntem; artık kullanılmıyor, ama kalsın isterseniz)
+  function getFontSize() {
+    const w = window.innerWidth;
+    if (w <= 350) return 10;
+    if (w <= 390) return 18;
+    if (w <= 430) return 28;
+    if (w <= 550) return 34;
+    if (w <= 768) return 48;
+    return 72;
   }
 
   function getCharWidth(char) {
     const test = document.createElement('span');
-    test.style.cssText = `font-size:${fontSize}px;font-weight:bold;font-family:system-ui,-apple-system,sans-serif;position:absolute;visibility:hidden;white-space:pre;letter-spacing:-0.025em;`;
+    test.style.cssText =
+      `font-size:${fontSize}px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;` +
+      `position:absolute;visibility:hidden;white-space:pre;letter-spacing:-0.025em;`;
     test.textContent = char === ' ' ? '\u00A0' : char;
     document.body.appendChild(test);
     const width = test.offsetWidth;
@@ -266,31 +265,58 @@ body.preloader-active {
     return { positions, totalWidth, widths };
   }
 
+  // iOS + Android: metni container'a sığdıran font-size (binary search)
+  function fitFontSizeToWidth(text, maxWidth, min = 16, max = 72) {
+    let lo = min, hi = max, best = min;
+
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      fontSize = mid;
+
+      const { totalWidth } = calculatePositions(text);
+      if (totalWidth <= maxWidth) {
+        best = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return best;
+  }
+
+  function clearLogo() {
+    // cursor elementini koru, diğerlerini sil
+    const keepCursor = cursor && cursor.parentNode === logo ? cursor : null;
+    logo.innerHTML = '';
+    if (keepCursor) logo.appendChild(keepCursor);
+
+    letters.length = 0;
+    comLetters.length = 0;
+  }
+
   function init() {
-    // Dinamik font boyutu hesapla
-    fontSize = calculateOptimalFontSize();
-    
-    // Logo yüksekliğini ayarla
+    clearLogo();
+
+    // container genişliğine göre güvenli alan (padding payı)
+    const safeWidth = Math.max(0, container.clientWidth - 32);
+
+    // initial text'e göre font-size'ı sığdır
+    fontSize = fitFontSizeToWidth(initialText, safeWidth, 16, 72);
+
     logo.style.height = (fontSize * 1.4) + 'px';
     logo.style.fontSize = fontSize + 'px';
-    
-    // Cursor boyutunu ayarla
+
     if (cursor) {
       cursor.style.height = (fontSize * 0.8) + 'px';
       cursor.style.width = Math.max(2, Math.floor(fontSize * 0.06)) + 'px';
     }
-    
+
     const { positions: initialPositions, totalWidth } = calculatePositions(initialText);
-    
-    console.log('Preloader Text Debug:', {
-      fontSize,
-      totalWidth,
-      screenWidth: window.innerWidth,
-      availableWidth: window.innerWidth - 40
-    });
-    
-    if (loadingBar) loadingBar.style.width = totalWidth + 'px';
-    
+
+    if (loadingBar) {
+      loadingBar.style.width = Math.min(totalWidth, safeWidth) + 'px';
+    }
+
     [...initialText].forEach((char, i) => {
       const span = document.createElement('span');
       span.className = 'letter';
@@ -300,7 +326,7 @@ body.preloader-active {
       logo.appendChild(span);
       letters.push(span);
     });
-    
+
     const comText = ".com";
     [...comText].forEach((char) => {
       const span = document.createElement('span');
@@ -310,10 +336,10 @@ body.preloader-active {
       logo.appendChild(span);
       comLetters.push(span);
     });
-    
+
     if (cursor) {
       cursor.style.right = 'auto';
-      cursor.style.left = `calc(50% + ${totalWidth / 2 + 8}px)`;
+      cursor.style.left = `calc(50% + ${Math.min(totalWidth, safeWidth) / 2 + 8}px)`;
     }
   }
 
@@ -326,11 +352,18 @@ body.preloader-active {
 
   function morph() {
     const finalText = "RisEnglish";
-    const { positions: finalPositions, totalWidth: finalWidth } = calculatePositions(finalText);
+    const safeWidth = Math.max(0, container.clientWidth - 32);
+
+    // final text daha kısa ama yine de width hesaplayalım
+    const { positions: finalPositions, totalWidth: finalWidthRaw } = calculatePositions(finalText);
+    const finalWidth = Math.min(finalWidthRaw, safeWidth);
+
     if (loadingBar) loadingBar.style.width = finalWidth + 'px';
-    
+
     finalMapping.forEach(([initialIdx, finalPos, isAccent]) => {
       const letter = letters[initialIdx];
+      if (!letter) return;
+
       if (finalPos === null) {
         letter.classList.add('fade-out');
       } else {
@@ -338,26 +371,30 @@ body.preloader-active {
         if (isAccent) letter.classList.add('accent');
       }
     });
+
     if (cursor) cursor.style.left = `calc(50% + ${finalWidth / 2 + 8}px)`;
   }
 
   function showCom() {
     const fullText = "RisEnglish.com";
-    const { positions, totalWidth } = calculatePositions(fullText);
-    
+    const safeWidth = Math.max(0, container.clientWidth - 32);
+
+    const { positions, totalWidth: totalWidthRaw } = calculatePositions(fullText);
+    const totalWidth = Math.min(totalWidthRaw, safeWidth);
+
     let convergingIndex = 0;
     finalMapping.forEach(([initialIdx, finalPos]) => {
-      if (finalPos !== null) {
+      if (finalPos !== null && letters[initialIdx]) {
         letters[initialIdx].style.left = `calc(50% + ${positions[convergingIndex]}px)`;
         convergingIndex++;
       }
     });
-    
+
     comLetters.forEach((letter, i) => {
       letter.style.left = `calc(50% + ${positions[10 + i]}px)`;
       setTimeout(() => letter.classList.add('visible'), i * 100);
     });
-    
+
     if (loadingBar) loadingBar.style.width = totalWidth + 'px';
     if (cursor) cursor.style.left = `calc(50% + ${totalWidth / 2 + 8}px)`;
   }
@@ -366,7 +403,7 @@ body.preloader-active {
     if (!progress) return;
     let currentProgress = 0;
     const interval = setInterval(() => {
-      currentProgress += 1.5;
+      currentProgress += 0.8;
       if (currentProgress >= 100) {
         currentProgress = 100;
         clearInterval(interval);
@@ -378,10 +415,10 @@ body.preloader-active {
   function hidePreloader() {
     preloader.classList.add('fade-out');
     document.body.classList.remove('preloader-active');
-    
+
     const pageContent = document.querySelector('.page-content');
     if (pageContent) pageContent.classList.add('loaded');
-    
+
     setTimeout(() => {
       preloader.style.display = 'none';
     }, 600);
@@ -396,6 +433,30 @@ body.preloader-active {
     }
   }
 
+  // iOS/Android: resize ve orientation değişiminde layout'u yeniden hesapla
+  let resizeTimer = null;
+  function onResize() {
+    if (!preloader || preloader.classList.contains('fade-out')) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      // Animasyonu en baştan oynatmak istemiyorsanız sadece init çağırmak yeter.
+      // Burada güvenli yol: init + mevcut görünürlük sınıflarını korumaya çalışmak.
+      const lettersWereVisible = letters.some(l => l.classList.contains('visible'));
+      const taglineShown = tagline && tagline.classList.contains('show');
+
+      init();
+
+      if (lettersWereVisible) {
+        // Harfleri görünür tut (kaba ama stabil)
+        letters.forEach(l => l.classList.add('visible'));
+      }
+      if (taglineShown && tagline) tagline.classList.add('show');
+    }, 80);
+  }
+
+  window.addEventListener('resize', onResize, { passive: true });
+  window.addEventListener('orientationchange', onResize, { passive: true });
+
   window.addEventListener('load', () => {
     pageLoaded = true;
     checkAndHide();
@@ -406,20 +467,21 @@ body.preloader-active {
     checkAndHide();
   }, 8000);
 
-  // Animasyonu başlat
+  // Başlat
   init();
-  setTimeout(() => showLetters(), 100);
-  setTimeout(() => morph(), 900);
-  setTimeout(() => showCom(), 1500);
-  setTimeout(() => { if (cursor) cursor.style.opacity = '0'; }, 2100);
+  setTimeout(showLetters, 100);
+  setTimeout(morph, 1400);
+  setTimeout(showCom, 2200);
+  setTimeout(() => { if (cursor) cursor.style.opacity = '0'; }, 3000);
+
   setTimeout(() => {
     if (tagline) tagline.classList.add('show');
-    setTimeout(() => animateProgress(), 300);
-  }, 2300);
-  
+    setTimeout(animateProgress, 300);
+  }, 3300);
+
   setTimeout(() => {
     animationComplete = true;
     checkAndHide();
-  }, 4000);
+  }, 6000);
 })();
 </script>
