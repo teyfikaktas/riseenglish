@@ -28,6 +28,7 @@
   background: #1e3a5f;
   z-index: 99999;
   transition: opacity 0.6s ease, visibility 0.6s ease;
+  overflow: hidden;
 }
 
 #preloader.fade-out {
@@ -40,24 +41,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
 #preloader .logo {
-  font-size: 2.5rem;
   font-weight: bold;
   font-family: system-ui, -apple-system, sans-serif;
   letter-spacing: -0.025em;
   display: flex;
   justify-content: center;
   position: relative;
-  height: 3.5rem;
-}
-
-@media (min-width: 768px) {
-  #preloader .logo { 
-    font-size: 4.5rem; 
-    height: 5.5rem; 
-  }
+  width: 100%;
 }
 
 #preloader .letter {
@@ -99,11 +96,8 @@
 
 #preloader .cursor {
   position: absolute;
-  right: -12px;
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
-  height: 2.5rem;
   background: #ff4757;
   animation: preloaderBlink 0.5s infinite;
   transition: all 0.3s ease;
@@ -112,12 +106,6 @@
 
 #preloader .cursor.visible {
   opacity: 1;
-}
-
-@media (min-width: 768px) {
-  #preloader .cursor { 
-    height: 4rem; 
-  }
 }
 
 @keyframes preloaderBlink {
@@ -134,6 +122,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
 #preloader .tagline.show {
@@ -143,7 +134,7 @@
 
 #preloader .tagline p {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 1rem;
+  font-size: 0.875rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin: 0;
@@ -173,7 +164,6 @@
   box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
 }
 
-/* Sayfa içeriği preloader bitene kadar gizli */
 body.preloader-active {
   overflow: hidden;
 }
@@ -190,7 +180,6 @@ body.preloader-active {
 
 <script>
 (function() {
-  // Body'ye preloader-active class'ı ekle
   document.body.classList.add('preloader-active');
 
   const logo = document.getElementById('logo');
@@ -216,9 +205,48 @@ body.preloader-active {
   const comLetters = [];
   let fontSize;
 
+  // Gerçek metin genişliğini ölçerek font boyutunu hesapla
+  function calculateOptimalFontSize() {
+    const screenWidth = window.innerWidth;
+    const availableWidth = screenWidth - 40; // 20px padding her taraftan
+    const testText = initialText; // "Rise Your English" - en uzun metin
+    
+    // Binary search ile doğru font boyutunu bul
+    let minFont = 12;
+    let maxFont = screenWidth >= 768 ? 72 : 50;
+    let optimalFont = minFont;
+    
+    while (minFont <= maxFont) {
+      const midFont = Math.floor((minFont + maxFont) / 2);
+      
+      // Bu font boyutuyla metin genişliğini ölç
+      const test = document.createElement('span');
+      test.style.cssText = `font-size:${midFont}px;font-weight:bold;font-family:system-ui,-apple-system,sans-serif;position:absolute;visibility:hidden;white-space:nowrap;letter-spacing:-0.025em;`;
+      test.textContent = testText;
+      document.body.appendChild(test);
+      const textWidth = test.offsetWidth;
+      document.body.removeChild(test);
+      
+      if (textWidth <= availableWidth) {
+        optimalFont = midFont;
+        minFont = midFont + 1;
+      } else {
+        maxFont = midFont - 1;
+      }
+    }
+    
+    console.log('Preloader Debug:', {
+      screenWidth,
+      availableWidth,
+      finalFontSize: optimalFont
+    });
+    
+    return optimalFont;
+  }
+
   function getCharWidth(char) {
     const test = document.createElement('span');
-    test.style.cssText = `font-size:${fontSize}px;font-weight:bold;font-family:system-ui,-apple-system,sans-serif;position:absolute;visibility:hidden;white-space:pre;`;
+    test.style.cssText = `font-size:${fontSize}px;font-weight:bold;font-family:system-ui,-apple-system,sans-serif;position:absolute;visibility:hidden;white-space:pre;letter-spacing:-0.025em;`;
     test.textContent = char === ' ' ? '\u00A0' : char;
     document.body.appendChild(test);
     const width = test.offsetWidth;
@@ -239,9 +267,28 @@ body.preloader-active {
   }
 
   function init() {
-    fontSize = window.innerWidth >= 768 ? 72 : 40;
+    // Dinamik font boyutu hesapla
+    fontSize = calculateOptimalFontSize();
+    
+    // Logo yüksekliğini ayarla
+    logo.style.height = (fontSize * 1.4) + 'px';
+    logo.style.fontSize = fontSize + 'px';
+    
+    // Cursor boyutunu ayarla
+    if (cursor) {
+      cursor.style.height = (fontSize * 0.8) + 'px';
+      cursor.style.width = Math.max(2, Math.floor(fontSize * 0.06)) + 'px';
+    }
     
     const { positions: initialPositions, totalWidth } = calculatePositions(initialText);
+    
+    console.log('Preloader Text Debug:', {
+      fontSize,
+      totalWidth,
+      screenWidth: window.innerWidth,
+      availableWidth: window.innerWidth - 40
+    });
+    
     if (loadingBar) loadingBar.style.width = totalWidth + 'px';
     
     [...initialText].forEach((char, i) => {
@@ -249,6 +296,7 @@ body.preloader-active {
       span.className = 'letter';
       span.textContent = char === ' ' ? '\u00A0' : char;
       span.style.left = `calc(50% + ${initialPositions[i]}px)`;
+      span.style.fontSize = fontSize + 'px';
       logo.appendChild(span);
       letters.push(span);
     });
@@ -258,6 +306,7 @@ body.preloader-active {
       const span = document.createElement('span');
       span.className = 'letter com';
       span.textContent = char;
+      span.style.fontSize = fontSize + 'px';
       logo.appendChild(span);
       comLetters.push(span);
     });
@@ -330,17 +379,14 @@ body.preloader-active {
     preloader.classList.add('fade-out');
     document.body.classList.remove('preloader-active');
     
-    // Sayfa içeriğini göster
     const pageContent = document.querySelector('.page-content');
     if (pageContent) pageContent.classList.add('loaded');
     
-    // Preloader'ı DOM'dan kaldır
     setTimeout(() => {
       preloader.style.display = 'none';
     }, 600);
   }
 
-  // Sayfa yüklenme durumunu takip et
   let pageLoaded = false;
   let animationComplete = false;
 
@@ -350,13 +396,11 @@ body.preloader-active {
     }
   }
 
-  // Sayfa tamamen yüklendiğinde
   window.addEventListener('load', () => {
     pageLoaded = true;
     checkAndHide();
   });
 
-  // Fallback: 8 saniye sonra zorla kapat
   setTimeout(() => {
     pageLoaded = true;
     checkAndHide();
@@ -373,7 +417,6 @@ body.preloader-active {
     setTimeout(() => animateProgress(), 300);
   }, 2300);
   
-  // Animasyon bittiğinde
   setTimeout(() => {
     animationComplete = true;
     checkAndHide();
