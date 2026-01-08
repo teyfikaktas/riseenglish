@@ -1,5 +1,6 @@
 <!-- resources/views/welcome.blade.php -->
 @extends('layouts.app')
+@include('partials.preloader')
 
 @section('content')
 

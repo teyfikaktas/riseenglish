@@ -18,22 +18,22 @@ public function index(Request $request)
 {
     $studentId = auth()->id();
     
+    // ✅ Önce tamamlanan sınav ID'lerini tek sorguda çek
+    $completedExamIds = ExamResult::where('student_id', $studentId)
+        ->whereNotNull('completed_at')
+        ->pluck('exam_id')
+        ->toArray();
+    
     $exams = Exam::whereHas('students', function($query) use ($studentId) {
             $query->where('users.id', $studentId);
         })
         ->with(['teacher:id,name', 'wordSets:id,name'])
         ->withCount('wordSets')
         ->select('id', 'teacher_id', 'name', 'description', 'start_time', 'time_per_question', 'is_active')
-        ->orderBy('is_active', 'desc')  // 👈 Önce aktifler (1, 0 sırası)
-        ->orderBy('start_time', 'desc') // 👈 Sonra her grup kendi içinde en yeniden eskiye
+        ->orderBy('is_active', 'desc')
+        ->orderBy('start_time', 'desc')
         ->get()
-        ->map(function($exam) use ($studentId) {
-            // Tamamlanma durumunu kontrol et
-            $isCompleted = ExamResult::where('exam_id', $exam->id)
-                ->where('student_id', $studentId)
-                ->whereNotNull('completed_at')
-                ->exists();
-            
+        ->map(function($exam) use ($completedExamIds) {
             return [
                 'id' => $exam->id,
                 'name' => $exam->name,
@@ -42,14 +42,12 @@ public function index(Request $request)
                 'start_time' => $exam->start_time->toIso8601String(),
                 'time_per_question' => $exam->time_per_question,
                 'is_active' => $exam->is_active,
-                'is_completed' => $isCompleted,
+                'is_completed' => in_array($exam->id, $completedExamIds), // ✅ Array lookup
                 'word_set_count' => $exam->word_sets_count,
-                'word_sets' => $exam->wordSets->map(function($set) {
-                    return [
-                        'id' => $set->id,
-                        'name' => $set->name,
-                    ];
-                }),
+                'word_sets' => $exam->wordSets->map(fn($set) => [
+                    'id' => $set->id,
+                    'name' => $set->name,
+                ]),
             ];
         });
     
