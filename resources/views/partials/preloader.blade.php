@@ -5,9 +5,11 @@
     <div class="logo" id="logo">
       <span class="cursor" id="cursor"></span>
     </div>
+
     <div class="tagline" id="tagline">
       <p>Bu bir <span class="hakan-hoca">Hakan Hoca</span> dil öğrenme platformudur</p>
       <p class="loading-text">Yükleniyor...</p>
+
       <div class="loading-bar" id="loadingBar">
         <div class="progress" id="progress"></div>
       </div>
@@ -18,8 +20,7 @@
 <style>
 #preloader {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -43,22 +44,21 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 100%;
+  max-width: 100vw;
   padding: 0 16px;
   box-sizing: border-box;
-
-  /* iOS/Android: harfler absolute iken piksel taşmalarını kesin keser */
   overflow: hidden;
 }
 
 #preloader .logo {
-  font-weight: bold;
+  font-weight: 700;
   font-family: system-ui, -apple-system, sans-serif;
   letter-spacing: -0.025em;
   display: flex;
   justify-content: center;
   position: relative;
   width: 100%;
+  max-width: 100%;
 }
 
 #preloader .letter {
@@ -130,8 +130,6 @@
   width: 100%;
   padding: 0 16px;
   box-sizing: border-box;
-
-  /* okunabilirlik ve taşma kontrolü */
   max-width: 34rem;
 }
 
@@ -140,15 +138,13 @@
   transform: translateY(0);
 }
 
-/* iOS + Android: taşma yapmayan, responsive metin */
 #preloader .tagline p {
   color: rgba(255, 255, 255, 0.7);
-  font-size: clamp(12px, 3.5vw, 18px);
+  font-size: clamp(11px, 3vw, 18px);
   line-height: 1.35;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   margin: 0;
   padding: 0 8px;
-
   overflow-wrap: anywhere;
   word-break: break-word;
   hyphens: auto;
@@ -156,12 +152,12 @@
 
 #preloader .tagline .hakan-hoca {
   color: #ff4757;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 #preloader .tagline .loading-text {
   color: rgba(255, 255, 255, 0.5);
-  font-size: clamp(11px, 3.0vw, 14px);
+  font-size: clamp(10px, 2.5vw, 14px);
   line-height: 1.3;
   margin-top: 0.5rem;
 }
@@ -197,10 +193,45 @@ body.preloader-active {
 .page-content.loaded {
   opacity: 1;
 }
+
+/* Mobile-specific overrides */
+@media (max-width: 480px) {
+  #preloader .tagline {
+    margin-top: 1.5rem;
+  }
+  
+  #preloader .tagline p {
+    font-size: clamp(10px, 3.2vw, 14px);
+    letter-spacing: 0.01em;
+  }
+  
+  #preloader .tagline .loading-text {
+    font-size: clamp(9px, 2.8vw, 12px);
+  }
+}
+
+@media (max-width: 350px) {
+  #preloader .logo-container {
+    padding: 0 8px;
+  }
+  
+  #preloader .tagline {
+    padding: 0 8px;
+    margin-top: 1rem;
+  }
+  
+  #preloader .tagline p {
+    font-size: 10px;
+  }
+  
+  #preloader .tagline .loading-text {
+    font-size: 9px;
+  }
+}
 </style>
 
 <script>
-(function() {
+(function () {
   document.body.classList.add('preloader-active');
 
   const logo = document.getElementById('logo');
@@ -225,18 +256,34 @@ body.preloader-active {
 
   const letters = [];
   const comLetters = [];
-  let fontSize;
+  let fontSize = 48;
 
-  // iOS/Android farklarını bypass: font-size'ı breakpoint ile değil,
-  // container'a SĞDIRARAK seçiyoruz (animasyonu bozmaz).
-  function getCharWidth(char) {
+  // Ekran genişliğine göre maksimum font size belirle
+  function getMaxFontSize() {
+    const w = window.innerWidth;
+    if (w <= 320) return 24;
+    if (w <= 375) return 28;
+    if (w <= 414) return 32;
+    if (w <= 480) return 38;
+    if (w <= 600) return 44;
+    if (w <= 768) return 54;
+    return 72;
+  }
+
+  // Ekran genişliğine göre minimum font size belirle
+  function getMinFontSize() {
+    const w = window.innerWidth;
+    if (w <= 320) return 14;
+    if (w <= 375) return 16;
+    if (w <= 480) return 18;
+    return 20;
+  }
+
+  function getCharWidth(char, size) {
     const test = document.createElement('span');
     test.style.cssText =
-      `font-size:${fontSize}px;` +
-      `font-weight:bold;` +
-      `font-family:system-ui,-apple-system,sans-serif;` +
-      `position:absolute;visibility:hidden;white-space:pre;` +
-      `letter-spacing:-0.025em;`;
+      `font-size:${size}px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;` +
+      `position:absolute;visibility:hidden;white-space:pre;letter-spacing:-0.025em;`;
     test.textContent = char === ' ' ? '\u00A0' : char;
     document.body.appendChild(test);
     const width = test.offsetWidth;
@@ -244,8 +291,8 @@ body.preloader-active {
     return width;
   }
 
-  function calculatePositions(text) {
-    const widths = [...text].map(c => getCharWidth(c));
+  function calculatePositions(text, size) {
+    const widths = [...text].map(c => getCharWidth(c, size));
     const totalWidth = widths.reduce((a, b) => a + b, 0);
     const positions = [];
     let x = -totalWidth / 2;
@@ -256,12 +303,19 @@ body.preloader-active {
     return { positions, totalWidth, widths };
   }
 
-  function fitFontSizeToWidth(text, maxWidth, min = 16, max = 72) {
-    let lo = min, hi = max, best = min;
+  // Binary search ile font size'ı container'a sığdır
+  function fitFontSizeToWidth(text, maxWidth) {
+    const minSize = getMinFontSize();
+    const maxSize = getMaxFontSize();
+    
+    let lo = minSize;
+    let hi = maxSize;
+    let best = minSize;
+
     while (lo <= hi) {
-      const mid = (lo + hi) >> 1;
-      fontSize = mid;
-      const { totalWidth } = calculatePositions(text);
+      const mid = Math.floor((lo + hi) / 2);
+      const { totalWidth } = calculatePositions(text, mid);
+      
       if (totalWidth <= maxWidth) {
         best = mid;
         lo = mid + 1;
@@ -269,10 +323,11 @@ body.preloader-active {
         hi = mid - 1;
       }
     }
+    
     return best;
   }
 
-  function clearLogoKeepCursor() {
+  function clearLogo() {
     const keepCursor = cursor && cursor.parentNode === logo ? cursor : null;
     logo.innerHTML = '';
     if (keepCursor) logo.appendChild(keepCursor);
@@ -281,27 +336,37 @@ body.preloader-active {
   }
 
   function init() {
-    clearLogoKeepCursor();
+    clearLogo();
 
-    // padding payı + küçük cihaz güvenliği
-    const safeWidth = Math.max(0, container.clientWidth - 32);
+    // Container genişliğini al, yoksa window genişliğini kullan
+    const containerWidth = container.clientWidth || window.innerWidth;
+    
+    // Mobilde daha fazla padding bırak
+    const paddingAmount = window.innerWidth <= 480 ? 48 : 32;
+    const safeWidth = Math.max(100, containerWidth - paddingAmount);
 
-    // Initial metni container'a sığdır (animasyon aynı kalır)
-    fontSize = fitFontSizeToWidth(initialText, safeWidth, 16, 72);
+    // Font size'ı hesapla
+    fontSize = fitFontSizeToWidth(initialText, safeWidth);
 
+    // Logo yüksekliğini ayarla
     logo.style.height = (fontSize * 1.4) + 'px';
     logo.style.fontSize = fontSize + 'px';
 
+    // Cursor boyutunu ayarla
     if (cursor) {
       cursor.style.height = (fontSize * 0.8) + 'px';
       cursor.style.width = Math.max(2, Math.floor(fontSize * 0.06)) + 'px';
     }
 
-    const { positions: initialPositions, totalWidth: initialWidthRaw } = calculatePositions(initialText);
-    const initialWidth = Math.min(initialWidthRaw, safeWidth);
+    const { positions: initialPositions, totalWidth } = calculatePositions(initialText, fontSize);
+    const displayWidth = Math.min(totalWidth, safeWidth);
 
-    if (loadingBar) loadingBar.style.width = initialWidth + 'px';
+    // Loading bar genişliğini ayarla
+    if (loadingBar) {
+      loadingBar.style.width = displayWidth + 'px';
+    }
 
+    // Harfleri oluştur
     [...initialText].forEach((char, i) => {
       const span = document.createElement('span');
       span.className = 'letter';
@@ -312,6 +377,7 @@ body.preloader-active {
       letters.push(span);
     });
 
+    // .com harflerini oluştur
     const comText = ".com";
     [...comText].forEach((char) => {
       const span = document.createElement('span');
@@ -322,9 +388,10 @@ body.preloader-active {
       comLetters.push(span);
     });
 
+    // Cursor pozisyonunu ayarla
     if (cursor) {
       cursor.style.right = 'auto';
-      cursor.style.left = `calc(50% + ${initialWidth / 2 + 8}px)`;
+      cursor.style.left = `calc(50% + ${displayWidth / 2 + 8}px)`;
     }
   }
 
@@ -337,9 +404,11 @@ body.preloader-active {
 
   function morph() {
     const finalText = "RisEnglish";
-    const safeWidth = Math.max(0, container.clientWidth - 32);
-
-    const { positions: finalPositions, totalWidth: finalWidthRaw } = calculatePositions(finalText);
+    const { positions: finalPositions, totalWidth: finalWidthRaw } = calculatePositions(finalText, fontSize);
+    
+    const containerWidth = container.clientWidth || window.innerWidth;
+    const paddingAmount = window.innerWidth <= 480 ? 48 : 32;
+    const safeWidth = Math.max(100, containerWidth - paddingAmount);
     const finalWidth = Math.min(finalWidthRaw, safeWidth);
 
     if (loadingBar) loadingBar.style.width = finalWidth + 'px';
@@ -361,17 +430,17 @@ body.preloader-active {
 
   function showCom() {
     const fullText = "RisEnglish.com";
-    const safeWidth = Math.max(0, container.clientWidth - 32);
-
-    const { positions, totalWidth: totalWidthRaw } = calculatePositions(fullText);
+    const { positions, totalWidth: totalWidthRaw } = calculatePositions(fullText, fontSize);
+    
+    const containerWidth = container.clientWidth || window.innerWidth;
+    const paddingAmount = window.innerWidth <= 480 ? 48 : 32;
+    const safeWidth = Math.max(100, containerWidth - paddingAmount);
     const totalWidth = Math.min(totalWidthRaw, safeWidth);
 
     let convergingIndex = 0;
     finalMapping.forEach(([initialIdx, finalPos]) => {
-      if (finalPos !== null) {
-        const letter = letters[initialIdx];
-        if (!letter) return;
-        letter.style.left = `calc(50% + ${positions[convergingIndex]}px)`;
+      if (finalPos !== null && letters[initialIdx]) {
+        letters[initialIdx].style.left = `calc(50% + ${positions[convergingIndex]}px)`;
         convergingIndex++;
       }
     });
@@ -419,6 +488,27 @@ body.preloader-active {
     }
   }
 
+  // Resize handler
+  let resizeTimer = null;
+  function onResize() {
+    if (!preloader || preloader.classList.contains('fade-out')) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const lettersWereVisible = letters.some(l => l.classList.contains('visible'));
+      const taglineShown = tagline && tagline.classList.contains('show');
+
+      init();
+
+      if (lettersWereVisible) {
+        letters.forEach(l => l.classList.add('visible'));
+      }
+      if (taglineShown && tagline) tagline.classList.add('show');
+    }, 100);
+  }
+
+  window.addEventListener('resize', onResize, { passive: true });
+  window.addEventListener('orientationchange', onResize, { passive: true });
+
   window.addEventListener('load', () => {
     pageLoaded = true;
     checkAndHide();
@@ -429,34 +519,16 @@ body.preloader-active {
     checkAndHide();
   }, 8000);
 
-  // iOS/Android: orientation/resize durumlarında layout'u tekrar sığdır.
-  // Animasyon akışına dokunmuyor; sadece init ile font-size/positions tekrar hesaplanıyor.
-  let resizeTimer = null;
-  function handleResize() {
-    if (!preloader || preloader.classList.contains('fade-out')) return;
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      init();
-
-      // Eğer harfler zaten görünür olduysa, görünürlüğü koru (animasyon "akışını" bozmaz).
-      // Not: Zamanlama değişmez; sadece mevcut durumda taşma engellenir.
-      letters.forEach(l => {
-        if (l.classList.contains('visible')) return;
-      });
-    }, 80);
-  }
-  window.addEventListener('resize', handleResize, { passive: true });
-  window.addEventListener('orientationchange', handleResize, { passive: true });
-
-  // START: animasyon zamanları aynı
+  // Başlat
   init();
-  setTimeout(() => showLetters(), 100);
-  setTimeout(() => morph(), 1400);
-  setTimeout(() => showCom(), 2200);
+  setTimeout(showLetters, 100);
+  setTimeout(morph, 1400);
+  setTimeout(showCom, 2200);
   setTimeout(() => { if (cursor) cursor.style.opacity = '0'; }, 3000);
+
   setTimeout(() => {
     if (tagline) tagline.classList.add('show');
-    setTimeout(() => animateProgress(), 300);
+    setTimeout(animateProgress, 300);
   }, 3300);
 
   setTimeout(() => {
