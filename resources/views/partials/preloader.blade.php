@@ -222,16 +222,32 @@ body.preloader-active {
   const comLetters = [];
   let fontSize = 48;
 
-  // Ekran genişliğine göre font size - BASİT VE NET
-  function getFontSize() {
-    const w = window.innerWidth;
-    if (w <= 320) return 24;
-    if (w <= 375) return 28;
-    if (w <= 414) return 32;
-    if (w <= 480) return 36;
-    if (w <= 600) return 42;
-    if (w <= 768) return 48;
-    return 72;
+  // Belirli font size ile metin genişliğini ölç
+  function measureTextWidth(text, size) {
+    const test = document.createElement('span');
+    test.style.cssText =
+      `font-size:${size}px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;` +
+      `position:absolute;visibility:hidden;white-space:pre;letter-spacing:-0.025em;`;
+    test.textContent = text.replace(/ /g, '\u00A0');
+    document.body.appendChild(test);
+    const width = test.offsetWidth;
+    document.body.removeChild(test);
+    return width;
+  }
+
+  // Ekrana sığacak font size'ı bul
+  function findFontSize() {
+    const maxWidth = window.innerWidth - 40; // 20px padding each side
+    const longestText = "Rise Your English"; // En uzun metin
+    
+    // 72'den başla, sığana kadar küçült
+    for (let size = 72; size >= 16; size -= 2) {
+      const width = measureTextWidth(longestText, size);
+      if (width <= maxWidth) {
+        return size;
+      }
+    }
+    return 16; // minimum
   }
 
   function getCharWidth(char) {
@@ -269,8 +285,8 @@ body.preloader-active {
   function init() {
     clearLogo();
 
-    // Font size'ı ekran genişliğine göre al
-    fontSize = getFontSize();
+    // Ekrana sığacak font size'ı bul
+    fontSize = findFontSize();
 
     logo.style.height = (fontSize * 1.4) + 'px';
     logo.style.fontSize = fontSize + 'px';
