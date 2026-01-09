@@ -115,144 +115,133 @@ class CategorySelectionScene extends Phaser.Scene {
         this.createBackButton();
     }
     
-createScrollableCategories(categories) {
-    const { width, height } = this.scale;
-    
-    const scrollAreaY = height * 0.25;
-    const scrollAreaHeight = height * 0.65;
-    const buttonHeight = 80;
-    const topPadding = 40; // ✅ Üstten boşluk
-    
-    // ✅ CONTAINER
-    this.categoryContainer = this.add.container(0, scrollAreaY);
-    
-    // ✅ KATEGORİLERİ EKLE
-    categories.forEach((category, index) => {
-        const y = topPadding + (index * buttonHeight); // ✅ topPadding ile başla
+    createScrollableCategories(categories) {
+        const { width, height } = this.scale;
         
-        const button = this.add.rectangle(width/2, y, 400, 70, parseInt(category.color.replace('#', '0x')))
-            .setStrokeStyle(3, 0xffffff)
-            .setInteractive({ useHandCursor: true });
+        const scrollAreaY = height * 0.25;
+        const scrollAreaHeight = height * 0.65;
+        const buttonHeight = 80;
+        const topPadding = 40;
         
-        const nameText = this.add.text(width/2 - 150, y, category.name, {
-            fontSize: '22px',
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
-        }).setOrigin(0, 0.5);
+        // Kutu boyutları
+        const boxWidth = 400;
+        const boxHeight = 70;
+        const textPadding = 20; // Kutu içi padding
+        const maxTextWidth = boxWidth - 120; // Set sayısı için yer bırak
         
-        const setCountText = this.add.text(width/2 + 150, y, `${category.total_sets} Set`, {
-            fontSize: '18px',
-            fill: '#ffffff',
-            fontFamily: 'Arial'
-        }).setOrigin(1, 0.5);
+        this.categoryContainer = this.add.container(0, scrollAreaY);
         
-        this.categoryContainer.add([button, nameText, setCountText]);
-        
-        button.on('pointerdown', () => {
-            this.scene.start('SetSelectionScene', { 
-                selectedLanguage: this.selectedLanguage,
-                category: category
-            });
-        });
-    });
-    
-    // ✅ MASK
-    const maskGraphics = this.make.graphics();
-    maskGraphics.fillStyle(0xffffff);
-    maskGraphics.fillRect(0, scrollAreaY, width, scrollAreaHeight);
-    const mask = maskGraphics.createGeometryMask();
-    this.categoryContainer.setMask(mask);
-    
-    // ✅ SCROLL HESAPLAMA
-    const totalHeight = topPadding + (categories.length * buttonHeight) + topPadding; // Alt boşluk da ekle
-    const maxScroll = Math.max(0, totalHeight - scrollAreaHeight);
-    
-    console.log('📊 Scroll Info:', {
-        containerY: scrollAreaY,
-        scrollAreaHeight,
-        totalHeight,
-        maxScroll,
-        topPadding,
-        firstButtonY: topPadding,
-        categories: categories.length
-    });
-    
-    // ⭐ Sadece scroll gerekiyorsa butonları göster
-    if (maxScroll > 0) {
-        const btnSize = 35;
-        const btnX = width - 50;
-        const btnCenterY = scrollAreaY + scrollAreaHeight / 2;
-        const btnSpacing = 100;
-        
-        // YUKARI BUTONU
-        const upBtn = this.add.circle(btnX, btnCenterY - btnSpacing, btnSize, 0x6366f1, 0.9)
-            .setStrokeStyle(3, 0xffffff)
-            .setInteractive({ useHandCursor: true })
-            .setDepth(2000);
-        
-        this.add.text(btnX, btnCenterY - btnSpacing, '▲', {
-            fontSize: '28px',
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(2000);
-        
-        // AŞAĞI BUTONU
-        const downBtn = this.add.circle(btnX, btnCenterY + btnSpacing, btnSize, 0x6366f1, 0.9)
-            .setStrokeStyle(3, 0xffffff)
-            .setInteractive({ useHandCursor: true })
-            .setDepth(2000);
-        
-        this.add.text(btnX, btnCenterY + btnSpacing, '▼', {
-            fontSize: '28px',
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(2000);
-        
-        // ✅ YUKARI TIKLA
-        upBtn.on('pointerdown', () => {
-            const currentOffset = this.categoryContainer.y - scrollAreaY;
-            const newOffset = Math.min(currentOffset + 120, 0);
-            const newY = scrollAreaY + newOffset;
+        categories.forEach((category, index) => {
+            const y = topPadding + (index * buttonHeight);
             
-            console.log('⬆️ Scroll Up:', { 
-                currentY: this.categoryContainer.y, 
-                currentOffset, 
-                newY 
-            });
+            const button = this.add.rectangle(width/2, y, boxWidth, boxHeight, parseInt(category.color.replace('#', '0x')))
+                .setStrokeStyle(3, 0xffffff)
+                .setInteractive({ useHandCursor: true });
             
-            this.tweens.add({
-                targets: this.categoryContainer,
-                y: newY,
-                duration: 300,
-                ease: 'Power2'
+            // ✅ Kategori adı - wordWrap ile taşmayı önle
+            const nameText = this.add.text(width/2 - (boxWidth/2) + textPadding, y, category.name, {
+                fontSize: '20px',
+                fill: '#ffffff',
+                fontFamily: 'Arial',
+                fontStyle: 'bold',
+                wordWrap: { width: maxTextWidth, useAdvancedWrap: true }
+            }).setOrigin(0, 0.5);
+            
+            // Eğer metin hala uzunsa, kısalt
+            if (nameText.width > maxTextWidth) {
+                let truncatedName = category.name;
+                while (nameText.width > maxTextWidth && truncatedName.length > 3) {
+                    truncatedName = truncatedName.slice(0, -1);
+                    nameText.setText(truncatedName + '...');
+                }
+            }
+            
+            const setCountText = this.add.text(width/2 + (boxWidth/2) - textPadding, y, `${category.total_sets} Set`, {
+                fontSize: '18px',
+                fill: '#ffffff',
+                fontFamily: 'Arial'
+            }).setOrigin(1, 0.5);
+            
+            this.categoryContainer.add([button, nameText, setCountText]);
+            
+            button.on('pointerdown', () => {
+                this.scene.start('SetSelectionScene', { 
+                    selectedLanguage: this.selectedLanguage,
+                    category: category
+                });
             });
         });
         
-        // ✅ AŞAĞI TIKLA
-        downBtn.on('pointerdown', () => {
-            const currentOffset = this.categoryContainer.y - scrollAreaY;
-            const newOffset = Math.max(currentOffset - 120, -maxScroll);
-            const newY = scrollAreaY + newOffset;
+        // MASK
+        const maskGraphics = this.make.graphics();
+        maskGraphics.fillStyle(0xffffff);
+        maskGraphics.fillRect(0, scrollAreaY, width, scrollAreaHeight);
+        const mask = maskGraphics.createGeometryMask();
+        this.categoryContainer.setMask(mask);
+        
+        // SCROLL HESAPLAMA
+        const totalHeight = topPadding + (categories.length * buttonHeight) + topPadding;
+        const maxScroll = Math.max(0, totalHeight - scrollAreaHeight);
+        
+        // Scroll butonları
+        if (maxScroll > 0) {
+            const btnSize = 35;
+            const btnX = width - 50;
+            const btnCenterY = scrollAreaY + scrollAreaHeight / 2;
+            const btnSpacing = 100;
             
-            console.log('⬇️ Scroll Down:', { 
-                currentY: this.categoryContainer.y, 
-                currentOffset, 
-                newY,
-                maxScroll
+            const upBtn = this.add.circle(btnX, btnCenterY - btnSpacing, btnSize, 0x6366f1, 0.9)
+                .setStrokeStyle(3, 0xffffff)
+                .setInteractive({ useHandCursor: true })
+                .setDepth(2000);
+            
+            this.add.text(btnX, btnCenterY - btnSpacing, '▲', {
+                fontSize: '28px',
+                fill: '#ffffff',
+                fontFamily: 'Arial',
+                fontStyle: 'bold'
+            }).setOrigin(0.5).setDepth(2000);
+            
+            const downBtn = this.add.circle(btnX, btnCenterY + btnSpacing, btnSize, 0x6366f1, 0.9)
+                .setStrokeStyle(3, 0xffffff)
+                .setInteractive({ useHandCursor: true })
+                .setDepth(2000);
+            
+            this.add.text(btnX, btnCenterY + btnSpacing, '▼', {
+                fontSize: '28px',
+                fill: '#ffffff',
+                fontFamily: 'Arial',
+                fontStyle: 'bold'
+            }).setOrigin(0.5).setDepth(2000);
+            
+            upBtn.on('pointerdown', () => {
+                const currentOffset = this.categoryContainer.y - scrollAreaY;
+                const newOffset = Math.min(currentOffset + 120, 0);
+                const newY = scrollAreaY + newOffset;
+                
+                this.tweens.add({
+                    targets: this.categoryContainer,
+                    y: newY,
+                    duration: 300,
+                    ease: 'Power2'
+                });
             });
             
-            this.tweens.add({
-                targets: this.categoryContainer,
-                y: newY,
-                duration: 300,
-                ease: 'Power2'
+            downBtn.on('pointerdown', () => {
+                const currentOffset = this.categoryContainer.y - scrollAreaY;
+                const newOffset = Math.max(currentOffset - 120, -maxScroll);
+                const newY = scrollAreaY + newOffset;
+                
+                this.tweens.add({
+                    targets: this.categoryContainer,
+                    y: newY,
+                    duration: 300,
+                    ease: 'Power2'
+                });
             });
-        });
+        }
     }
-}
+    
     createBackButton() {
         const backButton = this.add.text(50, 50, '← Geri', {
             fontSize: '24px',

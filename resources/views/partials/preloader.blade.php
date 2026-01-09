@@ -8,7 +8,7 @@
 
     <div class="tagline" id="tagline">
       <p>Bu bir <span class="hakan-hoca">Hakan Hoca</span> dil öğrenme platformudur</p>
-      <p class="loading-text">Yükleniyor...</p>
+      <p class="loading-text">Loading...</p>
 
       <div class="loading-bar" id="loadingBar">
         <div class="progress" id="progress"></div>
@@ -247,7 +247,7 @@ body.preloader-active {
         return size;
       }
     }
-    return 16; // minimum
+    return 4; // minimum
   }
 
   function getCharWidth(char) {
