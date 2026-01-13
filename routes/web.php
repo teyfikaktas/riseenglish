@@ -113,9 +113,11 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{wordSet}/kelime/{userWord}', [WordSetsController::class, 'deleteWord'])->name('delete-word');
     });
 });
+
 Route::get('/word-sets/{wordSet}/export-all', [WordSetsController::class, 'exportPdfAll'])->name('word-sets.export-all');
 Route::get('/word-sets/{wordSet}/export-turkish', [WordSetsController::class, 'exportPdfTurkish'])->name('word-sets.export-turkish');
 Route::get('/word-sets/{wordSet}/export-english', [WordSetsController::class, 'exportPdfEnglish'])->name('word-sets.export-english');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/categories/{lang}', function($lang) {
         $userId = auth()->id();
@@ -190,14 +192,13 @@ Route::get('/onay-bekleniyor', function() {
 Route::get('/standard-home', [App\Http\Controllers\HomeController::class, 'index'])
     ->middleware(['auth', 'verified.phone', 'teacher.approved'])
     ->name('standard.home');
+
 Route::middleware(['auth', 'role:ogretmen'])->group(function () {
     Route::get('/exams/daily-report', [ExamController::class, 'downloadDailyReport'])
         ->name('exams.daily-report');
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
     Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
-    
-    // SONRA WILDCARD ROUTE'LAR
     Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('exams.show');
     Route::get('/exams/{exam}/edit', [ExamController::class, 'edit'])->name('exams.edit');
     Route::put('/exams/{exam}', [ExamController::class, 'update'])->name('exams.update');
@@ -205,6 +206,7 @@ Route::middleware(['auth', 'role:ogretmen'])->group(function () {
     Route::post('/exams/{exam}/toggle-active', [ExamController::class, 'toggleActive'])->name('exams.toggle-active');
     Route::get('/exams/{exam}/report', [ExamController::class, 'downloadReport'])->name('exams.report');
 });
+
 Route::get('/kayit-ol', [CustomRegisterController::class, 'create'])->name('register');
 Route::post('/kayit-ol', [CustomRegisterController::class, 'store']);
 Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
@@ -217,15 +219,6 @@ Route::middleware(['auth', 'verified.phone', 'teacher.approved'])->group(functio
     Route::post('/kurs-kayit/{slug}', [FrontendCourseController::class, 'registerSubmit'])->name('course.register.submit');
     Route::get('/kurs-kayit-basarili', [FrontendCourseController::class, 'registerSuccess'])->name('course.register.success');
     Route::post('/egitimler/{id}/yorum', [FrontendCourseController::class, 'review'])->name('course.review');
-});
-
-Route::prefix('ogrenci')->name('ogrenci.')->group(function () {
-    Route::get('/test-categories', [TestCategoryController::class, 'index'])->name('test-categories.index');
-    Route::get('/test-categories/{category:slug}', [TestCategoryController::class, 'show'])->name('test-categories.show');
-    Route::get('/tests/{test:slug}', [TestController::class, 'show'])->name('tests.show');
-    Route::get('/test-taking/{test:slug}', [TestController::class, 'take'])->name('tests.take');
-    Route::get('/ogrenme-paneli', [App\Http\Controllers\Student\LearningPanelController::class, 'index'])->name('learning-panel.index');
-    Route::get('/ogrenme-paneli/sorular', [App\Http\Controllers\Student\LearningPanelController::class, 'questions'])->name('learning-panel.questions');
 });
 
 Route::middleware(['auth', 'verified.phone', 'teacher.approved'])->group(function () {
@@ -257,8 +250,7 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         
         Route::resource('users', \App\Http\Controllers\Admin\AdminUserController::class);
         Route::post('/users/{user}/approve', [\App\Http\Controllers\Admin\AdminUserController::class, 'approve'])->name('users.approve');
-        Route::post('/users/{user}/unapprove', [AdminUserController::class, 'unapprove'])
-    ->name('users.unapprove'); // <-- Bu noktalı virgül eksikti
+        Route::post('/users/{user}/unapprove', [\App\Http\Controllers\Admin\AdminUserController::class, 'unapprove'])->name('users.unapprove');
         Route::get('/users/{user}/manage-courses', [\App\Http\Controllers\Admin\AdminUserController::class, 'manageCourses'])->name('users.manageCourses');
         Route::post('/users/{user}/enroll-course', [\App\Http\Controllers\Admin\AdminUserController::class, 'enrollCourse'])->name('users.enrollCourse');
         Route::put('/users/{user}/courses/{course}', [\App\Http\Controllers\Admin\AdminUserController::class, 'updateCourseEnrollment'])->name('users.updateCourseEnrollment');
@@ -395,6 +387,12 @@ Route::middleware(['auth', 'role:ogretmen', 'verified.phone'])->group(function (
 
 Route::middleware(['auth', 'role:ogrenci|ogretmen', 'verified.phone', 'teacher.approved'])->group(function () {
     Route::prefix('ogrenci')->name('ogrenci.')->group(function () {
+        Route::get('/test-categories', [TestCategoryController::class, 'index'])->name('test-categories.index');
+        Route::get('/test-categories/{category:slug}', [TestCategoryController::class, 'show'])->name('test-categories.show');
+        Route::get('/tests/{test:slug}', [TestController::class, 'show'])->name('tests.show');
+        Route::get('/test-taking/{test:slug}', [TestController::class, 'take'])->name('tests.take');
+        Route::get('/ogrenme-paneli', [App\Http\Controllers\Student\LearningPanelController::class, 'index'])->name('learning-panel.index');
+        Route::get('/ogrenme-paneli/sorular', [App\Http\Controllers\Student\LearningPanelController::class, 'questions'])->name('learning-panel.questions');
         Route::get('/word-match-game', function () {
             return view('game');
         })->name('word-match-game');
