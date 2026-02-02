@@ -1700,31 +1700,169 @@
                 });
             }
 
-            // Global modal kapatma fonksiyonu - Düzeltilmiş
-            function closeModal() {
-                console.log('closeModal fonksiyonu çağrıldı');
-                const modal = document.getElementById('demoModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                    console.log('Modal kapatıldı');
+// closeModal fonksiyonunu güncelle
+function closeModal() {
+    console.log('closeModal fonksiyonu çağrıldı');
+    const modal = document.getElementById('demoModal');
+    if (modal) {
+        modal.style.display = 'none';
+        console.log('Modal kapatıldı');
 
-                    // Body scroll'unu geri getir
-                    document.body.style.overflow = '';
+        // Body scroll'unu geri getir
+        document.body.style.overflow = '';
 
-                    // Sadece giriş yapmayan kullanıcılar için şans çarkını göster
-                    // ve daha önce gösterilmediyse
-                    @if (!auth()->check())
-                        setTimeout(() => {
-                            if (!hasSeenFortuneWheel()) {
-                                showFortuneWheel();
-                                setFortuneWheelSeen();
-                            }
-                        }, 1500);
-                    @endif
-                } else {
-                    console.error('Modal elementi bulunamadı');
+        // BANNER'I GÖSTER - 1.5 saniye sonra
+        setTimeout(() => {
+            showProBanner();
+        }, 1500);
+
+        // Sadece giriş yapmayan kullanıcılar için şans çarkını göster
+        // Banner'dan sonra
+        @if (!auth()->check())
+            setTimeout(() => {
+                if (!hasSeenFortuneWheel()) {
+                    showFortuneWheel();
+                    setFortuneWheelSeen();
                 }
+            }, 8000); // Banner gösterildikten 6.5 saniye sonra (1.5 + 6.5 = 8)
+        @endif
+    }
+}
+
+function showProBanner() {
+    const bannerHTML = `
+    <div id="proBannerModal" class="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        style="background: rgba(0, 0, 0, 0.5);">
+        <div class="max-w-4xl w-full mx-4 relative">
+            <button id="closeProBanner" class="absolute -top-4 -right-4 w-12 h-12 bg-white hover:bg-gray-100 rounded-full transition-all duration-200 hover:rotate-90 z-20 shadow-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <div class="relative bg-gradient-to-r from-[#1a2e5a] via-[#2a4a7f] to-[#e63946] rounded-2xl overflow-hidden shadow-2xl p-8 md:p-12 animate-scale-in">
+                <!-- Decorative Background Elements -->
+                <div class="absolute inset-0 opacity-10">
+                    <div class="absolute top-8 left-8 w-20 h-20 bg-white rounded-full blur-sm"></div>
+                    <div class="absolute bottom-12 right-12 w-16 h-16 bg-white rounded-full blur-sm"></div>
+                    <div class="absolute top-1/2 left-1/4 w-12 h-12 bg-white rounded-full blur-sm"></div>
+                </div>
+
+                <!-- Content -->
+                <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <!-- Sol Taraf -->
+                    <div class="text-center md:text-left flex-1">
+                        <div class="text-white/80 text-sm md:text-base font-bold mb-2 tracking-widest">
+                            RISE ENGLISH
+                        </div>
+                        <div class="text-white text-5xl md:text-7xl font-black mb-4 drop-shadow-2xl leading-none" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.3);">
+                            PRO OL
+                        </div>
+                        <div class="flex items-baseline gap-3 justify-center md:justify-start flex-wrap">
+                            <div class="relative inline-block">
+                                <span class="text-white/60 text-2xl md:text-3xl font-bold">8000 TL</span>
+                                <!-- Eğik kırmızı çizgi -->
+                                <div class="absolute top-1/2 left-0 w-full h-1 bg-[#e63946] transform -rotate-12 origin-center" style="transform: translateY(-50%) rotate(-12deg);"></div>
+                            </div>
+                            <span class="text-[#1a2e5a] bg-white px-3 py-1 rounded-lg text-4xl md:text-5xl font-black drop-shadow-lg">4500 TL</span>
+                        </div>
+                    </div>
+
+                    <!-- Sağ Taraf -->
+                    <div class="text-center flex-shrink-0">
+                        <div class="relative inline-block">
+                            <!-- Daire Badge - Mavi Arka Plan -->
+                            <div class="relative">
+                                <div class="w-36 h-36 md:w-40 md:h-40 rounded-full border-4 border-white/40 flex items-center justify-center bg-gradient-to-br from-[#1a2e5a] to-[#2a4a7f] backdrop-blur-md shadow-2xl">
+                                    <div class="text-center">
+                                        <div class="text-white text-xs md:text-sm font-bold tracking-wide">SADECE</div>
+                                        <div class="text-white text-3xl md:text-4xl font-black my-1">4000 TL</div>
+                                        <div class="text-white/90 text-xs font-semibold">YILDA</div>
+                                    </div>
+                                </div>
+                                <!-- Pulse Effect -->
+                                <div class="absolute inset-0 rounded-full border-4 border-white/20 animate-ping"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <p class="text-white text-base md:text-lg font-bold drop-shadow-lg mb-2">
+                                Potansiyelini Ortaya Çıkart
+                            </p>
+                            <p class="text-white/80 text-xs md:text-sm font-medium">
+                                Hakan Hocamızdan Detaylı Bilgi Alabilirsiniz
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes scale-in {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
             }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .animate-scale-in {
+            animation: scale-in 0.5s ease-out;
+        }
+    </style>
+    `;
+
+    // Banner'ı body'e ekle
+    const bannerDiv = document.createElement('div');
+    bannerDiv.innerHTML = bannerHTML;
+    document.body.appendChild(bannerDiv);
+
+    // Kapama butonu event listener
+    const closeBannerBtn = document.getElementById('closeProBanner');
+    const bannerModal = document.getElementById('proBannerModal');
+    
+    if (closeBannerBtn && bannerModal) {
+        closeBannerBtn.addEventListener('click', function() {
+            bannerModal.style.opacity = '0';
+            bannerModal.style.transform = 'scale(0.9)';
+            bannerModal.style.transition = 'all 0.3s ease-out';
+            
+            setTimeout(() => {
+                bannerModal.remove();
+                
+                // Banner kapandıktan sonra şans çarkını göster (sadece giriş yapmayan kullanıcılar için)
+                @if (!auth()->check())
+                    setTimeout(() => {
+                        if (!hasSeenFortuneWheel()) {
+                            showFortuneWheel();
+                            setFortuneWheelSeen();
+                        }
+                    }, 500);
+                @endif
+            }, 300);
+        });
+
+        // Modal dışına tıklama ile kapatma
+        bannerModal.addEventListener('click', function(e) {
+            if (e.target === bannerModal) {
+                closeBannerBtn.click();
+            }
+        });
+
+        // ESC tuşu ile kapatma
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && bannerModal) {
+                closeBannerBtn.click();
+            }
+        });
+    }
+
+
+}
             // Şans çarkının daha önce görülüp görülmediğini kontrol et
             function hasSeenFortuneWheel() {
                 return localStorage.getItem('fortuneWheelSeen') === 'true';
