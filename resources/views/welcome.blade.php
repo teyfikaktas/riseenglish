@@ -1776,7 +1776,7 @@ function showProBanner() {
                                 <div class="w-36 h-36 md:w-40 md:h-40 rounded-full border-4 border-white/40 flex items-center justify-center bg-gradient-to-br from-[#1a2e5a] to-[#2a4a7f] backdrop-blur-md shadow-2xl">
                                     <div class="text-center">
                                         <div class="text-white text-xs md:text-sm font-bold tracking-wide">SADECE</div>
-                                        <div class="text-white text-3xl md:text-4xl font-black my-1">4000 TL</div>
+                                        <div class="text-white text-3xl md:text-4xl font-black my-1">4500 TL</div>
                                         <div class="text-white/90 text-xs font-semibold">YILDA</div>
                                     </div>
                                 </div>
