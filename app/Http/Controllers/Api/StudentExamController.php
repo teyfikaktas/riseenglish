@@ -18,7 +18,6 @@ public function index(Request $request)
 {
     $studentId = auth()->id();
     
-    // ✅ Önce tamamlanan sınav ID'lerini tek sorguda çek
     $completedExamIds = ExamResult::where('student_id', $studentId)
         ->whereNotNull('completed_at')
         ->pluck('exam_id')
@@ -28,15 +27,30 @@ public function index(Request $request)
             $query->where('users.id', $studentId);
         })
         ->where(function($query) {
-            $query->where('is_active', true) // ✅ Aktif olanlar
-                  ->orWhere('start_time', '>=', now()->subDays(3)); // ✅ veya son 3 gün
+            $query->where('is_active', true)
+                  ->orWhere('start_time', '>=', now()->subDays(3));
         })
         ->with(['teacher:id,name', 'wordSets:id,name'])
         ->withCount('wordSets')
         ->select('id', 'teacher_id', 'name', 'description', 'start_time', 'time_per_question', 'is_active')
-        ->orderBy('is_active', 'desc')
-        ->orderBy('start_time', 'desc')
         ->get()
+        ->sortByDesc(function($exam) use ($completedExamIds) {
+            // ✅ Tamamlanmamış aktif sınavlar en üstte
+            $isCompleted = in_array($exam->id, $completedExamIds);
+            $isActive = $exam->is_active;
+            
+            // Puanlama sistemi:
+            // 3 = Aktif + Tamamlanmamış (EN ÜST)
+            // 2 = Aktif + Tamamlanmış
+            // 1 = Pasif + Tamamlanmamış
+            // 0 = Pasif + Tamamlanmış
+            
+            if ($isActive && !$isCompleted) return 3;
+            if ($isActive && $isCompleted) return 2;
+            if (!$isActive && !$isCompleted) return 1;
+            return 0;
+        })
+        ->values()
         ->map(function($exam) use ($completedExamIds) {
             return [
                 'id' => $exam->id,
@@ -60,7 +74,6 @@ public function index(Request $request)
         'data' => $exams
     ]);
 }
-    
     /**
      * ✅ Sınava giriş kontrolü ve log kaydetme
      */
