@@ -73,7 +73,7 @@ public function index(Request $request)
         'success' => true,
         'data' => $exams
     ]);
-}
+
     /**
      * ✅ Sınava giriş kontrolü ve log kaydetme
      */
