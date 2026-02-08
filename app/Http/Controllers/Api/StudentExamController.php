@@ -18,7 +18,6 @@ public function index(Request $request)
 {
     $studentId = auth()->id();
     
-    // ✅ Önce tamamlanan sınav ID'lerini tek sorguda çek
     $completedExamIds = ExamResult::where('student_id', $studentId)
         ->whereNotNull('completed_at')
         ->pluck('exam_id')
@@ -27,14 +26,11 @@ public function index(Request $request)
     $exams = Exam::whereHas('students', function($query) use ($studentId) {
             $query->where('users.id', $studentId);
         })
-        ->where(function($query) {
-            $query->where('is_active', true) // ✅ Aktif olanlar
-                  ->orWhere('start_time', '>=', now()->subDays(3)); // ✅ veya son 3 gün
-        })
+        ->where('is_active', true)
+        ->whereDate('start_time', today())
         ->with(['teacher:id,name', 'wordSets:id,name'])
         ->withCount('wordSets')
         ->select('id', 'teacher_id', 'name', 'description', 'start_time', 'time_per_question', 'is_active')
-        ->orderBy('is_active', 'desc')
         ->orderBy('start_time', 'desc')
         ->get()
         ->map(function($exam) use ($completedExamIds) {
