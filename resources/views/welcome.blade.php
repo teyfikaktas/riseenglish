@@ -1732,109 +1732,147 @@ function closeModal() {
 function showProBanner() {
     const bannerHTML = `
     <div id="proBannerModal" class="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        style="background: rgba(0, 0, 0, 0.5);">
-        <div class="max-w-4xl w-full mx-4 relative">
+        style="background:rgba(0,0,0,0.6);opacity:0;transition:opacity 0.35s ease;">
+        <div id="proBannerInner" style="max-width:860px;width:100%;margin:0 16px;position:relative;transform:scale(0.85) translateY(30px);opacity:0;transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1),opacity 0.35s ease;">
+
             <button id="closeProBanner" class="absolute -top-4 -right-4 w-12 h-12 bg-white hover:bg-gray-100 rounded-full transition-all duration-200 hover:rotate-90 z-20 shadow-lg flex items-center justify-center">
                 <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
 
-            <div class="relative bg-gradient-to-r from-[#1a2e5a] via-[#2a4a7f] to-[#e63946] rounded-2xl overflow-hidden shadow-2xl p-8 md:p-12 animate-scale-in">
-                <!-- Decorative Background Elements -->
-                <div class="absolute inset-0 opacity-10">
-                    <div class="absolute top-8 left-8 w-20 h-20 bg-white rounded-full blur-sm"></div>
-                    <div class="absolute bottom-12 right-12 w-16 h-16 bg-white rounded-full blur-sm"></div>
-                    <div class="absolute top-1/2 left-1/4 w-12 h-12 bg-white rounded-full blur-sm"></div>
+            <div style="border-radius:20px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4);">
+
+                <!-- BASLIK -->
+                <div style="background:linear-gradient(135deg,#1a2e5a 0%,#2a4a7f 60%,#1a2e5a 100%);padding:22px 32px;text-align:center;position:relative;overflow:hidden;">
+                    <div style="position:absolute;top:-20px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,0.05);border-radius:50%;"></div>
+                    <div style="position:absolute;bottom:-30px;right:40px;width:100px;height:100px;background:rgba(255,255,255,0.05);border-radius:50%;"></div>
+                    <div style="color:rgba(255,255,255,0.55);font-size:0.68rem;font-weight:800;letter-spacing:4px;font-family:sans-serif;position:relative;z-index:1;margin-bottom:5px;">RISE ENGLISH</div>
+                    <h2 style="color:white;font-size:1.25rem;font-weight:900;margin:0;font-family:sans-serif;position:relative;z-index:1;letter-spacing:0.3px;">Abonelik Paketleri</h2>
                 </div>
 
-                <!-- Content -->
-                <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                    <!-- Sol Taraf -->
-                    <div class="text-center md:text-left flex-1">
-                        <div class="text-white/80 text-sm md:text-base font-bold mb-2 tracking-widest">
-                            RISE ENGLISH
-                        </div>
-                        <div class="text-white text-5xl md:text-7xl font-black mb-4 drop-shadow-2xl leading-none" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.3);">
-                            PRO OL
-                        </div>
-                        <div class="flex items-baseline gap-3 justify-center md:justify-start flex-wrap">
-                            <div class="relative inline-block">
-                                <span class="text-white/60 text-2xl md:text-3xl font-bold">8000 TL</span>
-                                <!-- Eğik kırmızı çizgi -->
-                                <div class="absolute top-1/2 left-0 w-full h-1 bg-[#e63946] transform -rotate-12 origin-center" style="transform: translateY(-50%) rotate(-12deg);"></div>
-                            </div>
-                            <span class="text-[#1a2e5a] bg-white px-3 py-1 rounded-lg text-4xl md:text-5xl font-black drop-shadow-lg">4500 TL</span>
-                        </div>
-                    </div>
-
-                    <!-- Sağ Taraf -->
-                    <div class="text-center flex-shrink-0">
-                        <div class="relative inline-block">
-                            <!-- Daire Badge - Mavi Arka Plan -->
-                            <div class="relative">
-                                <div class="w-36 h-36 md:w-40 md:h-40 rounded-full border-4 border-white/40 flex items-center justify-center bg-gradient-to-br from-[#1a2e5a] to-[#2a4a7f] backdrop-blur-md shadow-2xl">
-                                    <div class="text-center">
-                                        <div class="text-white text-xs md:text-sm font-bold tracking-wide">SADECE</div>
-                                        <div class="text-white text-3xl md:text-4xl font-black my-1">4500 TL</div>
-                                        <div class="text-white/90 text-xs font-semibold">YILDA</div>
-                                    </div>
-                                </div>
-                                <!-- Pulse Effect -->
-                                <div class="absolute inset-0 rounded-full border-4 border-white/20 animate-ping"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6">
-                            <p class="text-white text-base md:text-lg font-bold drop-shadow-lg mb-2">
-                                Potansiyelini Ortaya Çıkart
-                            </p>
-                            <p class="text-white/80 text-xs md:text-sm font-medium">
-                                Hakan Hocamızdan Detaylı Bilgi Alabilirsiniz
-                            </p>
-                        </div>
-                    </div>
+                <!-- TABLO -->
+                <div style="overflow-x:auto;background:white;">
+                    <table style="width:100%;border-collapse:collapse;font-family:sans-serif;">
+                        <thead>
+                            <tr>
+                                <th style="background:#f1f5f9;color:#64748b;padding:16px 20px;text-align:left;font-size:0.85rem;font-weight:700;width:190px;">&#214;zellikler</th>
+                                <th style="background:#1a2e5a;color:white;padding:16px 14px;text-align:center;font-weight:800;font-size:1.05rem;">Lite</th>
+                                <th style="background:#f97316;color:white;padding:16px 14px;text-align:center;font-weight:800;font-size:1.05rem;">Basic</th>
+                                <th style="background:#e63946;color:white;padding:16px 14px;text-align:center;font-weight:800;font-size:1.05rem;position:relative;">
+                                    <span style="position:absolute;top:0;right:0;background:#9b1c2a;color:white;font-size:0.58rem;font-weight:800;padding:3px 9px;border-radius:0 0 0 10px;letter-spacing:0.5px;">En Avantajl&#305;</span>
+                                    Premium
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Eri&#351;im S&#252;resi</td>
+                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;font-weight:700;color:#1a2e5a;">3 Ay</td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;font-weight:700;color:#374151;">12 Ay</td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;font-weight:700;color:#374151;">12 Ay</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Quiz &amp; Kaynaklar</td>
+                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Set Olu&#351;turma</td>
+                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;font-weight:600;color:#1a2e5a;font-size:0.85rem;">Maks 7 Set</td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;font-weight:700;color:#f97316;font-size:0.85rem;">Maks 12 Set</td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;font-weight:900;color:#e63946;">S&#305;n&#305;rs&#305;z Set</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Kelime Blast</td>
+                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Çevrimdışı Çalışma</td>
+                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">K&#252;t&#252;phane</td>
+                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span><div style="font-size:0.68rem;color:#15803d;font-weight:700;margin-top:2px;">6 Ay Eri&#351;im</div></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span><div style="font-size:0.68rem;color:#15803d;font-weight:700;margin-top:2px;">12 Ay Tam Eri&#351;im</div></td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Raporlama</td>
+                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                            </tr>
+                            <tr style="border-bottom:2px solid #e2e8f0;">
+                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Ses Kayd&#305; Takibi</td>
+                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
+                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                            </tr>
+                            <!-- FİYAT -->
+                            <tr>
+                                <td style="padding:18px 20px;font-weight:800;color:#1e293b;background:#f8fafc;">Fiyat</td>
+                                <td style="padding:18px 14px;text-align:center;background:#1a2e5a;">
+                                    <div style="position:relative;display:inline-block;margin-bottom:6px;"><span style="color:rgba(255,255,255,0.45);font-size:0.88rem;font-weight:700;">5.000 TL</span><div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#e63946;transform:rotate(-8deg) translateY(-50%);"></div></div>
+                                    <div style="color:white;font-size:1.9rem;font-weight:900;line-height:1;">3.000 TL</div>
+                                </td>
+                                <td style="padding:18px 14px;text-align:center;background:#f97316;">
+                                    <div style="position:relative;display:inline-block;margin-bottom:6px;"><span style="color:rgba(255,255,255,0.45);font-size:0.88rem;font-weight:700;">10.000 TL</span><div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#7c3500;transform:rotate(-8deg) translateY(-50%);"></div></div>
+                                    <div style="color:white;font-size:1.9rem;font-weight:900;line-height:1;">5.000 TL</div>
+                                    <div style="color:rgba(255,255,255,0.7);font-size:0.7rem;font-weight:700;margin-top:4px;">2 Taksit</div>
+                                </td>
+                                <td style="padding:18px 14px;text-align:center;background:#e63946;">
+                                    <div style="position:relative;display:inline-block;margin-bottom:6px;"><span style="color:rgba(255,255,255,0.45);font-size:0.88rem;font-weight:700;">15.000 TL</span><div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#7c1d1d;transform:rotate(-8deg) translateY(-50%);"></div></div>
+                                    <div style="color:white;font-size:1.9rem;font-weight:900;line-height:1;">7.500 TL</div>
+                                    <div style="color:rgba(255,255,255,0.7);font-size:0.7rem;font-weight:700;margin-top:4px;">3 Taksit</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- ALT -->
+                <div style="background:#0f1e3d;padding:14px 32px;text-align:center;">
+                    <p style="color:rgba(255,255,255,0.6);font-size:0.82rem;font-weight:600;margin:0;font-family:sans-serif;">
+                        Detayl&#305; bilgi i&#231;in <span style="color:white;font-weight:800;">Hakan Hocam&#305;zla</span> ileti&#351;ime ge&#231;ebilirsiniz &#128522;
+                    </p>
+                </div>
+
             </div>
         </div>
     </div>
-
-    <style>
-        @keyframes scale-in {
-            0% {
-                transform: scale(0.8);
-                opacity: 0;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-        .animate-scale-in {
-            animation: scale-in 0.5s ease-out;
-        }
-    </style>
     `;
 
-    // Banner'ı body'e ekle
     const bannerDiv = document.createElement('div');
     bannerDiv.innerHTML = bannerHTML;
     document.body.appendChild(bannerDiv);
 
-    // Kapama butonu event listener
-    const closeBannerBtn = document.getElementById('closeProBanner');
     const bannerModal = document.getElementById('proBannerModal');
-    
+    const bannerInner = document.getElementById('proBannerInner');
+    const closeBannerBtn = document.getElementById('closeProBanner');
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            bannerModal.style.opacity = '1';
+            bannerInner.style.opacity = '1';
+            bannerInner.style.transform = 'scale(1) translateY(0)';
+        });
+    });
+
     if (closeBannerBtn && bannerModal) {
         closeBannerBtn.addEventListener('click', function() {
             bannerModal.style.opacity = '0';
-            bannerModal.style.transform = 'scale(0.9)';
-            bannerModal.style.transition = 'all 0.3s ease-out';
-            
+            bannerInner.style.transform = 'scale(0.9) translateY(20px)';
+            bannerInner.style.opacity = '0';
+
             setTimeout(() => {
                 bannerModal.remove();
-                
-                // Banner kapandıktan sonra şans çarkını göster (sadece giriş yapmayan kullanıcılar için)
+
                 @if (!auth()->check())
                     setTimeout(() => {
                         if (!hasSeenFortuneWheel()) {
@@ -1843,27 +1881,18 @@ function showProBanner() {
                         }
                     }, 500);
                 @endif
-            }, 300);
+            }, 350);
         });
 
-        // Modal dışına tıklama ile kapatma
         bannerModal.addEventListener('click', function(e) {
-            if (e.target === bannerModal) {
-                closeBannerBtn.click();
-            }
+            if (e.target === bannerModal) closeBannerBtn.click();
         });
 
-        // ESC tuşu ile kapatma
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && bannerModal) {
-                closeBannerBtn.click();
-            }
+            if (e.key === 'Escape' && bannerModal) closeBannerBtn.click();
         });
     }
-
-
-}
-            // Şans çarkının daha önce görülüp görülmediğini kontrol et
+}         // Şans çarkının daha önce görülüp görülmediğini kontrol et
             function hasSeenFortuneWheel() {
                 return localStorage.getItem('fortuneWheelSeen') === 'true';
             }
