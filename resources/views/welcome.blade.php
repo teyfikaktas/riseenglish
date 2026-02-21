@@ -1731,9 +1731,158 @@ function closeModal() {
 
 function showProBanner() {
     const bannerHTML = `
+    <style>
+        #proBannerModal * { box-sizing: border-box; }
+
+        #proBannerInner {
+            max-width: 860px;
+            width: 100%;
+            margin: 0 12px;
+            position: relative;
+            transform: scale(0.85) translateY(30px);
+            opacity: 0;
+            transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease;
+        }
+
+        .pro-banner-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            background: white;
+        }
+
+        .pro-banner-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: sans-serif;
+            table-layout: fixed;
+        }
+
+        .pro-banner-table thead th {
+            padding: 16px 14px;
+            font-size: 1.05rem;
+        }
+
+        .pro-banner-table tbody td {
+            padding: 13px 14px;
+            font-size: 0.88rem;
+        }
+
+        .pro-banner-table .col-label {
+            padding: 13px 20px;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.88rem;
+            width: 28%;
+        }
+
+        .pro-banner-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-weight: 900;
+        }
+
+        .pro-banner-price-amount {
+            color: white;
+            font-size: 1.9rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .pro-banner-price-original {
+            color: rgba(255,255,255,0.45);
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .pro-banner-price-installment {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .pro-banner-lib-note {
+            font-size: 0.68rem;
+            color: #15803d;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .pro-banner-most-popular {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #9b1c2a;
+            color: white;
+            font-size: 0.58rem;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 0 0 0 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .pro-banner-header-title {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 900;
+            margin: 0;
+            font-family: sans-serif;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.3px;
+        }
+
+        .pro-banner-header-sub {
+            color: rgba(255,255,255,0.55);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            font-family: sans-serif;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 5px;
+        }
+
+        /* ── MOBILE ── */
+        @media (max-width: 600px) {
+            #proBannerInner { margin: 0 4px; }
+
+            #closeProBanner {
+                width: 28px !important;
+                height: 28px !important;
+                top: -8px !important;
+                right: -8px !important;
+            }
+            #closeProBanner svg { width: 14px !important; height: 14px !important; }
+
+            .pro-banner-header-title  { font-size: 0.8rem; }
+            .pro-banner-header-sub    { font-size: 0.48rem; letter-spacing: 1.5px; }
+
+            .pro-banner-table thead th   { padding: 7px 3px; font-size: 0.62rem; }
+            .pro-banner-table .col-label { padding: 6px 4px; font-size: 0.58rem; width: 26%; }
+            .pro-banner-table tbody td   { padding: 6px 3px; font-size: 0.58rem; }
+
+            .pro-banner-badge { width: 18px; height: 18px; font-size: 0.58rem; }
+
+            .pro-banner-most-popular   { font-size: 0.4rem; padding: 2px 3px; }
+            .pro-banner-lib-note       { font-size: 0.46rem; }
+
+            .pro-banner-price-amount      { font-size: 0.9rem; }
+            .pro-banner-price-original    { font-size: 0.52rem; }
+            .pro-banner-price-installment { font-size: 0.46rem; }
+
+            .pro-banner-footer { padding: 8px 12px !important; }
+            .pro-banner-footer p { font-size: 0.58rem !important; }
+        }
+    </style>
+
     <div id="proBannerModal" class="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         style="background:rgba(0,0,0,0.6);opacity:0;transition:opacity 0.35s ease;">
-        <div id="proBannerInner" style="max-width:860px;width:100%;margin:0 16px;position:relative;transform:scale(0.85) translateY(30px);opacity:0;transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1),opacity 0.35s ease;">
+        <div id="proBannerInner">
 
             <button id="closeProBanner" class="absolute -top-4 -right-4 w-12 h-12 bg-white hover:bg-gray-100 rounded-full transition-all duration-200 hover:rotate-90 z-20 shadow-lg flex items-center justify-center">
                 <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1743,93 +1892,102 @@ function showProBanner() {
 
             <div style="border-radius:20px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4);">
 
-                <!-- BASLIK -->
-                <div style="background:linear-gradient(135deg,#1a2e5a 0%,#2a4a7f 60%,#1a2e5a 100%);padding:22px 32px;text-align:center;position:relative;overflow:hidden;">
+                <!-- BAŞLIK -->
+                <div style="background:linear-gradient(135deg,#1a2e5a 0%,#2a4a7f 60%,#1a2e5a 100%);padding:18px 24px;text-align:center;position:relative;overflow:hidden;">
                     <div style="position:absolute;top:-20px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,0.05);border-radius:50%;"></div>
                     <div style="position:absolute;bottom:-30px;right:40px;width:100px;height:100px;background:rgba(255,255,255,0.05);border-radius:50%;"></div>
-                    <div style="color:rgba(255,255,255,0.55);font-size:0.68rem;font-weight:800;letter-spacing:4px;font-family:sans-serif;position:relative;z-index:1;margin-bottom:5px;">RISE ENGLISH</div>
-                    <h2 style="color:white;font-size:1.25rem;font-weight:900;margin:0;font-family:sans-serif;position:relative;z-index:1;letter-spacing:0.3px;">Abonelik Paketleri</h2>
+                    <div class="pro-banner-header-sub">RISE ENGLISH</div>
+                    <h2 class="pro-banner-header-title">Abonelik Paketleri</h2>
                 </div>
 
                 <!-- TABLO -->
-                <div style="overflow-x:auto;background:white;">
-                    <table style="width:100%;border-collapse:collapse;font-family:sans-serif;">
+                <div class="pro-banner-table-wrap">
+                    <table class="pro-banner-table">
                         <thead>
                             <tr>
-                                <th style="background:#f1f5f9;color:#64748b;padding:16px 20px;text-align:left;font-size:0.85rem;font-weight:700;width:190px;">&#214;zellikler</th>
-                                <th style="background:#1a2e5a;color:white;padding:16px 14px;text-align:center;font-weight:800;font-size:1.05rem;">Lite</th>
-                                <th style="background:#f97316;color:white;padding:16px 14px;text-align:center;font-weight:800;font-size:1.05rem;">Basic</th>
-                                <th style="background:#e63946;color:white;padding:16px 14px;text-align:center;font-weight:800;font-size:1.05rem;position:relative;">
-                                    <span style="position:absolute;top:0;right:0;background:#9b1c2a;color:white;font-size:0.58rem;font-weight:800;padding:3px 9px;border-radius:0 0 0 10px;letter-spacing:0.5px;">En Avantajl&#305;</span>
+                                <th style="background:#f1f5f9;color:#64748b;text-align:left;font-weight:700;">Özellikler</th>
+                                <th style="background:#1a2e5a;color:white;text-align:center;font-weight:800;">Lite</th>
+                                <th style="background:#f97316;color:white;text-align:center;font-weight:800;">Basic</th>
+                                <th style="background:#e63946;color:white;text-align:center;font-weight:800;position:relative;">
+                                    <span class="pro-banner-most-popular">En Avantajlı</span>
                                     Premium
                                 </th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr style="border-bottom:1px solid #f1f5f9;">
-                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Eri&#351;im S&#252;resi</td>
-                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;font-weight:700;color:#1a2e5a;">3 Ay</td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;font-weight:700;color:#374151;">12 Ay</td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;font-weight:700;color:#374151;">12 Ay</td>
+                                <td class="col-label">Erişim Süresi</td>
+                                <td style="text-align:center;background:#eef1f8;font-weight:700;color:#1a2e5a;">3 Ay</td>
+                                <td style="text-align:center;background:#fff8f3;font-weight:700;color:#374151;">12 Ay</td>
+                                <td style="text-align:center;background:#fff5f5;font-weight:700;color:#374151;">12 Ay</td>
                             </tr>
                             <tr style="border-bottom:1px solid #f1f5f9;">
-                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Quiz &amp; Kaynaklar</td>
-                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                                <td class="col-label">Quiz &amp; Kaynaklar</td>
+                                <td style="text-align:center;background:#eef1f8;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span></td>
+                                <td style="text-align:center;background:#fff8f3;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span></td>
+                                <td style="text-align:center;background:#fff5f5;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span></td>
                             </tr>
                             <tr style="border-bottom:1px solid #f1f5f9;">
-                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Set Olu&#351;turma</td>
-                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;font-weight:600;color:#1a2e5a;font-size:0.85rem;">Maks 7 Set</td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;font-weight:700;color:#f97316;font-size:0.85rem;">Maks 12 Set</td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;font-weight:900;color:#e63946;">S&#305;n&#305;rs&#305;z Set</td>
+                                <td class="col-label">Set Oluşturma</td>
+                                <td style="text-align:center;background:#eef1f8;font-weight:600;color:#1a2e5a;">Maks 7 Set</td>
+                                <td style="text-align:center;background:#fff8f3;font-weight:700;color:#f97316;">Maks 12 Set</td>
+                                <td style="text-align:center;background:#fff5f5;font-weight:900;color:#e63946;">Sınırsız Set</td>
                             </tr>
                             <tr style="border-bottom:1px solid #f1f5f9;">
-                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Kelime Blast</td>
-                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                                <td class="col-label">Kelime Blast</td>
+                                <td style="text-align:center;background:#eef1f8;"><span class="pro-banner-badge" style="background:#fee2e2;color:#dc2626;">&#10005;</span></td>
+                                <td style="text-align:center;background:#fff8f3;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span></td>
+                                <td style="text-align:center;background:#fff5f5;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span></td>
                             </tr>
                             <tr style="border-bottom:1px solid #f1f5f9;">
-                            <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Çevrimdışı Çalışma</td>
-                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                                <td class="col-label">Çevrimdışı Çalışma</td>
+                                <td style="text-align:center;background:#eef1f8;"><span class="pro-banner-badge" style="background:#fee2e2;color:#dc2626;">&#10005;</span></td>
+                                <td style="text-align:center;background:#fff8f3;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span></td>
+                                <td style="text-align:center;background:#fff5f5;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span></td>
                             </tr>
                             <tr style="border-bottom:1px solid #f1f5f9;">
-                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">K&#252;t&#252;phane</td>
-                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span><div style="font-size:0.68rem;color:#15803d;font-weight:700;margin-top:2px;">6 Ay Eri&#351;im</div></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span><div style="font-size:0.68rem;color:#15803d;font-weight:700;margin-top:2px;">12 Ay Tam Eri&#351;im</div></td>
+                                <td class="col-label">Kütüphane</td>
+                                <td style="text-align:center;background:#eef1f8;"><span class="pro-banner-badge" style="background:#fee2e2;color:#dc2626;">&#10005;</span></td>
+                                <td style="text-align:center;background:#fff8f3;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span><div class="pro-banner-lib-note">6 Ay Erişim</div></td>
+                                <td style="text-align:center;background:#fff5f5;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span><div class="pro-banner-lib-note">12 Ay Tam Erişim</div></td>
                             </tr>
                             <tr style="border-bottom:1px solid #f1f5f9;">
-                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Raporlama</td>
-                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                                <td class="col-label">Raporlama</td>
+                                <td style="text-align:center;background:#eef1f8;"><span class="pro-banner-badge" style="background:#fee2e2;color:#dc2626;">&#10005;</span></td>
+                                <td style="text-align:center;background:#fff8f3;"><span class="pro-banner-badge" style="background:#fee2e2;color:#dc2626;">&#10005;</span></td>
+                                <td style="text-align:center;background:#fff5f5;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span></td>
                             </tr>
                             <tr style="border-bottom:2px solid #e2e8f0;">
-                                <td style="padding:13px 20px;font-weight:700;color:#1e293b;font-size:0.88rem;">Ses Kayd&#305; Takibi</td>
-                                <td style="padding:13px 14px;text-align:center;background:#eef1f8;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff8f3;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#dc2626;font-weight:900;">&#10005;</span></td>
-                                <td style="padding:13px 14px;text-align:center;background:#fff5f5;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900;">&#10003;</span></td>
+                                <td class="col-label">Ses Kaydı Takibi</td>
+                                <td style="text-align:center;background:#eef1f8;"><span class="pro-banner-badge" style="background:#fee2e2;color:#dc2626;">&#10005;</span></td>
+                                <td style="text-align:center;background:#fff8f3;"><span class="pro-banner-badge" style="background:#fee2e2;color:#dc2626;">&#10005;</span></td>
+                                <td style="text-align:center;background:#fff5f5;"><span class="pro-banner-badge" style="background:#dcfce7;color:#16a34a;">&#10003;</span></td>
                             </tr>
                             <!-- FİYAT -->
                             <tr>
-                                <td style="padding:18px 20px;font-weight:800;color:#1e293b;background:#f8fafc;">Fiyat</td>
-                                <td style="padding:18px 14px;text-align:center;background:#1a2e5a;">
-                                    <div style="position:relative;display:inline-block;margin-bottom:6px;"><span style="color:rgba(255,255,255,0.45);font-size:0.88rem;font-weight:700;">5.000 TL</span><div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#e63946;transform:rotate(-8deg) translateY(-50%);"></div></div>
-                                    <div style="color:white;font-size:1.9rem;font-weight:900;line-height:1;">3.000 TL</div>
+                                <td class="col-label" style="background:#f8fafc;font-weight:800;">Fiyat</td>
+                                <td style="text-align:center;background:#1a2e5a;padding:18px 14px;">
+                                    <div style="position:relative;display:inline-block;margin-bottom:4px;">
+                                        <span class="pro-banner-price-original">5.000 TL</span>
+                                        <div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#e63946;transform:rotate(-8deg) translateY(-50%);"></div>
+                                    </div>
+                                    <div class="pro-banner-price-amount">3.000 TL</div>
                                 </td>
-                                <td style="padding:18px 14px;text-align:center;background:#f97316;">
-                                    <div style="position:relative;display:inline-block;margin-bottom:6px;"><span style="color:rgba(255,255,255,0.45);font-size:0.88rem;font-weight:700;">10.000 TL</span><div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#7c3500;transform:rotate(-8deg) translateY(-50%);"></div></div>
-                                    <div style="color:white;font-size:1.9rem;font-weight:900;line-height:1;">5.000 TL</div>
-                                    <div style="color:rgba(255,255,255,0.7);font-size:0.7rem;font-weight:700;margin-top:4px;">2 Taksit</div>
+                                <td style="text-align:center;background:#f97316;padding:18px 14px;">
+                                    <div style="position:relative;display:inline-block;margin-bottom:4px;">
+                                        <span class="pro-banner-price-original">10.000 TL</span>
+                                        <div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#7c3500;transform:rotate(-8deg) translateY(-50%);"></div>
+                                    </div>
+                                    <div class="pro-banner-price-amount">5.000 TL</div>
+                                    <div class="pro-banner-price-installment">2 Taksit</div>
                                 </td>
-                                <td style="padding:18px 14px;text-align:center;background:#e63946;">
-                                    <div style="position:relative;display:inline-block;margin-bottom:6px;"><span style="color:rgba(255,255,255,0.45);font-size:0.88rem;font-weight:700;">15.000 TL</span><div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#7c1d1d;transform:rotate(-8deg) translateY(-50%);"></div></div>
-                                    <div style="color:white;font-size:1.9rem;font-weight:900;line-height:1;">7.500 TL</div>
-                                    <div style="color:rgba(255,255,255,0.7);font-size:0.7rem;font-weight:700;margin-top:4px;">3 Taksit</div>
+                                <td style="text-align:center;background:#e63946;padding:18px 14px;">
+                                    <div style="position:relative;display:inline-block;margin-bottom:4px;">
+                                        <span class="pro-banner-price-original">15.000 TL</span>
+                                        <div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#7c1d1d;transform:rotate(-8deg) translateY(-50%);"></div>
+                                    </div>
+                                    <div class="pro-banner-price-amount">7.500 TL</div>
+                                    <div class="pro-banner-price-installment">3 Taksit</div>
                                 </td>
                             </tr>
                         </tbody>
@@ -1837,9 +1995,9 @@ function showProBanner() {
                 </div>
 
                 <!-- ALT -->
-                <div style="background:#0f1e3d;padding:14px 32px;text-align:center;">
-                    <p style="color:rgba(255,255,255,0.6);font-size:0.82rem;font-weight:600;margin:0;font-family:sans-serif;">
-                        Detayl&#305; bilgi i&#231;in <span style="color:white;font-weight:800;">Hakan Hocam&#305;zla</span> ileti&#351;ime ge&#231;ebilirsiniz &#128522;
+                <div class="pro-banner-footer" style="background:#0f1e3d;padding:12px 24px;text-align:center;">
+                    <p style="color:rgba(255,255,255,0.6);font-weight:600;margin:0;font-family:sans-serif;">
+                        Detaylı bilgi için <span style="color:white;font-weight:800;">Hakan Hocamızla</span> iletişime geçebilirsiniz 😊
                     </p>
                 </div>
 
@@ -1892,7 +2050,7 @@ function showProBanner() {
             if (e.key === 'Escape' && bannerModal) closeBannerBtn.click();
         });
     }
-}         // Şans çarkının daha önce görülüp görülmediğini kontrol et
+}    // Şans çarkının daha önce görülüp görülmediğini kontrol et
             function hasSeenFortuneWheel() {
                 return localStorage.getItem('fortuneWheelSeen') === 'true';
             }
