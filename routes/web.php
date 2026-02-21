@@ -61,7 +61,7 @@ Route::get('robots.txt', function () {
 });
 
 Route::get('/gizlilik-politikasi', function () {
-    return view('privacy');
+    return view('privacy.privacy');
 })->name('privacy');
 
 Route::get('/iletisim', [\App\Http\Controllers\ContactController::class, 'index'])->name('contact');
