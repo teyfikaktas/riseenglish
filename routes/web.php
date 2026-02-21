@@ -60,6 +60,10 @@ Route::get('robots.txt', function () {
     return response($content, 200)->header('Content-Type', 'text/plain');
 });
 
+Route::get('/gizlilik-politikasi', function () {
+    return view('privacy');
+})->name('privacy');
+
 Route::get('/iletisim', [\App\Http\Controllers\ContactController::class, 'index'])->name('contact');
 Route::post('/iletisim/gonder', [\App\Http\Controllers\ContactController::class, 'send'])->name('contact.send');
 
