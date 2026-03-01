@@ -86,45 +86,46 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Word Sets ✅
-    Route::get('/word-sets', function() {
-        try {
-            $userId = auth()->id();
-            
-            $wordSets = \App\Models\WordSet::where('is_active', 1)
-                ->where(function($query) use ($userId) {
-                    $query->where('user_id', 1)
-                          ->orWhere('user_id', 36)
-                          ->orWhere('user_id', $userId);
-                })
-                ->withCount('words')
-                ->select('id', 'name', 'description', 'color', 'word_count', 'user_id', 'created_at')
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->map(function($set) use ($userId) {
-                    return [
-                        'id' => $set->id,
-                        'name' => $set->name,
-                        'description' => $set->description,
-                        'color' => $set->color,
-                        'word_count' => $set->words_count ?? $set->word_count,
-                        'is_my_set' => $set->user_id == $userId,
-                        'created_at' => $set->created_at?->toIso8601String(),
-                    ];
-                });
-            
-            return response()->json([
-                'success' => true,
-                'word_sets' => $wordSets
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Word Sets API Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Kelime setleri yüklenemedi',
-                'word_sets' => []
-            ], 500);
-        }
-    });
+// Word Sets ✅
+Route::get('/word-sets', function() {
+    try {
+        $userId = auth()->id();
+        
+        $wordSets = \App\Models\WordSet::where('is_active', 1)
+            ->where(function($query) use ($userId) {
+                // ->where('user_id', 1)
+                // ->orWhere('user_id', 36)
+                $query->where('user_id', $userId);
+            })
+            ->withCount('words')
+            ->select('id', 'name', 'description', 'color', 'word_count', 'user_id', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($set) use ($userId) {
+                return [
+                    'id' => $set->id,
+                    'name' => $set->name,
+                    'description' => $set->description,
+                    'color' => $set->color,
+                    'word_count' => $set->words_count ?? $set->word_count,
+                    'is_my_set' => $set->user_id == $userId,
+                    'created_at' => $set->created_at?->toIso8601String(),
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'word_sets' => $wordSets
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Word Sets API Error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Kelime setleri yüklenemedi',
+            'word_sets' => []
+        ], 500);
+    }
+});
 });
 
 // API route for OTP SMS without middleware
