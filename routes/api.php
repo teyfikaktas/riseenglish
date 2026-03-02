@@ -12,160 +12,10 @@ use App\Models\WordSet;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'user']);
-    
-    // ✅ Öğrenci Sınavları
-    Route::prefix('student')->group(function () {
-        Route::get('exams', [StudentExamController::class, 'index']);
-        Route::get('exams/{exam}', [StudentExamController::class, 'show']);
-                Route::post('exams/{exam}/enter', [StudentExamController::class, 'enterExam']); // ✅ YENİ - Sınava giriş kontrolü
-        Route::post('exams/{exam}/submit', [StudentExamController::class, 'submitResult']);
-        Route::get('exam-results', [StudentExamController::class, 'results']);
-    });
-    
-    Route::get('/word-sets/{setId}/words', function($setId) {
-        try {
-            $userId = auth()->id();
-            $lang = request()->get('lang', null);
-            
-            $wordSet = \App\Models\WordSet::where('id', $setId)
-                ->where('is_active', 1)
-                ->where(function($query) use ($userId) {
-                    $query->where('user_id', 1)
-                          ->orWhere('user_id', 36)
-                          ->orWhere('user_id', $userId);
-                })
-                ->first();
-            
-            if (!$wordSet) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Word set bulunamadı'
-                ], 404);
-            }
-            
-            $wordsQuery = $wordSet->words();
-            
-            if ($lang) {
-                $wordsQuery->where('lang', $lang);
-            }
-            
-            $words = $wordsQuery
-                ->orderBy('id')
-                ->get()
-                ->map(function($word) {
-                    return [
-                        'id' => $word->id,
-                        'english' => $word->word,
-                        'turkish' => $word->definition,
-                        'lang' => $word->lang,
-                        'example' => $word->example ?? null,
-                    ];
-                });
-            
-            return response()->json([
-                'success' => true,
-                'word_set' => [
-                    'id' => $wordSet->id,
-                    'name' => $wordSet->name,
-                    'description' => $wordSet->description,
-                    'color' => $wordSet->color,
-                ],
-                'words' => $words,
-                'total_words' => $words->count()
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Word Set Words API Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Kelimeler yüklenemedi'
-            ], 500);
-        }
-    });
-    
-    // Word Sets ✅
-// Word Sets ✅
-// Tüm setler (user_id = 1, 36 ve kendi)
-Route::get('/word-sets', function() {
-    try {
-        $userId = auth()->id();
-        
-        $wordSets = \App\Models\WordSet::where('is_active', 1)
-            ->where(function($query) use ($userId) {
-                $query->where('user_id', $userId)
-                      ->orWhereIn('user_id', [1, 36]);
-            })
-            ->withCount('words')
-            ->select('id', 'name', 'description', 'color', 'word_count', 'user_id', 'created_at')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function($set) use ($userId) {
-                return [
-                    'id' => $set->id,
-                    'name' => $set->name,
-                    'description' => $set->description,
-                    'color' => $set->color,
-                    'word_count' => $set->words_count ?? $set->word_count,
-                    'is_my_set' => $set->user_id == $userId,
-                    'created_at' => $set->created_at?->toIso8601String(),
-                ];
-            });
-        
-        return response()->json([
-            'success' => true,
-            'word_sets' => $wordSets
-        ]);
-    } catch (\Exception $e) {
-        \Log::error('Word Sets API Error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Kelime setleri yüklenemedi',
-            'word_sets' => []
-        ], 500);
-    }
-});
-
-// Sadece kendi setleri
-Route::get('/word-sets/my', function() {
-    try {
-        $userId = auth()->id();
-        
-        $wordSets = \App\Models\WordSet::where('is_active', 1)
-            ->where('user_id', $userId)
-            ->withCount('words')
-            ->select('id', 'name', 'description', 'color', 'word_count', 'user_id', 'created_at')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function($set) use ($userId) {
-                return [
-                    'id' => $set->id,
-                    'name' => $set->name,
-                    'description' => $set->description,
-                    'color' => $set->color,
-                    'word_count' => $set->words_count ?? $set->word_count,
-                    'is_my_set' => true,
-                    'created_at' => $set->created_at?->toIso8601String(),
-                ];
-            });
-        
-        return response()->json([
-            'success' => true,
-            'word_sets' => $wordSets
-        ]);
-    } catch (\Exception $e) {
-        \Log::error('My Word Sets API Error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Kelime setleri yüklenemedi',
-            'word_sets' => []
-        ], 500);
-    }
-});
-// API route for OTP SMS without middleware
+// OTP
 Route::post('/send-otp', [OtpController::class, 'sendOtp']);
 
+// Public routes
 Route::get('/languages', function() {
     try {
         $languages = Word::getAvailableLanguages();
@@ -179,13 +29,7 @@ Route::get('/languages', function() {
 Route::get('/categories/{lang}', function($lang) {
     try {
         $userId = auth()->check() ? auth()->id() : 1;
-        
-        \Log::info('Categories API Called', [
-            'lang' => $lang,
-            'userId' => $userId,
-            'is_authenticated' => auth()->check()
-        ]);
-        
+
         $categories = WordSet::where('is_active', 1)
             ->where(function($query) use ($userId) {
                 $query->where('user_id', 1)
@@ -199,24 +43,10 @@ Route::get('/categories/{lang}', function($lang) {
             ->get()
             ->map(function($category) use ($lang) {
                 $wordCount = $category->words()->where('lang', $lang)->count();
-                $totalChunks = $wordCount > 0 ? ceil($wordCount / 50) : 0;
-                
-                \Log::info('Category Processed', [
-                    'category_id' => $category->id,
-                    'category_name' => $category->name,
-                    'user_id' => $category->user_id,
-                    'actual_word_count' => $wordCount,
-                    'total_sets' => $totalChunks
-                ]);
-                
-                $category->total_sets = $totalChunks;
+                $category->total_sets = $wordCount > 0 ? ceil($wordCount / 50) : 0;
                 return $category;
             });
-        
-        \Log::info('Categories Response', [
-            'total_categories' => $categories->count()
-        ]);
-        
+
         return response()->json($categories);
     } catch (\Exception $e) {
         \Log::error('Categories API Error: ' . $e->getMessage());
@@ -227,19 +57,19 @@ Route::get('/categories/{lang}', function($lang) {
 Route::get('/words/{categoryId}/{page}/{lang?}', function($categoryId, $page = 1, $lang = null) {
     try {
         $category = WordSet::findOrFail($categoryId);
-        
+
         if (!$lang) {
             $firstWord = $category->words()->first();
             $lang = $firstWord ? $firstWord->lang : 'en';
         }
-        
+
         $words = $category->words()
             ->where('lang', $lang)
             ->orderBy('id')
             ->skip(($page - 1) * 50)
             ->take(50)
             ->get();
-        
+
         $gameWords = $words->map(function($word) {
             return [
                 'english' => $word->word,
@@ -247,9 +77,9 @@ Route::get('/words/{categoryId}/{page}/{lang?}', function($categoryId, $page = 1
                 'id' => $word->id
             ];
         });
-        
+
         $totalWords = $category->words()->where('lang', $lang)->count();
-        
+
         return response()->json([
             'words' => $gameWords,
             'current_page' => $page,
@@ -271,3 +101,153 @@ Route::get('/words/{categoryId}/{page}/{lang?}', function($categoryId, $page = 1
         ]);
     }
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+
+    // Öğrenci Sınavları
+    Route::prefix('student')->group(function () {
+        Route::get('exams', [StudentExamController::class, 'index']);
+        Route::get('exams/{exam}', [StudentExamController::class, 'show']);
+        Route::post('exams/{exam}/enter', [StudentExamController::class, 'enterExam']);
+        Route::post('exams/{exam}/submit', [StudentExamController::class, 'submitResult']);
+        Route::get('exam-results', [StudentExamController::class, 'results']);
+    });
+
+    // ⚠️ /my önce tanımlanmalı, yoksa {setId} yakalar
+    Route::get('/word-sets/my', function() {
+        try {
+            $userId = auth()->id();
+
+            $wordSets = \App\Models\WordSet::where('is_active', 1)
+                ->where('user_id', $userId)
+                ->withCount('words')
+                ->select('id', 'name', 'description', 'color', 'word_count', 'user_id', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($set) {
+                    return [
+                        'id' => $set->id,
+                        'name' => $set->name,
+                        'description' => $set->description,
+                        'color' => $set->color,
+                        'word_count' => $set->words_count ?? $set->word_count,
+                        'is_my_set' => true,
+                        'created_at' => $set->created_at?->toIso8601String(),
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'word_sets' => $wordSets
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('My Word Sets API Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Kelime setleri yüklenemedi',
+                'word_sets' => []
+            ], 500);
+        }
+    });
+
+    Route::get('/word-sets', function() {
+        try {
+            $userId = auth()->id();
+
+            $wordSets = \App\Models\WordSet::where('is_active', 1)
+                ->where(function($query) use ($userId) {
+                    $query->where('user_id', $userId)
+                          ->orWhereIn('user_id', [1, 36]);
+                })
+                ->withCount('words')
+                ->select('id', 'name', 'description', 'color', 'word_count', 'user_id', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($set) use ($userId) {
+                    return [
+                        'id' => $set->id,
+                        'name' => $set->name,
+                        'description' => $set->description,
+                        'color' => $set->color,
+                        'word_count' => $set->words_count ?? $set->word_count,
+                        'is_my_set' => $set->user_id == $userId,
+                        'created_at' => $set->created_at?->toIso8601String(),
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'word_sets' => $wordSets
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Word Sets API Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Kelime setleri yüklenemedi',
+                'word_sets' => []
+            ], 500);
+        }
+    });
+
+    Route::get('/word-sets/{setId}/words', function($setId) {
+        try {
+            $userId = auth()->id();
+            $lang = request()->get('lang', null);
+
+            $wordSet = \App\Models\WordSet::where('id', $setId)
+                ->where('is_active', 1)
+                ->where(function($query) use ($userId) {
+                    $query->where('user_id', 1)
+                          ->orWhere('user_id', 36)
+                          ->orWhere('user_id', $userId);
+                })
+                ->first();
+
+            if (!$wordSet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Word set bulunamadı'
+                ], 404);
+            }
+
+            $wordsQuery = $wordSet->words();
+
+            if ($lang) {
+                $wordsQuery->where('lang', $lang);
+            }
+
+            $words = $wordsQuery
+                ->orderBy('id')
+                ->get()
+                ->map(function($word) {
+                    return [
+                        'id' => $word->id,
+                        'english' => $word->word,
+                        'turkish' => $word->definition,
+                        'lang' => $word->lang,
+                        'example' => $word->example ?? null,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'word_set' => [
+                    'id' => $wordSet->id,
+                    'name' => $wordSet->name,
+                    'description' => $wordSet->description,
+                    'color' => $wordSet->color,
+                ],
+                'words' => $words,
+                'total_words' => $words->count()
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Word Set Words API Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Kelimeler yüklenemedi'
+            ], 500);
+        }
+    });
+}); 
