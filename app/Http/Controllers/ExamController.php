@@ -70,12 +70,11 @@ public function destroy(Exam $exam)
 }
 public function downloadDailyReport(Request $request)
 {
-    // 1. Validasyon
     $request->validate(['date' => 'required|date']);
     $date = \Carbon\Carbon::parse($request->date);
     $teacherId = auth()->id();
 
-    // 2. Sınavları, atanan öğrencileri ve sonuçları tek sorguda çek (Eager Loading)
+    // Sınavları ve ilişkileri çek
     $exams = Exam::where('teacher_id', $teacherId)
         ->whereDate('start_time', $date->toDateString())
         ->with(['students:id,name', 'results.student:id,name'])
@@ -85,37 +84,33 @@ public function downloadDailyReport(Request $request)
         return back()->with('error', 'Seçilen tarihte sınav bulunamadı.');
     }
 
-    // 3. Verileri ayrıştır
     $allEnrolledStudents = collect();
     $enteredResults = collect();
 
     foreach ($exams as $exam) {
-        // Bu sınava atanmış tüm öğrencileri al
         $allEnrolledStudents = $allEnrolledStudents->merge($exam->students);
-        
-        // Puanı 0'dan büyük olanları (girenleri) al
         $enteredResults = $enteredResults->merge($exam->results->where('score', '>', 0));
     }
 
-    // Mükerrer kayıtları temizle (Eğer öğrenci birden fazla sınava kayıtlıysa)
     $allEnrolledStudents = $allEnrolledStudents->unique('id');
 
-    // 4. Girmeyenleri bul: Kayıtlılar - Girenler
+    // Girmeyenleri bul (Kayıtlılar - Girenler)
     $enteredStudentIds = $enteredResults->pluck('student_id')->toArray();
     
-    $notEnteredStudents = $allEnrolledStudents->filter(function ($student) use ($enteredStudentIds) {
+    // Değişken adını eski haline getirdim, Blade patlamayacak
+    $notEnteredResults = $allEnrolledStudents->filter(function ($student) use ($enteredStudentIds) {
         return !in_array($student->id, $enteredStudentIds);
     });
 
-// 5. PDF oluşturma
-$pdf = PDF::loadView('exams.daily-report-pdf', [
-    'enteredResults'    => $enteredResults,
-    'notEnteredResults' => $notEnteredStudents, // İsmi Blade'in beklediği gibi notEnteredResults yaptık
-    'date'              => $date,
-    'teacher'           => auth()->user(),
-    'enteredCount'      => $enteredResults->count(),
-    'notEnteredCount'   => $notEnteredStudents->count()
-]);
+    // PDF'e gönderirken de eski isimleri kullanıyoruz
+    $pdf = PDF::loadView('exams.daily-report-pdf', [
+        'enteredResults'    => $enteredResults,
+        'notEnteredResults' => $notEnteredResults, 
+        'date'              => $date,
+        'teacher'           => auth()->user(),
+        'enteredCount'      => $enteredResults->count(),
+        'notEnteredCount'   => $notEnteredResults->count()
+    ]);
 
     return $pdf->download('Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf');
 }

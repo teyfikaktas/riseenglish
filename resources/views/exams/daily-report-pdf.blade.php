@@ -331,17 +331,15 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($notEnteredResults as $index => $result)
-                    <tr>
+                @foreach($notEnteredResults as $index => $student) <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td class="student-name">{{ $result->student->name }}</td>
+                        <td class="student-name">{{ $student->name }}</td>
                         <td style="color: #dc2626;">Sınava Girmedi</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
         @endif
-
         <div class="footer">
             <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
             <p>© {{ date('Y') }} Rise English - Tüm Hakları Saklıdır</p>
