@@ -70,58 +70,54 @@ public function destroy(Exam $exam)
 }
 public function downloadDailyReport(Request $request)
 {
-    $request->validate([
-        'date' => 'required|date'
-    ]);
-    
+    // 1. Validasyon
+    $request->validate(['date' => 'required|date']);
     $date = \Carbon\Carbon::parse($request->date);
     $teacherId = auth()->id();
-    
-    // O güne ait sınavları çek
+
+    // 2. Sınavları, atanan öğrencileri ve sonuçları tek sorguda çek (Eager Loading)
     $exams = Exam::where('teacher_id', $teacherId)
         ->whereDate('start_time', $date->toDateString())
-        ->with('students')
+        ->with(['students:id,name', 'results.student:id,name'])
         ->get();
-    
+
     if ($exams->isEmpty()) {
         return back()->with('error', 'Seçilen tarihte sınav bulunamadı.');
     }
+
+    // 3. Verileri ayrıştır
+    $allEnrolledStudents = collect();
+    $enteredResults = collect();
+
+    foreach ($exams as $exam) {
+        // Bu sınava atanmış tüm öğrencileri al
+        $allEnrolledStudents = $allEnrolledStudents->merge($exam->students);
+        
+        // Puanı 0'dan büyük olanları (girenleri) al
+        $enteredResults = $enteredResults->merge($exam->results->where('score', '>', 0));
+    }
+
+    // Mükerrer kayıtları temizle (Eğer öğrenci birden fazla sınava kayıtlıysa)
+    $allEnrolledStudents = $allEnrolledStudents->unique('id');
+
+    // 4. Girmeyenleri bul: Kayıtlılar - Girenler
+    $enteredStudentIds = $enteredResults->pluck('student_id')->toArray();
     
-    // Sınava giren sonuçlar (score > 0)
-    $enteredResults = \App\Models\ExamResult::whereHas('exam', function($q) use ($date, $teacherId) {
-        $q->whereDate('start_time', $date->toDateString())
-          ->where('teacher_id', $teacherId);
-    })
-    ->where('score', '>', 0)
-    ->with(['student', 'exam'])
-    ->orderByDesc('success_rate')
-    ->get();
-    
-    // Sınava girmeyenler (score = 0)
-    $notEnteredResults = \App\Models\ExamResult::whereHas('exam', function($q) use ($date, $teacherId) {
-        $q->whereDate('start_time', $date->toDateString())
-          ->where('teacher_id', $teacherId);
-    })
-    ->where('score', '=', 0)
-    ->with(['student', 'exam'])
-    ->get();
-    
-    $enteredCount = $enteredResults->count();
-    $notEnteredCount = $notEnteredResults->count();
-    
-    // PDF oluştur
+    $notEnteredStudents = $allEnrolledStudents->filter(function ($student) use ($enteredStudentIds) {
+        return !in_array($student->id, $enteredStudentIds);
+    });
+
+    // 5. PDF oluşturma
     $pdf = PDF::loadView('exams.daily-report-pdf', [
-        'enteredResults' => $enteredResults,
-        'notEnteredResults' => $notEnteredResults,
-        'date' => $date,
-        'teacher' => auth()->user(),
-        'enteredCount' => $enteredCount,
-        'notEnteredCount' => $notEnteredCount
+        'enteredResults'    => $enteredResults,
+        'notEnteredStudents'=> $notEnteredStudents,
+        'date'              => $date,
+        'teacher'           => auth()->user(),
+        'enteredCount'      => $enteredResults->count(),
+        'notEnteredCount'   => $notEnteredStudents->count()
     ]);
-    
-    $fileName = 'Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf';
-    
-    return $pdf->download($fileName);
+
+    return $pdf->download('Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf');
 }
 /**
  * Sınav raporunu PDF olarak indir
