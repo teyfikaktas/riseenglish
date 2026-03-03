@@ -74,7 +74,6 @@ public function downloadDailyReport(Request $request)
     $date = \Carbon\Carbon::parse($request->date);
     $teacherId = auth()->id();
 
-    // Sınavları ve ilişkileri çek
     $exams = Exam::where('teacher_id', $teacherId)
         ->whereDate('start_time', $date->toDateString())
         ->with(['students:id,name', 'results.student:id,name'])
@@ -93,23 +92,21 @@ public function downloadDailyReport(Request $request)
     }
 
     $allEnrolledStudents = $allEnrolledStudents->unique('id');
+    $enteredResults = $enteredResults->sortByDesc('success_rate')->values();
 
-    // Girmeyenleri bul (Kayıtlılar - Girenler)
     $enteredStudentIds = $enteredResults->pluck('student_id')->toArray();
-    
-    // Değişken adını eski haline getirdim, Blade patlamayacak
-    $notEnteredResults = $allEnrolledStudents->filter(function ($student) use ($enteredStudentIds) {
+
+    $notEnteredStudents = $allEnrolledStudents->filter(function ($student) use ($enteredStudentIds) {
         return !in_array($student->id, $enteredStudentIds);
     });
 
-    // PDF'e gönderirken de eski isimleri kullanıyoruz
     $pdf = PDF::loadView('exams.daily-report-pdf', [
         'enteredResults'    => $enteredResults,
-        'notEnteredResults' => $notEnteredResults, 
+        'notEnteredResults' => $notEnteredStudents,
         'date'              => $date,
         'teacher'           => auth()->user(),
         'enteredCount'      => $enteredResults->count(),
-        'notEnteredCount'   => $notEnteredResults->count()
+        'notEnteredCount'   => $notEnteredStudents->count(),
     ]);
 
     return $pdf->download('Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf');
