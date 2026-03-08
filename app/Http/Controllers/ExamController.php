@@ -42,14 +42,18 @@ public function index(Request $request)
               ->orWhereDate('start_time', 'like', "%{$search}%");
         });
     }
-    
+$examNames = Exam::where('teacher_id', auth()->id())
+    ->selectRaw("TRIM(SUBSTRING_INDEX(name, ' - ', 1)) as base_name")
+    ->distinct()
+    ->orderBy('base_name')
+    ->pluck('base_name');
     $todayExams = $todayExamsQuery->orderBy('start_time', 'asc')->get();
     
     $exams = $query->orderBy('is_active', 'desc')
         ->orderBy('start_time', 'desc')
         ->paginate(10);
     
-    return view('exams.index', compact('exams', 'todayExams'));
+    return view('exams.index', compact('exams', 'todayExams', 'examNames'));
 }
     /**
  * Sınavı sil
@@ -68,6 +72,63 @@ public function destroy(Exam $exam)
         ->route('exams.index')
         ->with('success', 'Sınav başarıyla silindi!');
 }
+
+public function bulkDeletePreview(Request $request)
+{
+    $request->validate([
+        'start_date' => 'required|date',
+        'end_date'   => 'required|date|after_or_equal:start_date',
+        'name_like'  => 'nullable|string',
+    ]);
+
+    $query = Exam::where('teacher_id', auth()->id())
+        ->whereBetween('start_time', [
+            \Carbon\Carbon::parse($request->start_date)->startOfDay(),
+            \Carbon\Carbon::parse($request->end_date)->endOfDay(),
+        ]);
+
+    if ($request->filled('name_like')) {
+        $query->where('name', 'like', $request->name_like . '%');
+    }
+
+    $exams = $query->withCount(['students', 'results'])->orderBy('start_time')->get();
+
+    $totalStudentRows  = $exams->sum('students_count');
+    $totalResultRows   = $exams->sum('results_count');
+
+    return response()->json([
+        'exams'      => $exams->map(fn($e) => ['id' => $e->id, 'name' => $e->name, 'start_time' => $e->start_time]),
+        'exam_count' => $exams->count(),
+        'student_rows' => $totalStudentRows,
+        'result_rows'  => $totalResultRows,
+    ]);
+}
+
+public function bulkDelete(Request $request)
+{
+    $request->validate([
+        'start_date' => 'required|date',
+        'end_date'   => 'required|date|after_or_equal:start_date',
+        'name_like'  => 'nullable|string',
+    ]);
+
+    $examIds = Exam::where('teacher_id', auth()->id())
+        ->whereBetween('start_time', [
+            \Carbon\Carbon::parse($request->start_date)->startOfDay(),
+            \Carbon\Carbon::parse($request->end_date)->endOfDay(),
+        ])
+        ->when($request->filled('name_like'), fn($q) => $q->where('name', 'like', $request->name_like . '%'))
+        ->pluck('id');
+
+    \DB::table('exam_results')->whereIn('exam_id', $examIds)->delete();
+    \DB::table('exam_student')->whereIn('exam_id', $examIds)->delete();
+    \DB::table('exam_word_set')->whereIn('exam_id', $examIds)->delete();
+    Exam::whereIn('id', $examIds)->delete();
+
+    return redirect()->route('exams.index')->with('success', $examIds->count() . ' sınav silindi.');
+}
+
+
 public function downloadDailyReport(Request $request)
 {
     $request->validate(['date' => 'required|date']);
@@ -101,8 +162,8 @@ public function downloadDailyReport(Request $request)
     });
 
     $pdf = PDF::loadView('exams.daily-report-pdf', [
-        'enteredResults'    => $enteredResults,
-        'notEnteredResults' => $notEnteredStudents,
+        'enteredResults'    => $enteredResuts,
+        'notEnteredResults' => $notEnteredStludents,
         'date'              => $date,
         'teacher'           => auth()->user(),
         'enteredCount'      => $enteredResults->count(),
