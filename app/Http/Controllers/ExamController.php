@@ -161,14 +161,14 @@ public function downloadDailyReport(Request $request)
         return !in_array($student->id, $enteredStudentIds);
     });
 
-    $pdf = PDF::loadView('exams.daily-report-pdf', [
-        'enteredResults'    => $enteredResuts,
-        'notEnteredResults' => $notEnteredStludents,
-        'date'              => $date,
-        'teacher'           => auth()->user(),
-        'enteredCount'      => $enteredResults->count(),
-        'notEnteredCount'   => $notEnteredStudents->count(),
-    ]);
+$pdf = PDF::loadView('exams.daily-report-pdf', [
+    'enteredResults'    => $enteredResults,      // düzeltildi
+    'notEnteredResults' => $notEnteredStudents,   // düzeltildi
+    'date'              => $date,
+    'teacher'           => auth()->user(),
+    'enteredCount'      => $enteredResults->count(),
+    'notEnteredCount'   => $notEnteredStudents->count(),
+]);
 
     return $pdf->download('Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf');
 }
