@@ -215,7 +215,9 @@ Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
 
 Route::get('/egitimler', [FrontendCourseController::class, 'index'])->name('courses.index');
 Route::get('/egitimler/{slug}', [FrontendCourseController::class, 'detail'])->name('courses.detail');
-
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+})->name('privacy.policy');
 Route::middleware(['auth', 'verified.phone', 'teacher.approved'])->group(function () {
     Route::get('/kurs-kayit/{slug}', [FrontendCourseController::class, 'register'])->name('course.register');
     Route::post('/kurs-kayit/{slug}', [FrontendCourseController::class, 'registerSubmit'])->name('course.register.submit');
