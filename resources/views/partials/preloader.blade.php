@@ -155,7 +155,7 @@
 }
 
 #preloader .tagline .loading-text {
-  color: rgba(255, 255, 255, 0.5);
+  color: #ff4757;
   font-size: clamp(11px, 3.0vw, 14px);
   line-height: 1.3;
   margin-top: 0.5rem;
