@@ -1735,7 +1735,7 @@ function showProBanner() {
         #proBannerModal * { box-sizing: border-box; }
 
         #proBannerInner {
-            max-width: clamp(280px, 92vw, 860px);
+            max-width: clamp(260px, 94vw, 780px);
             width: 100%;
             margin: 0 auto;
             position: relative;
@@ -1754,59 +1754,59 @@ function showProBanner() {
             width: 100%;
             border-collapse: collapse;
             font-family: sans-serif;
-            table-layout: fixed;
+            table-layout: auto;
         }
 
         .pro-banner-table thead th {
-            padding: 16px 14px;
-            font-size: 1.05rem;
+            padding: 12px 10px;
+            font-size: 0.92rem;
         }
 
         .pro-banner-table tbody td {
-            padding: 13px 14px;
-            font-size: 0.88rem;
+            padding: 10px 10px;
+            font-size: 0.8rem;
         }
 
         .pro-banner-table .col-label {
-            padding: 13px 20px;
+            padding: 10px 14px;
             font-weight: 700;
             color: #1e293b;
-            font-size: 0.88rem;
-            width: 28%;
+            font-size: 0.8rem;
+            width: 24%;
         }
 
         .pro-banner-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             font-weight: 900;
         }
 
         .pro-banner-price-amount {
             color: white;
-            font-size: 1.9rem;
+            font-size: 1.6rem;
             font-weight: 900;
             line-height: 1;
         }
 
         .pro-banner-price-original {
             color: rgba(255,255,255,0.45);
-            font-size: 0.88rem;
+            font-size: 0.78rem;
             font-weight: 700;
         }
 
         .pro-banner-price-installment {
             color: rgba(255,255,255,0.7);
-            font-size: 0.7rem;
+            font-size: 0.62rem;
             font-weight: 700;
-            margin-top: 4px;
+            margin-top: 3px;
         }
 
         .pro-banner-lib-note {
-            font-size: 0.68rem;
+            font-size: 0.6rem;
             color: #15803d;
             font-weight: 700;
             margin-top: 2px;
@@ -1818,16 +1818,16 @@ function showProBanner() {
             right: 0;
             background: #9b1c2a;
             color: white;
-            font-size: 0.58rem;
+            font-size: 0.52rem;
             font-weight: 800;
-            padding: 3px 9px;
-            border-radius: 0 0 0 10px;
+            padding: 2px 7px;
+            border-radius: 0 0 0 8px;
             letter-spacing: 0.5px;
         }
 
         .pro-banner-header-title {
             color: white;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 900;
             margin: 0;
             font-family: sans-serif;
@@ -1838,127 +1838,113 @@ function showProBanner() {
 
         .pro-banner-header-sub {
             color: rgba(255,255,255,0.55);
-            font-size: 0.68rem;
+            font-size: 0.6rem;
             font-weight: 800;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
             font-family: sans-serif;
             position: relative;
             z-index: 1;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         /* ── TABLET ── */
         @media (max-width: 900px) {
-            #proBannerInner {
-                max-width: 94vw;
-            }
-            .pro-banner-table thead th { padding: 12px 8px; font-size: 0.9rem; }
-            .pro-banner-table tbody td { padding: 10px 8px; font-size: 0.8rem; }
-            .pro-banner-table .col-label { padding: 10px 12px; font-size: 0.8rem; }
-            .pro-banner-price-amount { font-size: 1.5rem; }
-            .pro-banner-price-original { font-size: 0.78rem; }
-            .pro-banner-header-title { font-size: 1.05rem; }
+            #proBannerInner { max-width: 96vw; }
+            .pro-banner-table thead th { padding: 10px 6px; font-size: 0.8rem; }
+            .pro-banner-table tbody td { padding: 8px 6px; font-size: 0.72rem; }
+            .pro-banner-table .col-label { padding: 8px 10px; font-size: 0.72rem; }
+            .pro-banner-price-amount { font-size: 1.3rem; }
+            .pro-banner-price-original { font-size: 0.68rem; }
+            .pro-banner-header-title { font-size: 0.95rem; }
+            .pro-banner-badge { width: 22px; height: 22px; }
         }
 
         /* ── MOBILE ── */
         @media (max-width: 600px) {
             #proBannerInner {
-                margin: 0 4px;
-                max-width: 96vw !important;
-            }
-
-            .pro-banner-table {
-                table-layout: auto !important;
-            }
-
-            #closeProBanner {
-                width: 28px !important;
-                height: 28px !important;
-                top: -8px !important;
-                right: -8px !important;
-            }
-            #closeProBanner svg { width: 14px !important; height: 14px !important; }
-
-            .pro-banner-header-title  { font-size: 0.8rem; }
-            .pro-banner-header-sub    { font-size: 0.48rem; letter-spacing: 1.5px; }
-
-            .pro-banner-table thead th   { padding: 7px 3px; font-size: 0.6rem; }
-            .pro-banner-table .col-label { padding: 6px 4px; font-size: 0.55rem; width: 22%; }
-            .pro-banner-table tbody td   { padding: 6px 3px; font-size: 0.55rem; }
-
-            .pro-banner-badge { width: 18px; height: 18px; font-size: 0.55rem; }
-
-            .pro-banner-most-popular   { font-size: 0.4rem; padding: 2px 3px; }
-            .pro-banner-lib-note       { font-size: 0.44rem; }
-
-            .pro-banner-price-amount      { font-size: 0.85rem; }
-            .pro-banner-price-original    { font-size: 0.5rem; }
-            .pro-banner-price-installment { font-size: 0.44rem; }
-
-            .pro-banner-footer { padding: 8px 12px !important; }
-            .pro-banner-footer p { font-size: 0.55rem !important; }
-        }
-
-        /* ── VERY SMALL MOBILE (400px altı) ── */
-        @media (max-width: 400px) {
-            #proBannerInner {
                 margin: 0 2px;
                 max-width: 98vw !important;
             }
 
-            .pro-banner-table {
-                table-layout: auto !important;
-            }
-
-            .pro-banner-header-title  { font-size: 0.7rem; }
-            .pro-banner-header-sub    { font-size: 0.42rem; letter-spacing: 1px; }
-
-            .pro-banner-table thead th   { padding: 5px 2px; font-size: 0.5rem; }
-            .pro-banner-table .col-label { padding: 4px 3px; font-size: 0.48rem; width: 20%; }
-            .pro-banner-table tbody td   { padding: 4px 2px; font-size: 0.48rem; }
-
-            .pro-banner-badge { width: 16px; height: 16px; font-size: 0.48rem; }
-
-            .pro-banner-most-popular   { font-size: 0.36rem; padding: 2px 2px; }
-            .pro-banner-lib-note       { font-size: 0.4rem; }
-
-            .pro-banner-price-amount      { font-size: 0.7rem; }
-            .pro-banner-price-original    { font-size: 0.44rem; }
-            .pro-banner-price-installment { font-size: 0.38rem; }
-
-            .pro-banner-footer { padding: 6px 8px !important; }
-            .pro-banner-footer p { font-size: 0.48rem !important; }
-
             #closeProBanner {
-                width: 24px !important;
-                height: 24px !important;
+                width: 26px !important;
+                height: 26px !important;
                 top: -6px !important;
                 right: -6px !important;
             }
-            #closeProBanner svg { width: 12px !important; height: 12px !important; }
+            #closeProBanner svg { width: 13px !important; height: 13px !important; }
+
+            .pro-banner-header-title  { font-size: 0.68rem; }
+            .pro-banner-header-sub    { font-size: 0.4rem; letter-spacing: 1.5px; }
+
+            .pro-banner-table thead th   { padding: 5px 2px; font-size: 0.5rem; }
+            .pro-banner-table .col-label { padding: 4px 3px; font-size: 0.46rem; width: 20%; }
+            .pro-banner-table tbody td   { padding: 4px 2px; font-size: 0.46rem; }
+
+            .pro-banner-badge { width: 15px; height: 15px; font-size: 0.46rem; }
+
+            .pro-banner-most-popular   { font-size: 0.34rem; padding: 1px 3px; }
+            .pro-banner-lib-note       { font-size: 0.38rem; }
+
+            .pro-banner-price-amount      { font-size: 0.72rem; }
+            .pro-banner-price-original    { font-size: 0.42rem; }
+            .pro-banner-price-installment { font-size: 0.36rem; }
+
+            .pro-banner-footer { padding: 6px 8px !important; }
+            .pro-banner-footer p { font-size: 0.46rem !important; }
         }
 
-        /* ── EXTRA SMALL (340px altı - eski iPhone SE vs) ── */
-        @media (max-width: 340px) {
+        /* ── VERY SMALL (400px altı) ── */
+        @media (max-width: 400px) {
             #proBannerInner {
                 margin: 0;
                 max-width: 100vw !important;
             }
 
-            .pro-banner-header-title  { font-size: 0.62rem; }
-            .pro-banner-header-sub    { font-size: 0.38rem; letter-spacing: 0.5px; }
+            .pro-banner-header-title  { font-size: 0.58rem; }
+            .pro-banner-header-sub    { font-size: 0.34rem; letter-spacing: 1px; }
 
-            .pro-banner-table thead th   { padding: 4px 1px; font-size: 0.44rem; }
-            .pro-banner-table .col-label { padding: 3px 2px; font-size: 0.42rem; width: 20%; }
-            .pro-banner-table tbody td   { padding: 3px 1px; font-size: 0.42rem; }
+            .pro-banner-table thead th   { padding: 3px 1px; font-size: 0.42rem; }
+            .pro-banner-table .col-label { padding: 3px 2px; font-size: 0.4rem; width: 18%; }
+            .pro-banner-table tbody td   { padding: 3px 1px; font-size: 0.4rem; }
 
-            .pro-banner-badge { width: 14px; height: 14px; font-size: 0.42rem; }
+            .pro-banner-badge { width: 13px; height: 13px; font-size: 0.4rem; }
 
-            .pro-banner-price-amount      { font-size: 0.6rem; }
-            .pro-banner-price-original    { font-size: 0.38rem; }
-            .pro-banner-price-installment { font-size: 0.34rem; }
+            .pro-banner-most-popular   { font-size: 0.3rem; padding: 1px 2px; }
+            .pro-banner-lib-note       { font-size: 0.34rem; }
 
-            .pro-banner-footer p { font-size: 0.42rem !important; }
+            .pro-banner-price-amount      { font-size: 0.58rem; }
+            .pro-banner-price-original    { font-size: 0.36rem; }
+            .pro-banner-price-installment { font-size: 0.3rem; }
+
+            .pro-banner-footer { padding: 4px 6px !important; }
+            .pro-banner-footer p { font-size: 0.4rem !important; }
+
+            #closeProBanner {
+                width: 22px !important;
+                height: 22px !important;
+                top: -5px !important;
+                right: -5px !important;
+            }
+            #closeProBanner svg { width: 11px !important; height: 11px !important; }
+        }
+
+        /* ── EXTRA SMALL (320px altı) ── */
+        @media (max-width: 320px) {
+            .pro-banner-header-title  { font-size: 0.5rem; }
+            .pro-banner-header-sub    { font-size: 0.3rem; letter-spacing: 0.5px; }
+
+            .pro-banner-table thead th   { padding: 2px 1px; font-size: 0.36rem; }
+            .pro-banner-table .col-label { padding: 2px 1px; font-size: 0.34rem; }
+            .pro-banner-table tbody td   { padding: 2px 1px; font-size: 0.34rem; }
+
+            .pro-banner-badge { width: 11px; height: 11px; font-size: 0.34rem; }
+
+            .pro-banner-price-amount      { font-size: 0.48rem; }
+            .pro-banner-price-original    { font-size: 0.3rem; }
+            .pro-banner-price-installment { font-size: 0.26rem; }
+
+            .pro-banner-footer p { font-size: 0.34rem !important; }
         }
     </style>
 
@@ -1975,7 +1961,7 @@ function showProBanner() {
             <div style="border-radius:20px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4);">
 
                 <!-- BAŞLIK -->
-                <div style="background:linear-gradient(135deg,#1a2e5a 0%,#2a4a7f 60%,#1a2e5a 100%);padding:18px 24px;text-align:center;position:relative;overflow:hidden;">
+                <div style="background:linear-gradient(135deg,#1a2e5a 0%,#2a4a7f 60%,#1a2e5a 100%);padding:14px 18px;text-align:center;position:relative;overflow:hidden;">
                     <div style="position:absolute;top:-20px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,0.05);border-radius:50%;"></div>
                     <div style="position:absolute;bottom:-30px;right:40px;width:100px;height:100px;background:rgba(255,255,255,0.05);border-radius:50%;"></div>
                     <div class="pro-banner-header-sub">RISE ENGLISH</div>
@@ -2048,23 +2034,23 @@ function showProBanner() {
                             <!-- FİYAT -->
                             <tr>
                                 <td class="col-label" style="background:#f8fafc;font-weight:800;">Fiyat</td>
-                                <td style="text-align:center;background:#1a2e5a;padding:18px 14px;">
-                                    <div style="position:relative;display:inline-block;margin-bottom:4px;">
+                                <td style="text-align:center;background:#1a2e5a;padding:14px 8px;">
+                                    <div style="position:relative;display:inline-block;margin-bottom:3px;">
                                         <span class="pro-banner-price-original">5.000 TL</span>
                                         <div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#e63946;transform:rotate(-8deg) translateY(-50%);"></div>
                                     </div>
                                     <div class="pro-banner-price-amount">3.000 TL</div>
                                 </td>
-                                <td style="text-align:center;background:#f97316;padding:18px 14px;">
-                                    <div style="position:relative;display:inline-block;margin-bottom:4px;">
+                                <td style="text-align:center;background:#f97316;padding:14px 8px;">
+                                    <div style="position:relative;display:inline-block;margin-bottom:3px;">
                                         <span class="pro-banner-price-original">10.000 TL</span>
                                         <div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#7c3500;transform:rotate(-8deg) translateY(-50%);"></div>
                                     </div>
                                     <div class="pro-banner-price-amount">5.000 TL</div>
                                     <div class="pro-banner-price-installment">2 Taksit</div>
                                 </td>
-                                <td style="text-align:center;background:#e63946;padding:18px 14px;">
-                                    <div style="position:relative;display:inline-block;margin-bottom:4px;">
+                                <td style="text-align:center;background:#e63946;padding:14px 8px;">
+                                    <div style="position:relative;display:inline-block;margin-bottom:3px;">
                                         <span class="pro-banner-price-original">15.000 TL</span>
                                         <div style="position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:#7c1d1d;transform:rotate(-8deg) translateY(-50%);"></div>
                                     </div>
@@ -2077,7 +2063,7 @@ function showProBanner() {
                 </div>
 
                 <!-- ALT -->
-                <div class="pro-banner-footer" style="background:#0f1e3d;padding:12px 24px;text-align:center;">
+                <div class="pro-banner-footer" style="background:#0f1e3d;padding:10px 18px;text-align:center;">
                     <p style="color:rgba(255,255,255,0.6);font-weight:600;margin:0;font-family:sans-serif;">
                         Detaylı bilgi için <span style="color:white;font-weight:800;">Hakan Hocamızla</span> iletişime geçebilirsiniz 😊
                     </p>
