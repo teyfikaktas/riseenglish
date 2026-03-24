@@ -1735,7 +1735,7 @@ function showProBanner() {
         #proBannerModal * { box-sizing: border-box; }
 
         #proBannerInner {
-            max-width: clamp(320px, 52vw, 860px);
+            max-width: clamp(280px, 92vw, 860px);
             width: 100%;
             margin: 0 auto;
             position: relative;
@@ -1849,6 +1849,9 @@ function showProBanner() {
 
         /* ── TABLET ── */
         @media (max-width: 900px) {
+            #proBannerInner {
+                max-width: 94vw;
+            }
             .pro-banner-table thead th { padding: 12px 8px; font-size: 0.9rem; }
             .pro-banner-table tbody td { padding: 10px 8px; font-size: 0.8rem; }
             .pro-banner-table .col-label { padding: 10px 12px; font-size: 0.8rem; }
@@ -1859,7 +1862,14 @@ function showProBanner() {
 
         /* ── MOBILE ── */
         @media (max-width: 600px) {
-            #proBannerInner { margin: 0 4px; }
+            #proBannerInner {
+                margin: 0 4px;
+                max-width: 96vw !important;
+            }
+
+            .pro-banner-table {
+                table-layout: auto !important;
+            }
 
             #closeProBanner {
                 width: 28px !important;
@@ -1872,21 +1882,83 @@ function showProBanner() {
             .pro-banner-header-title  { font-size: 0.8rem; }
             .pro-banner-header-sub    { font-size: 0.48rem; letter-spacing: 1.5px; }
 
-            .pro-banner-table thead th   { padding: 7px 3px; font-size: 0.62rem; }
-            .pro-banner-table .col-label { padding: 6px 4px; font-size: 0.58rem; width: 26%; }
-            .pro-banner-table tbody td   { padding: 6px 3px; font-size: 0.58rem; }
+            .pro-banner-table thead th   { padding: 7px 3px; font-size: 0.6rem; }
+            .pro-banner-table .col-label { padding: 6px 4px; font-size: 0.55rem; width: 22%; }
+            .pro-banner-table tbody td   { padding: 6px 3px; font-size: 0.55rem; }
 
-            .pro-banner-badge { width: 18px; height: 18px; font-size: 0.58rem; }
+            .pro-banner-badge { width: 18px; height: 18px; font-size: 0.55rem; }
 
             .pro-banner-most-popular   { font-size: 0.4rem; padding: 2px 3px; }
-            .pro-banner-lib-note       { font-size: 0.46rem; }
+            .pro-banner-lib-note       { font-size: 0.44rem; }
 
-            .pro-banner-price-amount      { font-size: 0.9rem; }
-            .pro-banner-price-original    { font-size: 0.52rem; }
-            .pro-banner-price-installment { font-size: 0.46rem; }
+            .pro-banner-price-amount      { font-size: 0.85rem; }
+            .pro-banner-price-original    { font-size: 0.5rem; }
+            .pro-banner-price-installment { font-size: 0.44rem; }
 
             .pro-banner-footer { padding: 8px 12px !important; }
-            .pro-banner-footer p { font-size: 0.58rem !important; }
+            .pro-banner-footer p { font-size: 0.55rem !important; }
+        }
+
+        /* ── VERY SMALL MOBILE (400px altı) ── */
+        @media (max-width: 400px) {
+            #proBannerInner {
+                margin: 0 2px;
+                max-width: 98vw !important;
+            }
+
+            .pro-banner-table {
+                table-layout: auto !important;
+            }
+
+            .pro-banner-header-title  { font-size: 0.7rem; }
+            .pro-banner-header-sub    { font-size: 0.42rem; letter-spacing: 1px; }
+
+            .pro-banner-table thead th   { padding: 5px 2px; font-size: 0.5rem; }
+            .pro-banner-table .col-label { padding: 4px 3px; font-size: 0.48rem; width: 20%; }
+            .pro-banner-table tbody td   { padding: 4px 2px; font-size: 0.48rem; }
+
+            .pro-banner-badge { width: 16px; height: 16px; font-size: 0.48rem; }
+
+            .pro-banner-most-popular   { font-size: 0.36rem; padding: 2px 2px; }
+            .pro-banner-lib-note       { font-size: 0.4rem; }
+
+            .pro-banner-price-amount      { font-size: 0.7rem; }
+            .pro-banner-price-original    { font-size: 0.44rem; }
+            .pro-banner-price-installment { font-size: 0.38rem; }
+
+            .pro-banner-footer { padding: 6px 8px !important; }
+            .pro-banner-footer p { font-size: 0.48rem !important; }
+
+            #closeProBanner {
+                width: 24px !important;
+                height: 24px !important;
+                top: -6px !important;
+                right: -6px !important;
+            }
+            #closeProBanner svg { width: 12px !important; height: 12px !important; }
+        }
+
+        /* ── EXTRA SMALL (340px altı - eski iPhone SE vs) ── */
+        @media (max-width: 340px) {
+            #proBannerInner {
+                margin: 0;
+                max-width: 100vw !important;
+            }
+
+            .pro-banner-header-title  { font-size: 0.62rem; }
+            .pro-banner-header-sub    { font-size: 0.38rem; letter-spacing: 0.5px; }
+
+            .pro-banner-table thead th   { padding: 4px 1px; font-size: 0.44rem; }
+            .pro-banner-table .col-label { padding: 3px 2px; font-size: 0.42rem; width: 20%; }
+            .pro-banner-table tbody td   { padding: 3px 1px; font-size: 0.42rem; }
+
+            .pro-banner-badge { width: 14px; height: 14px; font-size: 0.42rem; }
+
+            .pro-banner-price-amount      { font-size: 0.6rem; }
+            .pro-banner-price-original    { font-size: 0.38rem; }
+            .pro-banner-price-installment { font-size: 0.34rem; }
+
+            .pro-banner-footer p { font-size: 0.42rem !important; }
         }
     </style>
 
@@ -2060,7 +2132,7 @@ function showProBanner() {
             if (e.key === 'Escape' && bannerModal) closeBannerBtn.click();
         });
     }
-}   // Şans çarkının daha önce görülüp görülmediğini kontrol et
+} // Şans çarkının daha önce görülüp görülmediğini kontrol et
             function hasSeenFortuneWheel() {
                 return localStorage.getItem('fortuneWheelSeen') === 'true';
             }
