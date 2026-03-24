@@ -1735,9 +1735,9 @@ function showProBanner() {
         #proBannerModal * { box-sizing: border-box; }
 
         #proBannerInner {
-            max-width: 860px;
+            max-width: clamp(320px, 52vw, 860px);
             width: 100%;
-            margin: 0 12px;
+            margin: 0 auto;
             position: relative;
             transform: scale(0.85) translateY(30px);
             opacity: 0;
@@ -1845,6 +1845,16 @@ function showProBanner() {
             position: relative;
             z-index: 1;
             margin-bottom: 5px;
+        }
+
+        /* ── TABLET ── */
+        @media (max-width: 900px) {
+            .pro-banner-table thead th { padding: 12px 8px; font-size: 0.9rem; }
+            .pro-banner-table tbody td { padding: 10px 8px; font-size: 0.8rem; }
+            .pro-banner-table .col-label { padding: 10px 12px; font-size: 0.8rem; }
+            .pro-banner-price-amount { font-size: 1.5rem; }
+            .pro-banner-price-original { font-size: 0.78rem; }
+            .pro-banner-header-title { font-size: 1.05rem; }
         }
 
         /* ── MOBILE ── */
@@ -2050,7 +2060,7 @@ function showProBanner() {
             if (e.key === 'Escape' && bannerModal) closeBannerBtn.click();
         });
     }
-}    // Şans çarkının daha önce görülüp görülmediğini kontrol et
+}   // Şans çarkının daha önce görülüp görülmediğini kontrol et
             function hasSeenFortuneWheel() {
                 return localStorage.getItem('fortuneWheelSeen') === 'true';
             }

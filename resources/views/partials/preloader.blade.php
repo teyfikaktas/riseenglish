@@ -7,7 +7,7 @@
     </div>
 
     <div class="tagline" id="tagline">
-      <p>Bu bir <span class="hakan-hoca">Hakan Hoca</span> dil öğrenme platformudur</p>
+      <p>Bu Bir <span class="hakan-hoca">Hakan Hoca</span> Dil Öğrenme Platformudur.</p>
       <p class="loading-text">Loading...</p>
 
       <div class="loading-bar" id="loadingBar">
