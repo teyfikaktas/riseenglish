@@ -252,7 +252,8 @@ public function create()
 }
 public function groupDailyReport(Request $request, \App\Models\Group $group)
 {
-    $date = \Carbon\Carbon::today();
+    $request->validate(['date' => 'required|date']);
+    $date = \Carbon\Carbon::parse($request->date);
     $teacherId = auth()->id();
 
     // Gruptaki öğrenci ID'leri
@@ -262,15 +263,17 @@ public function groupDailyReport(Request $request, \App\Models\Group $group)
         return back()->with('error', 'Bu grupta öğrenci bulunamadı.');
     }
 
-    // Sadece bu gruptaki öğrencilere atanmış bugünkü sınavları çek
-    $exams = Exam::where('teacher_id', $teacherId)
+    // Bugünkü TÜM sınavları çek
+    $allExams = Exam::where('teacher_id', $teacherId)
         ->whereDate('start_time', $date->toDateString())
-        ->whereHas('students', function($q) use ($studentIds) {
-            $q->whereIn('users.id', $studentIds);
-        })
-        ->with(['results'])
+        ->with(['results', 'students'])
         ->orderBy('start_time')
         ->get();
+
+    // Sadece bu gruptaki öğrencilere atanmış sınavları filtrele
+    $exams = $allExams->filter(function($exam) use ($studentIds) {
+        return $exam->students->whereIn('id', $studentIds)->isNotEmpty();
+    })->values();
 
     if ($exams->isEmpty()) {
         return back()->with('error', 'Bugün bu gruba ait sınav bulunamadı.');
