@@ -209,6 +209,8 @@ Route::middleware(['auth', 'role:ogretmen'])->group(function () {
     Route::get('/exams/{exam}/report', [ExamController::class, 'downloadReport'])->name('exams.report');
 });
 Route::get('/group-daily-report', [App\Http\Controllers\GroupDailyReportController::class, 'index'])->name('group-daily-report.index');
+Route::get('/group-daily-report/{group}', [App\Http\Controllers\ExamController::class, 'groupDailyReport'])->name('exams.group-daily-report');
+
 Route::get('/kayit-ol', [CustomRegisterController::class, 'create'])->name('register');
 Route::post('/kayit-ol', [CustomRegisterController::class, 'store']);
 Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
