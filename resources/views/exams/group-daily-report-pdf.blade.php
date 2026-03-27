@@ -192,9 +192,9 @@
             <thead>
                 <tr>
                     <th class="student-col">Öğrenci</th>
-                    @foreach($exams as $exam)
+                    @foreach($exams as $index => $exam)
                         <th>
-                            {{ Str::limit($exam->name, 20) }}<br>
+                            Sınav {{ $index + 1 }}<br>
                             <span style="font-size:9px; font-weight:normal;">{{ \Carbon\Carbon::parse($exam->start_time)->format('H:i') }}</span>
                         </th>
                     @endforeach
