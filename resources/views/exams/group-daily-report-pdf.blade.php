@@ -186,7 +186,7 @@
 
     <!-- 2. SAYFA - MATRİS TABLOSU -->
     <div class="report-container">
-        <div class="section-title">GÜNLÜK SINAV MATRİSİ</div>
+        <div class="section-title">GÜNLÜK SINAV SONUÇLARI</div>
 
         <table class="matrix-table">
             <thead>
