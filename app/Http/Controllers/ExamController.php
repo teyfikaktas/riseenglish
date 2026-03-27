@@ -263,7 +263,7 @@ public function groupDailyReport(Request $request, \App\Models\Group $group)
         return back()->with('error', 'Bu grupta öğrenci bulunamadı.');
     }
 
-    // Bugünkü TÜM sınavları çek
+    // Bugünkü tüm sınavları çek
     $allExams = Exam::where('teacher_id', $teacherId)
         ->whereDate('start_time', $date->toDateString())
         ->with(['results', 'students'])
@@ -291,8 +291,8 @@ public function groupDailyReport(Request $request, \App\Models\Group $group)
             if ($result && $result->score > 0) {
                 $row[$exam->id] = [
                     'success_rate' => $result->success_rate,
-                    'correct'      => $result->correct_count,
-                    'wrong'        => $result->wrong_count,
+                    'correct'      => $result->getCorrectAnswersCount(),
+                    'wrong'        => $result->getWrongAnswersCount(),
                 ];
             } else {
                 $row[$exam->id] = null;

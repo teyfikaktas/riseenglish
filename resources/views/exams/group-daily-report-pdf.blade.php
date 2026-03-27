@@ -68,22 +68,6 @@
         .cover-details-table tr:nth-child(3) td:first-child { border-left: 4px solid #7209b7; }
         .cover-details-table tr:nth-child(4) td:first-child { border-left: 4px solid #f72585; }
 
-        .stats-grid { display: table; width: 100%; margin: 20px 0; border-spacing: 10px; }
-        .stat-row { display: table-row; }
-        .stat-box {
-            display: table-cell; padding: 15px; text-align: center;
-            border-radius: 5px; background-color: rgba(249, 250, 251, 0.95);
-            border: 2px solid #eee; width: 33.33%;
-        }
-        .stat-number { font-size: 32px; margin: 8px 0; }
-        .stat-label { font-size: 11px; color: #6b7280; text-transform: uppercase; }
-        .total-students { border-top: 4px solid #0284c7; }
-        .total-students .stat-number { color: #0284c7; }
-        .completed { border-top: 4px solid #16a34a; }
-        .completed .stat-number { color: #16a34a; }
-        .not-completed { border-top: 4px solid #dc2626; }
-        .not-completed .stat-number { color: #dc2626; }
-
         .report-container {
             margin: 30px 40px;
             padding: 10px;
@@ -153,7 +137,6 @@
     @php
         $totalExams = $exams->count();
         $totalStudents = $students->count();
-        $enteredCount = collect($matrix)->filter(fn($row) => collect($row)->whereNotNull()->isNotEmpty())->count();
     @endphp
 
     <!-- KAPAK SAYFASI -->
@@ -198,23 +181,6 @@
                     <td>{{ $totalExams }}</td>
                 </tr>
             </table>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-row">
-                <div class="stat-box total-students">
-                    <div class="stat-label">Öğrenci Sayısı</div>
-                    <div class="stat-number">{{ $totalStudents }}</div>
-                </div>
-                <div class="stat-box completed">
-                    <div class="stat-label">En Az 1 Sınava Giren</div>
-                    <div class="stat-number">{{ $enteredCount }}</div>
-                </div>
-                <div class="stat-box not-completed">
-                    <div class="stat-label">Hiç Girmemiş</div>
-                    <div class="stat-number">{{ $totalStudents - $enteredCount }}</div>
-                </div>
-            </div>
         </div>
     </div>
 
