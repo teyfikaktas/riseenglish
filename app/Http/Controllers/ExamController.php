@@ -53,8 +53,13 @@ $examNames = Exam::where('teacher_id', auth()->id())
         ->orderBy('start_time', 'desc')
         ->paginate(10);
     
-    return view('exams.index', compact('exams', 'todayExams', 'examNames'));
-}
+$groups = \App\Models\Group::where('is_active', true)
+    ->with('teacher')
+    ->withCount('students')
+    ->orderBy('name')
+    ->get();
+
+return view('exams.index', compact('exams', 'todayExams', 'examNames', 'groups'));}
     /**
  * Sınavı sil
  */
@@ -245,7 +250,63 @@ public function create()
         return back()->with('error', 'Bir hata oluştu');
     }
 }
+public function groupDailyReport(Request $request, \App\Models\Group $group)
+{
+    $request->validate(['date' => 'required|date']);
+    $date = \Carbon\Carbon::parse($request->date);
+    $teacherId = auth()->id();
 
+    // O gündeki tüm sınavları çek
+    $exams = Exam::where('teacher_id', $teacherId)
+        ->whereDate('start_time', $date->toDateString())
+        ->with(['results'])
+        ->orderBy('start_time')
+        ->get();
+
+    if ($exams->isEmpty()) {
+        return back()->with('error', 'Seçilen tarihte sınav bulunamadı.');
+    }
+
+    // Gruptaki öğrenciler
+    $students = $group->students()->orderBy('name')->get();
+
+    if ($students->isEmpty()) {
+        return back()->with('error', 'Bu grupta öğrenci bulunamadı.');
+    }
+
+    // Matris oluştur: student_id => [exam_id => [success_rate, correct, wrong] veya null]
+    $matrix = [];
+    foreach ($students as $student) {
+        $row = [];
+        foreach ($exams as $exam) {
+            $result = $exam->results->where('student_id', $student->id)->first();
+            if ($result && $result->score > 0) {
+                $row[$exam->id] = [
+                    'success_rate' => $result->success_rate,
+                    'correct'      => $result->correct_count,
+                    'wrong'        => $result->wrong_count,
+                ];
+            } else {
+                $row[$exam->id] = null;
+            }
+        }
+        $matrix[$student->id] = $row;
+    }
+
+    $pdf = PDF::loadView('exams.group-daily-report-pdf', [
+        'group'    => $group,
+        'students' => $students,
+        'exams'    => $exams,
+        'matrix'   => $matrix,
+        'date'     => $date,
+        'teacher'  => auth()->user(),
+    ]);
+
+    $pdf->setPaper('A4', 'landscape');
+
+    $fileName = 'Grup_Rapor_' . $group->name . '_' . $date->format('d-m-Y') . '.pdf';
+    return $pdf->download($fileName);
+}
 public function store(Request $request)
 {
     try {

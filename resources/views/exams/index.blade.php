@@ -41,7 +41,34 @@
             </form>
             <p class="text-xs text-gray-500 mt-2">Seçilen tarihteki tüm sınavların ve öğrencilerin sonuçlarını tek PDF'te indirir.</p>
         </div>
-
+<!-- Grup Günlük Raporu -->
+<div class="bg-white rounded-xl shadow-lg p-4 mb-6 border border-blue-100">
+    <h2 class="text-base font-semibold text-[#1a2e5a] mb-3 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Grup Günlük Raporu
+    </h2>
+    <div class="flex flex-col sm:flex-row gap-3 items-end">
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Grup Seç</label>
+            <select name="group_id" id="group_report_group" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400">
+                <option value="">-- Grup Seçin --</option>
+                @foreach($groups as $group)
+                    <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->students_count }} öğrenci)</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tarih</label>
+            <input type="date" id="group_report_date" value="{{ date('Y-m-d') }}" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400">
+        </div>
+        <button onclick="getGroupReport()" class="inline-flex items-center gap-2 bg-[#1a2e5a] hover:bg-[#15254a] text-white font-semibold px-6 py-2 rounded-lg transition shadow-md">
+            📊 Rapor Al
+        </button>
+    </div>
+    <p class="text-xs text-gray-500 mt-2">Seçilen grubun belirtilen tarihteki sınav sonuçlarını indirir.</p>
+</div>
 <!-- Toplu Sınav Sil -->
 <div class="bg-white rounded-xl shadow-lg p-4 mb-6 border border-red-100">
     <h2 class="text-base font-semibold text-red-700 mb-3 flex items-center gap-2">
