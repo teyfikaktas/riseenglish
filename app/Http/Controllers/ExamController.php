@@ -252,11 +252,10 @@ public function create()
 }
 public function groupDailyReport(Request $request, \App\Models\Group $group)
 {
-    $request->validate(['date' => 'required|date']);
-    $date = \Carbon\Carbon::parse($request->date);
+    $date = \Carbon\Carbon::today();
     $teacherId = auth()->id();
 
-    // O gündeki tüm sınavları çek
+    // Bugünkü tüm sınavları çek
     $exams = Exam::where('teacher_id', $teacherId)
         ->whereDate('start_time', $date->toDateString())
         ->with(['results'])
@@ -264,7 +263,7 @@ public function groupDailyReport(Request $request, \App\Models\Group $group)
         ->get();
 
     if ($exams->isEmpty()) {
-        return back()->with('error', 'Seçilen tarihte sınav bulunamadı.');
+        return back()->with('error', 'Bugün için sınav bulunamadı.');
     }
 
     // Gruptaki öğrenciler
@@ -274,7 +273,7 @@ public function groupDailyReport(Request $request, \App\Models\Group $group)
         return back()->with('error', 'Bu grupta öğrenci bulunamadı.');
     }
 
-    // Matris oluştur: student_id => [exam_id => [success_rate, correct, wrong] veya null]
+    // Matris oluştur
     $matrix = [];
     foreach ($students as $student) {
         $row = [];
