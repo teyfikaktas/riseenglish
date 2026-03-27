@@ -347,7 +347,21 @@ function deleteExam(examId, examName) {
 function closeDeleteModal() {
     document.getElementById('deleteModal').classList.add('hidden');
 }
+function getGroupReport() {
+    const groupId = document.getElementById('group_report_group').value;
+    const date = document.getElementById('group_report_date').value;
 
+    if (!groupId) {
+        alert('Lütfen bir grup seçin.');
+        return;
+    }
+    if (!date) {
+        alert('Lütfen tarih seçin.');
+        return;
+    }
+
+    window.location.href = `/group-daily-report/${groupId}?date=${date}`;
+}
 async function bulkDeletePreview() {
     const start = document.getElementById('bulk_start').value;
     const end   = document.getElementById('bulk_end').value;
