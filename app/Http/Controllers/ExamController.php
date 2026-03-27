@@ -255,23 +255,29 @@ public function groupDailyReport(Request $request, \App\Models\Group $group)
     $date = \Carbon\Carbon::today();
     $teacherId = auth()->id();
 
-    // Bugünkü tüm sınavları çek
+    // Gruptaki öğrenci ID'leri
+    $studentIds = $group->students()->pluck('users.id')->toArray();
+
+    if (empty($studentIds)) {
+        return back()->with('error', 'Bu grupta öğrenci bulunamadı.');
+    }
+
+    // Sadece bu gruptaki öğrencilere atanmış bugünkü sınavları çek
     $exams = Exam::where('teacher_id', $teacherId)
         ->whereDate('start_time', $date->toDateString())
+        ->whereHas('students', function($q) use ($studentIds) {
+            $q->whereIn('users.id', $studentIds);
+        })
         ->with(['results'])
         ->orderBy('start_time')
         ->get();
 
     if ($exams->isEmpty()) {
-        return back()->with('error', 'Bugün için sınav bulunamadı.');
+        return back()->with('error', 'Bugün bu gruba ait sınav bulunamadı.');
     }
 
     // Gruptaki öğrenciler
     $students = $group->students()->orderBy('name')->get();
-
-    if ($students->isEmpty()) {
-        return back()->with('error', 'Bu grupta öğrenci bulunamadı.');
-    }
 
     // Matris oluştur
     $matrix = [];
