@@ -103,19 +103,28 @@
             border-bottom: 1px solid #eee;
             text-align: center;
             font-size: 12px;
+            color: #000;
         }
         .matrix-table td.student-name {
             text-align: left;
             font-size: 12px;
+            color: #000;
         }
         .matrix-table tr:nth-child(even) td {
             background-color: rgba(249, 250, 251, 0.95);
         }
 
-        .score-high { color: #16a34a; }
-        .score-mid { color: #ca8a04; }
-        .score-low { color: #dc2626; }
-        .score-none { color: #dc2626; font-size: 9px; }
+        .score-text {
+            color: #000;
+        }
+        .score-none {
+            color: #dc2626;
+            font-size: 9px;
+        }
+        .detail-text {
+            font-size: 9px;
+            color: #000;
+        }
 
         .footer {
             margin-top: 40px;
@@ -127,8 +136,18 @@
             padding: 15px;
         }
         .footer-logo { height: 40px; margin-bottom: 10px; }
-        .bottom-logo { text-align: center; margin-top: 20px; }
-        .bottom-logo img { max-width: 600px; height: auto; }
+
+        .bottom-logo {
+            text-align: center;
+            margin-top: 30px;
+            page-break-before: avoid;
+        }
+        .bottom-logo img {
+            max-width: 500px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
 
         @page { size: A4 landscape; margin: 0; }
     </style>
@@ -210,12 +229,9 @@
                             @endphp
                             <td>
                                 @if($cell !== null)
-                                    <span class="{{ $cell['success_rate'] >= 70 ? 'score-high' : ($cell['success_rate'] >= 50 ? 'score-mid' : 'score-low') }}">
-                                        %{{ number_format($cell['success_rate'], 0) }}
-                                    </span>
+                                    <span class="score-text">%{{ number_format($cell['success_rate'], 0) }}</span>
                                     <br>
-                                    <span style="font-size:9px; color:#16a34a;">{{ $cell['correct'] }}D</span>
-                                    <span style="font-size:9px; color:#dc2626;">{{ $cell['wrong'] }}Y</span>
+                                    <span class="detail-text">{{ $cell['correct'] }}D {{ $cell['wrong'] }}Y</span>
                                 @else
                                     <span class="score-none">GİRMEDİ</span>
                                 @endif
