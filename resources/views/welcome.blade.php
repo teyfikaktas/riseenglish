@@ -1712,9 +1712,9 @@ function closeModal() {
         document.body.style.overflow = '';
 
         // BANNER'I GÖSTER - 1.5 saniye sonra
-        setTimeout(() => {
-            showProBanner();
-        }, 1500);
+      //   setTimeout(() => {
+         //    showProBanner();
+       //  }, 1500);
 
         // Sadece giriş yapmayan kullanıcılar için şans çarkını göster
         // Banner'dan sonra
