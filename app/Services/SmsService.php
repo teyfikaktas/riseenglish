@@ -21,7 +21,7 @@ class SmsService
     /**
      * Varsayılan SMS başlık numarası
      */
-    const DEFAULT_HEADER = '3326062804';
+    const DEFAULT_HEADER = 'H.EKINCI';
 
     /**
      * Telefon numarasını formatlama
