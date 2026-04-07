@@ -69,6 +69,34 @@
     </div>
     <p class="text-xs text-gray-500 mt-2">Seçilen grubun belirtilen tarihteki sınav sonuçlarını indirir.</p>
 </div>
+
+<div class="bg-white rounded-xl shadow-lg p-4 mb-6 border border-green-100">
+    <h2 class="text-base font-semibold text-[#1a2e5a] mb-3 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Grup Haftalık Raporu
+    </h2>
+    <div class="flex flex-col sm:flex-row gap-3 items-end">
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Grup Seç</label>
+            <select id="weekly_report_group" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400">
+                <option value="">-- Grup Seçin --</option>
+                @foreach($groups as $group)
+                    <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->students_count }} öğrenci)</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Hafta Başlangıcı (Pazartesi)</label>
+            <input type="date" id="weekly_report_start" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400">
+        </div>
+        <button onclick="getWeeklyReport()" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition shadow-md">
+            📅 Haftalık Rapor Al
+        </button>
+    </div>
+    <p class="text-xs text-gray-500 mt-2">Seçilen grupun Pazartesi'den Cumartesi'ye kadar 6 günlük sınav sonuçlarını indirir.</p>
+</div>
 <!-- Toplu Sınav Sil -->
 <div class="bg-white rounded-xl shadow-lg p-4 mb-6 border border-red-100">
     <h2 class="text-base font-semibold text-red-700 mb-3 flex items-center gap-2">
@@ -361,6 +389,21 @@ function getGroupReport() {
     }
 
     window.location.href = `/group-daily-report/${groupId}?date=${date}`;
+}
+function getWeeklyReport() {
+    const groupId = document.getElementById('weekly_report_group').value;
+    const startDate = document.getElementById('weekly_report_start').value;
+ 
+    if (!groupId) {
+        alert('Lütfen bir grup seçin.');
+        return;
+    }
+    if (!startDate) {
+        alert('Lütfen hafta başlangıç tarihini seçin.');
+        return;
+    }
+ 
+    window.location.href = `/group-weekly-report/${groupId}?start_date=${startDate}`;
 }
 async function bulkDeletePreview() {
     const start = document.getElementById('bulk_start').value;
