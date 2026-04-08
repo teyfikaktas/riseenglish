@@ -46,21 +46,6 @@
             font-size: 14px;
             vertical-align: middle;
         }
-        .report-header-table .header-right {
-            text-align: center;
-        }
-        .hakan-badge {
-            display: inline-block;
-            background-color: #1a2e5a;
-            color: #fff;
-            padding: 8px 30px;
-            border-radius: 8px;
-            font-size: 14px;
-            letter-spacing: 2px;
-            text-align: center;
-            line-height: 1.5;
-            min-width: 100px;
-        }
 
         .date-range-title {
             text-align: center;
@@ -170,9 +155,6 @@
                 <td class="header-left">
                     <img src="{{ public_path('images/logo.png') }}" alt="Rise English">
                     <span>RISE ENGLISH</span>
-                </td>
-                <td class="header-right">
-                    <span class="hakan-badge">HAKAN<br>TEACHER</span>
                 </td>
             </tr>
         </table>
