@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 class ChainBreaker extends Component
 {
     use WithFileUploads;
+public $isPro = false;
 
     public $daysCompleted = 0;
     public $currentStreak = 0;
@@ -68,6 +69,16 @@ class ChainBreaker extends Component
                 $this->showGenderSelector = false; // Eğer zaten seçim yapıldıysa saklayalım
             }
         }
+
+        if ($this->isUserAuthenticated) {
+    $this->isPro = Auth::user()->hasMembership();
+    Log::info('PRO STATUS', [
+        'isPro' => $this->isPro,
+        'userId' => Auth::id(),
+        'activeMembership' => Auth::user()->activeMembership,
+        'membershipCount' => Auth::user()->memberships()->count(),
+    ]);
+}
     }
 
     public function setGender($gender)

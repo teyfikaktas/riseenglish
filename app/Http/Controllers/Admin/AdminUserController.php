@@ -134,21 +134,14 @@ public function edit(User $user)
         ['id' => 'ogrenci', 'name' => 'Öğrenci']
     ];
     
-    // Kullanıcının rollerini çek
     $userRoles = $user->getRoleNames()->toArray();
-    
-    // Tüm grupları çek
     $groups = \App\Models\Group::with('teacher')->where('is_active', true)->get();
-    
-    // Kullanıcının gruplarını çek
     $userGroups = $user->groups->pluck('id')->toArray();
-    
-    // Öğretmenleri çek (grup oluşturma için)
     $teachers = User::role('ogretmen')->get();
+    $memberships = $user->memberships()->orderBy('created_at', 'desc')->get();
     
-    return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'groups', 'userGroups', 'teachers'));
+    return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'groups', 'userGroups', 'teachers', 'memberships'));
 }
-
 public function approve(User $user)
 {
     if (!$user->hasRole('ogrenci')) {
@@ -361,6 +354,7 @@ public function destroy(User $user)
         // 13. API tokenları (Sanctum)
         $user->tokens()->delete();
         
+        $user->memberships()->delete();
         // Son olarak user'ı sil
         $user->delete();
         
@@ -371,6 +365,62 @@ public function destroy(User $user)
         return redirect()->route('admin.users.index')
             ->with('error', 'Kullanıcı silinirken bir hata oluştu: ' . $e->getMessage());
     }
+}
+
+/**
+ * Membership ekle
+ */
+public function addMembership(Request $request, User $user)
+{
+    $request->validate([
+        'starts_at' => 'required|date',
+        'expires_at' => 'required|date|after:starts_at',
+        'amount' => 'nullable|numeric|min:0',
+        'notes' => 'nullable|string|max:500',
+    ]);
+
+    $user->memberships()->create([
+        'starts_at' => $request->starts_at,
+        'expires_at' => $request->expires_at,
+        'amount' => $request->amount ?? 0,
+        'is_active' => true,
+        'notes' => $request->notes,
+    ]);
+
+    return back()->with('success', 'Membership başarıyla eklendi.');
+}
+
+/**
+ * Membership güncelle
+ */
+public function updateMembership(Request $request, User $user, \App\Models\Membership $membership)
+{
+    $request->validate([
+        'starts_at' => 'required|date',
+        'expires_at' => 'required|date|after:starts_at',
+        'amount' => 'nullable|numeric|min:0',
+        'is_active' => 'boolean',
+        'notes' => 'nullable|string|max:500',
+    ]);
+
+    $membership->update([
+        'starts_at' => $request->starts_at,
+        'expires_at' => $request->expires_at,
+        'amount' => $request->amount ?? 0,
+        'is_active' => $request->boolean('is_active'),
+        'notes' => $request->notes,
+    ]);
+
+    return back()->with('success', 'Membership güncellendi.');
+}
+
+/**
+ * Membership sil
+ */
+public function deleteMembership(User $user, \App\Models\Membership $membership)
+{
+    $membership->delete();
+    return back()->with('success', 'Membership silindi.');
 }
 
     /**

@@ -316,6 +316,67 @@ public function groupDailyReport(Request $request, \App\Models\Group $group)
     return $pdf->download($fileName);
 }
 
+public function selfCreate()
+{
+    $student = auth()->user();
+
+    $wordSets = $student->wordSets()
+        ->where('is_active', 1)
+        ->withCount('words')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return view('exams.self-create', compact('wordSets'));
+}
+
+public function selfStore(Request $request)
+{
+    $validated = $request->validate([
+        'word_sets'          => 'required|array|min:1',
+        'word_sets.*'        => 'exists:word_sets,id',
+        'time_per_question'  => 'required|integer|min:30|max:60',
+        'start_date'         => 'required|date|after_or_equal:today',
+        'end_date'           => 'required|date|after_or_equal:start_date',
+    ]);
+
+    $student   = auth()->user();
+    $startDate = \Carbon\Carbon::parse($validated['start_date']);
+    $endDate   = \Carbon\Carbon::parse($validated['end_date']);
+
+    // Max 7 gün kontrolü
+    if ($startDate->diffInDays($endDate) > 6) {
+        return back()->withInput()->with('error', 'En fazla 7 günlük aralık seçebilirsiniz.');
+    }
+
+    $createdExams = [];
+    $currentDate  = $startDate->copy();
+
+    while ($currentDate->lte($endDate)) {
+        $exam = \App\Models\Exam::create([
+            'teacher_id'        => $student->id,
+            'name'              => 'Kendi Sınavım - ' . $currentDate->isoFormat('D MMMM, dddd'),
+            'description'       => 'Öğrenci tarafından oluşturuldu',
+            'start_time'        => $currentDate->copy()->setTime(9, 0)->format('Y-m-d H:i:s'),
+            'time_per_question' => $validated['time_per_question'],
+            'is_active'         => true,
+        ]);
+
+        $exam->wordSets()->attach($validated['word_sets']);
+        $exam->students()->attach([$student->id]);
+
+        $createdExams[] = $exam;
+        $currentDate->addDay();
+    }
+
+    $firstDate = $startDate->isoFormat('D MMMM');
+    $lastDate  = $endDate->isoFormat('D MMMM');
+    $count     = count($createdExams);
+
+    return redirect()
+        ->back()
+        ->with('success', "Tebrikler! {$firstDate} - {$lastDate} tarihleri arasında {$count} sınavınız oluşturuldu.");
+}
+
 /**
      * Grup Haftalık Rapor - Pazartesi-Cumartesi arası günlük toplamlar
      * Route: GET /group-weekly-report/{group}?start_date=2025-03-08

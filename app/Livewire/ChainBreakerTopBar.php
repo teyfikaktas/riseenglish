@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ChainBreakerTopBar extends Component
 {
+    
     public $daysCompleted = 0;
     public $currentLevel = 'Bronz';
     public $motivationalText = 'Yolun başındasın!';
@@ -16,17 +17,37 @@ class ChainBreakerTopBar extends Component
     public $daysUntilNextLevel = 0;
     public $nextLevel = '';
     public $nextLevelImagePath = '';
-    
+    public $isPro = false;
+    public $proBitisTarihi = null;
+public $proKalanGun = 0;
+
+public $isUserAuthenticated = false;
+
     protected $listeners = [
         'refreshProgress' => 'refreshProgress',
         'dayCompleted' => 'refreshProgress'
     ];
 
-    public function mount()
-    {
-        $this->refreshProgress();
-    }
+public function mount()
+{
+    $this->isUserAuthenticated = Auth::check();
+    $this->refreshProgress();
 
+    if ($this->isUserAuthenticated) {
+        try {
+            $this->isPro = Auth::user()->hasMembership();
+            if ($this->isPro) {
+                $membership = Auth::user()->activeMembership;
+                if ($membership && $membership->expires_at) {
+                    $this->proKalanGun = (int) now()->diffInDays($membership->expires_at, false);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('PRO CHECK ERROR: ' . $e->getMessage());
+            $this->isPro = false;
+        }
+    }
+}
     public function refreshProgress()
     {
         if (!Auth::check() || !Auth::user()->hasRole('ogrenci')) {

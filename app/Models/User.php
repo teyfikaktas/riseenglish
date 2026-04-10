@@ -2,90 +2,32 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-use Laravel\Sanctum\HasApiTokens; // ✅ BU SATIRI EKLE
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, HasRoles; // ✅ HasApiTokens ekle
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'parent_phone_number',
         'parent_phone_number_2',
-        'phone',             // Telefon numarası alanı
-        'phone_verified',    // Telefon doğrulama durumu
-        'phone_verified_at', // Telefon doğrulama tarihi
+        'phone',
+        'phone_verified',
+        'phone_verified_at',
         'password',
     ];
 
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
-// Öğretmen olarak verdiği kurslar
-    public function teachingCourses()
-    {
-        return $this->hasMany(Course::class, 'teacher_id');
-    }
 
-    // Öğrenci olarak katıldığı kurslar
-    public function enrolledCourses()
-    {
-        return $this->belongsToMany(Course::class, 'course_user')
-                ->withPivot('enrollment_date', 'status_id', 'paid_amount', 'payment_completed', 'completion_date', 'final_grade', 'notes')
-                ->withTimestamps();
-    }
-
-    // Kullanıcının katılımları
-    public function attendances()
-    {
-        return $this->hasMany(Attendance::class, 'user_id');
-    }
-public function chainActivities()
-{
-    return $this->hasMany(ChainActivity::class);
-}
-/**
- * Kullanıcının zincir ilerlemesi
- */
-public function chainProgress()
-{
-    return $this->hasOne(ChainProgress::class);
-}
-    // Kullanıcının değerlendirme sonuçları
-    public function assessmentResults()
-    {
-        return $this->hasMany(AssessmentResult::class, 'user_id');
-    }
-
-    // Kullanıcının yaptığı kurs değerlendirmeleri
-    public function courseReviews()
-    {
-        return $this->hasMany(CourseReview::class, 'user_id');
-    }
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -93,31 +35,84 @@ public function chainProgress()
             'password' => 'hashed',
         ];
     }
-    // Öğrencinin kendi oluşturduğu kelime setleri
-public function wordSets()
-{
-    return $this->hasMany(WordSet::class, 'user_id');
-}
-/**
- * Öğrencinin dahil olduğu gruplar
- */
-public function groups()
-{
-    return $this->belongsToMany(Group::class, 'group_user')
-                ->withPivot('joined_at')
-                ->withTimestamps();
-}
-// User.php model'ine ekle
-public function privateLessonSessions()
-{
-    return $this->hasMany(PrivateLessonSession::class, 'student_id');
-}
-/**
- * Öğretmen olarak yönettiği gruplar
- */
-public function teachingGroups()
-{
-    return $this->hasMany(Group::class, 'teacher_id');
-}
 
+    public function teachingCourses()
+    {
+        return $this->hasMany(Course::class, 'teacher_id');
+    }
+
+    public function enrolledCourses()
+    {
+        return $this->belongsToMany(Course::class, 'course_user')
+                ->withPivot('enrollment_date', 'status_id', 'paid_amount', 'payment_completed', 'completion_date', 'final_grade', 'notes')
+                ->withTimestamps();
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'user_id');
+    }
+
+    public function chainActivities()
+    {
+        return $this->hasMany(ChainActivity::class);
+    }
+
+    public function chainProgress()
+    {
+        return $this->hasOne(ChainProgress::class);
+    }
+
+    public function assessmentResults()
+    {
+        return $this->hasMany(AssessmentResult::class, 'user_id');
+    }
+
+    public function courseReviews()
+    {
+        return $this->hasMany(CourseReview::class, 'user_id');
+    }
+
+    public function wordSets()
+    {
+        return $this->hasMany(WordSet::class, 'user_id');
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_user')
+                    ->withPivot('joined_at')
+                    ->withTimestamps();
+    }
+
+    public function privateLessonSessions()
+    {
+        return $this->hasMany(PrivateLessonSession::class, 'student_id');
+    }
+
+    public function teachingGroups()
+    {
+        return $this->hasMany(Group::class, 'teacher_id');
+    }
+
+    // Tüm membership kayıtları
+    public function memberships()
+    {
+        return $this->hasMany(Membership::class);
+    }
+
+    // Aktif membership
+    public function activeMembership()
+    {
+        return $this->hasOne(Membership::class)
+                    ->where('is_active', true)
+                    ->where('expires_at', '>', now())
+                    ->latest('starts_at');
+    }
+
+    // Membership geçerli mi?
+    public function hasMembership(): bool
+    {
+        return $this->activeMembership()->exists();
+    }
 }

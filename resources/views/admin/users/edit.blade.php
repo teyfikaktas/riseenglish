@@ -29,58 +29,52 @@
     </div>
     @endif
 
+    <!-- ====== KULLANICI BİLGİLERİ FORMU ====== -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-6">
             <form action="{{ route('admin.users.update', $user->id) }}" method="POST">
                 @csrf
                 @method('PUT')
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- İsim -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-1">İsim</label>
                         <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
                     </div>
-                    
-                    <!-- Email -->
+
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
                     </div>
-                    
-                    <!-- Telefon -->
+
                     <div>
                         <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
                         <input type="text" name="phone" id="phone" value="{{ old('phone', $user->phone) }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     </div>
-                    
-                    <!-- Veli Telefon Numarası (Öğrenciler için) -->
+
                     <div>
-                        <label for="parent_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Veli Telefon Numarası (Öğrenciler için)</label>
+                        <label for="parent_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Veli Telefon Numarası</label>
                         <input type="text" name="parent_phone_number" id="parent_phone_number" value="{{ old('parent_phone_number', $user->parent_phone_number) }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     </div>
-                    
-                    <!-- İkinci Veli Telefon Numarası (Öğrenciler için) -->
+
                     <div>
                         <label for="parent_phone_number_2" class="block text-sm font-medium text-gray-700 mb-1">İkinci Veli Telefon Numarası</label>
                         <input type="text" name="parent_phone_number_2" id="parent_phone_number_2" value="{{ old('parent_phone_number_2', $user->parent_phone_number_2) }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     </div>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- Şifre -->
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Şifre (Değiştirmek istemiyorsanız boş bırakın)</label>
                         <input type="password" name="password" id="password" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     </div>
-                    
-                    <!-- Şifre Onay -->
+
                     <div>
                         <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Şifre Onayı</label>
                         <input type="password" name="password_confirmation" id="password_confirmation" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     </div>
                 </div>
-                
+
                 <!-- Roller -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Kullanıcı Rolleri</label>
@@ -94,21 +88,20 @@
                     </div>
                 </div>
 
-                <!-- Gruplar (Sadece öğrenciler için) -->
+                <!-- Gruplar -->
                 <div class="mb-6" id="groups-section">
                     <div class="mb-2">
                         <label class="block text-sm font-medium text-gray-700">
                             Gruplar <span class="text-gray-500 text-xs">(Öğrenci rolü seçili ise görünür)</span>
                         </label>
                     </div>
-                    
-                    <!-- Grup Arama -->
+
                     @if(!$groups->isEmpty())
                     <div class="mb-4">
                         <input type="text" id="groupSearch" placeholder="Grup ara..." class="w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     </div>
                     @endif
-                    
+
                     <div id="groupsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach ($groups as $group)
                         <div class="group-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50" data-group-name="{{ strtolower($group->name) }}" data-teacher-name="{{ $group->teacher ? strtolower($group->teacher->name) : '' }}">
@@ -125,17 +118,17 @@
                         </div>
                         @endforeach
                         @if($groups->isEmpty())
-                        <p id="noGroupsMsg" class="text-gray-500 text-sm col-span-full">
+                        <p class="text-gray-500 text-sm col-span-full">
                             Henüz grup oluşturulmamış. <a href="{{ route('admin.groups.index') }}" class="text-blue-600 hover:underline">Grup Yönetimi</a> sayfasından grup oluşturabilirsiniz.
                         </p>
                         @endif
                     </div>
-                    
+
                     <div id="noResultsMsg" class="hidden text-gray-500 text-sm mt-4">
                         Arama sonucu bulunamadı.
                     </div>
                 </div>
-                
+
                 <div class="flex justify-end space-x-3">
                     <button type="button" onclick="window.location='{{ route('admin.users.show', $user->id) }}'" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg">
                         İptal
@@ -150,6 +143,85 @@
             </form>
         </div>
     </div>
+
+    <!-- ====== PRO ÜYELİK BÖLÜMÜ (Ana formun DIŞINDA) ====== -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mt-6">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Pro Üyelik</h2>
+                <button type="button" onclick="document.getElementById('proForm').classList.toggle('hidden')" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Pro Üyelik Ekle
+                </button>
+            </div>
+
+            <!-- Aktif Üyelik Durumu -->
+            @if($user->activeMembership)
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mb-1">PRO AKTİF</span>
+                        <p class="text-sm text-gray-700">{{ $user->activeMembership->starts_at->format('d.m.Y') }} - {{ $user->activeMembership->expires_at->format('d.m.Y') }}</p>
+                        <p class="text-sm text-gray-500">Kalan: <strong class="text-green-600">{{ $user->activeMembership->remainingDays() }} gün</strong></p>
+                        @if($user->activeMembership->amount > 0)
+                        <p class="text-sm text-gray-500">Tutar: {{ number_format($user->activeMembership->amount, 2, ',', '.') }} ₺</p>
+                        @endif
+                    </div>
+                    <form action="{{ route('admin.users.deleteMembership', [$user->id, $user->activeMembership->id]) }}" method="POST" onsubmit="return confirm('Pro üyeliği iptal etmek istediğinize emin misiniz?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-xs px-3 py-1.5 rounded bg-red-100 text-red-700 hover:bg-red-200">İptal Et</button>
+                    </form>
+                </div>
+            </div>
+            @else
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">PRO DEĞİL</span>
+            </div>
+            @endif
+
+            <!-- Yeni Pro Üyelik Formu -->
+            <div id="proForm" class="hidden bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                <form action="{{ route('admin.users.addMembership', $user->id) }}" method="POST">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Başlangıç</label>
+                            <input type="date" name="starts_at" value="{{ date('Y-m-d') }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Bitiş</label>
+                            <input type="date" name="expires_at" value="{{ date('Y-m-d', strtotime('+30 days')) }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Tutar (₺)</label>
+                            <input type="number" name="amount" step="0.01" min="0" placeholder="0.00" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-1.5 px-4 rounded-lg">Pro Yap</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Geçmiş Üyelikler -->
+            @if($memberships->where('id', '!=', optional($user->activeMembership)->id)->count() > 0)
+            <details class="mt-3">
+                <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700">Geçmiş Üyelikler ({{ $memberships->where('id', '!=', optional($user->activeMembership)->id)->count() }})</summary>
+                <div class="mt-2 space-y-1">
+                    @foreach($memberships->where('id', '!=', optional($user->activeMembership)->id) as $m)
+                    <div class="flex items-center justify-between text-sm text-gray-500 py-1 border-b border-gray-100">
+                        <span>{{ $m->starts_at->format('d.m.Y') }} - {{ $m->expires_at->format('d.m.Y') }}</span>
+                        <span>{{ number_format($m->amount, 2, ',', '.') }} ₺</span>
+                    </div>
+                    @endforeach
+                </div>
+            </details>
+            @endif
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -162,17 +234,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const groupSearch = document.getElementById('groupSearch');
     const groupItems = document.querySelectorAll('.group-item');
     const noResultsMsg = document.getElementById('noResultsMsg');
-    
-    // Grup arama fonksiyonu
+
     if (groupSearch) {
         groupSearch.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
             let visibleCount = 0;
-            
+
             groupItems.forEach(item => {
                 const groupName = item.dataset.groupName;
                 const teacherName = item.dataset.teacherName;
-                
+
                 if (groupName.includes(searchTerm) || teacherName.includes(searchTerm)) {
                     item.classList.remove('hidden');
                     visibleCount++;
@@ -180,8 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     item.classList.add('hidden');
                 }
             });
-            
-            // Sonuç bulunamadı mesajı
+
             if (visibleCount === 0 && searchTerm !== '') {
                 noResultsMsg.classList.remove('hidden');
             } else {
@@ -189,11 +259,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-    
-    // Rol kontrolü
+
     function checkRoles() {
         const checkedRoles = document.querySelectorAll('input[name="roles[]"]:checked');
-        
+
         if (checkedRoles.length === 0) {
             submitButton.disabled = true;
             submitButton.classList.add('opacity-50', 'cursor-not-allowed');
@@ -202,7 +271,6 @@ document.addEventListener('DOMContentLoaded', function () {
             submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
         }
 
-        // Öğrenci rolü seçiliyse grup seçimini göster
         const isStudent = Array.from(checkedRoles).some(cb => cb.value === 'ogrenci');
         if (isStudent) {
             groupsSection.classList.remove('opacity-50');
@@ -212,12 +280,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (groupSearch) groupSearch.disabled = true;
         }
     }
-    
+
     roleCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', checkRoles);
     });
-    
-    // Sayfa yüklendiğinde kontrol et
+
     checkRoles();
 });
 </script>

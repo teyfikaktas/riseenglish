@@ -456,11 +456,17 @@
             </div>
             
             <!-- Seviye etiketi - İyileştirilmiş görünüm -->
-            <div class="mt-2 px-3 py-1 bg-gradient-to-r from-[#1a2e5a] to-[#2a4e8a] text-white rounded-lg shadow-lg transform -rotate-2 hover:rotate-0 transition-all duration-300 font-bold text-xs sm:text-sm relative min-w-20">
-                <span class="relative z-10">{{ $currentLevel }}</span>
-                <!-- Seviye etiketi için ışıltı efekti -->
-                <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 blur-sm transform translate-y-1/2 animate-shine"></span>
-            </div>
+<!-- Seviye etiketi - İyileştirilmiş görünüm -->
+<div class="mt-2 px-3 py-1 bg-gradient-to-r from-[#1a2e5a] to-[#2a4e8a] text-white rounded-lg shadow-lg transform -rotate-2 hover:rotate-0 transition-all duration-300 font-bold text-xs sm:text-sm relative min-w-20">
+    <span class="relative z-10">{{ $currentLevel }}</span>
+    <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 blur-sm transform translate-y-1/2 animate-shine"></span>
+</div>
+
+@if ($isPro)
+<div class="mt-1 px-2 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-md shadow-md text-[10px] sm:text-xs font-bold text-center animate-pulse">
+    <i class="fas fa-crown mr-0.5"></i>PRO
+</div>
+@endif
         </div>
     </div>
 

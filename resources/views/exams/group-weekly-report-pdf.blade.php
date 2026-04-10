@@ -145,7 +145,7 @@
 </head>
 <body>
     @php
-        $dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+        $dayNames = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
     @endphp
 
     <!-- HAFTALIK SINAV SONUÇLARI -->

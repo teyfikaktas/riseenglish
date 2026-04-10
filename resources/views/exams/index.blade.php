@@ -88,7 +88,7 @@
             </select>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Hafta Başlangıcı (Pazartesi)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Hafta Başlangıcı (Pazar)</label>
             <input type="date" id="weekly_report_start" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400">
         </div>
         <button onclick="getWeeklyReport()" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition shadow-md">
@@ -366,6 +366,28 @@
 
 @push('scripts')
 <script>
+
+// Haftalık rapor tarih input'unu sadece Pazar günleriyle sınırla
+const weeklyInput = document.getElementById('weekly_report_start');
+
+// Varsayılan olarak bu haftanın Pazarını set et
+const today = new Date();
+const dayOfWeek = today.getDay(); // 0=Pazar
+const lastSunday = new Date(today);
+lastSunday.setDate(today.getDate() - dayOfWeek);
+weeklyInput.value = lastSunday.toISOString().split('T')[0];
+
+weeklyInput.addEventListener('change', function() {
+    const selected = new Date(this.value + 'T00:00:00');
+    if (selected.getDay() !== 0) {
+        alert('Lütfen bir Pazar günü seçin.');
+        // En yakın önceki Pazara snap'le
+        selected.setDate(selected.getDate() - selected.getDay());
+        this.value = selected.toISOString().split('T')[0];
+    }
+});
+
+
 function deleteExam(examId, examName) {
     document.getElementById('examNameToDelete').textContent = examName;
     document.getElementById('deleteForm').action = `/exams/${examId}`;
