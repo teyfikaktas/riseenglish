@@ -21,6 +21,10 @@
                                             ⚠️ Süre dolmuş
                                         @endif
                                     </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 ml-1 align-middle">
+                                        Ücretsiz versiyon, Hakan Hoca ile iletişime geçiniz.
+                                    </span>
                                 @endif
                             </h3>
                             <div class="flex items-center space-x-2">
@@ -88,6 +92,10 @@
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-white ml-1 align-middle">
                                             <i class="fas fa-crown mr-0.5"></i>PRO
                                         </span>
+                                    @else
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-semibold bg-gray-100 text-gray-600 ml-1 align-middle">
+                                            Ücretsiz versiyon
+                                        </span>
                                     @endif
                                 </h3>
                                 <p class="text-xs text-gray-600">{{ $motivationalText }}</p>
@@ -98,6 +106,10 @@
                                         @else
                                             ⚠️ Pro süreniz dolmuş
                                         @endif
+                                    </p>
+                                @else
+                                    <p class="text-[10px] mt-0.5 text-gray-500 font-semibold">
+                                        Hakan Hoca ile iletişime geçiniz.
                                     </p>
                                 @endif
                             </div>
