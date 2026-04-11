@@ -34,36 +34,37 @@
             @csrf
 
             <!-- Set Seçimi -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-[#1a2e5a] mb-4">Kelime Setlerini Seç</h2>
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <h2 class="text-xl font-bold text-[#1a2e5a] mb-4">Kelime Setini Seç</h2>
 
-                @if($wordSets->count() > 0)
-                    <div class="space-y-3">
-                        @foreach($wordSets as $set)
-                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-[#1a2e5a] cursor-pointer transition-all">
-                                <input type="checkbox"
-                                       name="word_sets[]"
-                                       value="{{ $set->id }}"
-                                       class="w-5 h-5 text-[#1a2e5a] rounded focus:ring-[#1a2e5a]">
-                                <div class="ml-4 flex-1">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-4 h-4 rounded" style="background-color: {{ $set->color }}"></div>
-                                        <span class="font-semibold text-gray-900">{{ $set->name }}</span>
-                                        <span class="text-sm text-gray-500">({{ $set->words_count ?? $set->word_count }} kelime)</span>
-                                    </div>
-                                    @if($set->description)
-                                        <p class="text-sm text-gray-600 mt-1 ml-7">{{ $set->description }}</p>
-                                    @endif
-                                </div>
-                            </label>
-                        @endforeach
+    @if($wordSets->count() > 0)
+        <div class="space-y-3">
+            @foreach($wordSets as $set)
+                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-[#1a2e5a] cursor-pointer transition-all">
+                    <input type="radio"
+                           name="word_set"
+                           value="{{ $set->id }}"
+                           class="w-5 h-5 text-[#1a2e5a] focus:ring-[#1a2e5a]"
+                           required>
+                    <div class="ml-4 flex-1">
+                        <div class="flex items-center gap-3">
+                            <div class="w-4 h-4 rounded" style="background-color: {{ $set->color }}"></div>
+                            <span class="font-semibold text-gray-900">{{ $set->name }}</span>
+                            <span class="text-sm text-gray-500">({{ $set->words_count ?? $set->word_count }} kelime)</span>
+                        </div>
+                        @if($set->description)
+                            <p class="text-sm text-gray-600 mt-1 ml-7">{{ $set->description }}</p>
+                        @endif
                     </div>
-                @else
-                    <div class="text-center py-8 text-gray-500">
-                        <p>Henüz kelime setin yok. Önce bir set oluştur!</p>
-                    </div>
-                @endif
-            </div>
+                </label>
+            @endforeach
+        </div>
+    @else
+        <div class="text-center py-8 text-gray-500">
+            <p>Henüz kelime setin yok. Önce bir set oluştur!</p>
+        </div>
+    @endif
+</div>
 
             <!-- Süre Seçimi -->
             <div class="bg-white rounded-xl shadow-lg p-6">
@@ -72,11 +73,11 @@
                     <input type="range"
                            name="time_per_question"
                            id="time_slider"
-                           min="30" max="60" value="30" step="5"
+                           min="15" max="30" value="15" step="5"
                            class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1a2e5a]">
-                    <span id="time_display" class="text-2xl font-bold text-[#1a2e5a] min-w-[60px] text-center">30 sn</span>
+                    <span id="time_display" class="text-2xl font-bold text-[#1a2e5a] min-w-[60px] text-center">15 sn</span>
                 </div>
-                <p class="text-xs text-gray-500 mt-2">Her soru için ayrılan süre (30-60 saniye)</p>
+                <p class="text-xs text-gray-500 mt-2">Her soru için ayrılan süre (15-30 saniye)</p>
             </div>
 
             <!-- Tarih Aralığı -->
@@ -104,7 +105,17 @@
                                required>
                     </div>
                 </div>
-
+<!-- Sınav Saati -->
+<div class="bg-white rounded-xl shadow-lg p-6">
+    <h2 class="text-xl font-bold text-[#1a2e5a] mb-4">Sınav Saati</h2>
+    <p class="text-sm text-gray-600 mb-4">Sınavların her gün kaçta aktif olacağını seç.</p>
+    <input type="time"
+           name="exam_time"
+           id="exam_time"
+           value="09:00"
+           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a2e5a] focus:border-transparent text-lg"
+           required>
+</div>
                 <!-- Tarih özeti -->
                 <div id="date_summary" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p class="text-sm text-blue-800" id="date_summary_text"></p>

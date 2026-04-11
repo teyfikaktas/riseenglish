@@ -331,13 +331,13 @@ public function selfCreate()
 
 public function selfStore(Request $request)
 {
-    $validated = $request->validate([
-        'word_sets'          => 'required|array|min:1',
-        'word_sets.*'        => 'exists:word_sets,id',
-        'time_per_question'  => 'required|integer|min:30|max:60',
-        'start_date'         => 'required|date|after_or_equal:today',
-        'end_date'           => 'required|date|after_or_equal:start_date',
-    ]);
+$validated = $request->validate([
+    'word_set'           => 'required|exists:word_sets,id',
+    'time_per_question'  => 'required|integer|min:15|max:30',
+    'exam_time'          => 'required|date_format:H:i',
+    'start_date'         => 'required|date|after_or_equal:today',
+    'end_date'           => 'required|date|after_or_equal:start_date',
+]);
 
     $student   = auth()->user();
     $startDate = \Carbon\Carbon::parse($validated['start_date']);
@@ -356,13 +356,12 @@ public function selfStore(Request $request)
             'teacher_id'        => $student->id,
             'name'              => 'Kendi Sınavım - ' . $currentDate->isoFormat('D MMMM, dddd'),
             'description'       => 'Öğrenci tarafından oluşturuldu',
-            'start_time'        => $currentDate->copy()->setTime(9, 0)->format('Y-m-d H:i:s'),
+'start_time' => $currentDate->copy()->setTimeFromTimeString($validated['exam_time'])->format('Y-m-d H:i:s'),
             'time_per_question' => $validated['time_per_question'],
             'is_active'         => true,
         ]);
 
-        $exam->wordSets()->attach($validated['word_sets']);
-        $exam->students()->attach([$student->id]);
+$exam->wordSets()->attach([$validated['word_set']]);        $exam->students()->attach([$student->id]);
 
         $createdExams[] = $exam;
         $currentDate->addDay();

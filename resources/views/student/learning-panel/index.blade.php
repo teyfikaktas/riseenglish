@@ -8,10 +8,10 @@
                 <div class="px-3 py-1 bg-[#e63946] text-white rounded-full text-xs font-bold">
                     Öğrenci Girişi
                 </div>
-                        <a href="{{ route('exams.self-create') }}" 
-           class="px-3 py-1 bg-[#1a2e5a] text-white rounded-full text-xs font-bold hover:bg-[#2a4a7a] transition-colors">
-            📝 Sınav Oluştur
-        </a>
+<a href="{{ route('exams.self-create') }}" 
+   class="px-5 py-2.5 bg-[#1a2e5a] text-white rounded-full text-sm font-bold hover:bg-[#2a4a7a] transition-colors">
+    📝 Sınav Oluştur
+</a>
             </div>
 
             <div class="bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] rounded-lg p-4 text-white">
