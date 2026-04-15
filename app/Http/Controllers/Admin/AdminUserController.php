@@ -123,7 +123,41 @@ class AdminUserController extends Controller
         
         return view('admin.users.show', compact('user', 'enrolledCourses', 'taughtCourses'));
     }
+public function proStudents()
+{
+    $groups = \App\Models\Group::where('is_active', true)
+        ->with(['students', 'teacher'])
+        ->orderBy('name')
+        ->get();
 
+    return view('admin.users.pro-students', compact('groups'));
+}
+
+
+/**
+ * Pro Öğrenciler PDF Rapor
+ * Route: GET /admin/pro-students/{group}/pdf
+ */
+public function proStudentsPdf(\App\Models\Group $group)
+{
+    $group->load(['students.activeMembership', 'teacher']);
+
+    $students = $group->students->sortBy('name')->values();
+
+    if ($students->isEmpty()) {
+        return back()->with('error', 'Bu grupta öğrenci bulunamadı.');
+    }
+
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.pro-students-pdf', [
+        'group'    => $group,
+        'students' => $students,
+    ]);
+
+    $pdf->setPaper('A4', 'portrait');
+
+    $fileName = 'Pro_Ogrenciler_' . $group->name . '_' . now()->format('d-m-Y') . '.pdf';
+    return $pdf->download($fileName);
+}
 // AdminUserController.php içine ekle
 
 public function edit(User $user)
@@ -419,10 +453,9 @@ public function updateMembership(Request $request, User $user, \App\Models\Membe
  */
 public function deleteMembership(User $user, \App\Models\Membership $membership)
 {
-    $membership->delete();
-    return back()->with('success', 'Membership silindi.');
+    $membership->update(['is_active' => false]);
+    return back()->with('success', 'Membership iptal edildi.');
 }
-
     /**
      * Kullanıcının belirli bir kurs için kayıt verilerini döndürür (JSON)
      */

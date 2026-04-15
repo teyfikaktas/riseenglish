@@ -206,19 +206,27 @@
                 </form>
             </div>
 
-            <!-- Geçmiş Üyelikler -->
-            @if($memberships->where('id', '!=', optional($user->activeMembership)->id)->count() > 0)
-            <details class="mt-3">
-                <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700">Geçmiş Üyelikler ({{ $memberships->where('id', '!=', optional($user->activeMembership)->id)->count() }})</summary>
-                <div class="mt-2 space-y-1">
-                    @foreach($memberships->where('id', '!=', optional($user->activeMembership)->id) as $m)
-                    <div class="flex items-center justify-between text-sm text-gray-500 py-1 border-b border-gray-100">
-                        <span>{{ $m->starts_at->format('d.m.Y') }} - {{ $m->expires_at->format('d.m.Y') }}</span>
-                        <span>{{ number_format($m->amount, 2, ',', '.') }} ₺</span>
-                    </div>
-                    @endforeach
-                </div>
-            </details>
+          <!-- Geçmiş Üyelikler -->
+@php
+    $pastMemberships = $memberships->where('id', '!=', optional($user->activeMembership)->id);
+@endphp
+@if($pastMemberships->count() > 0)
+<details class="mt-3">
+    <summary class="text-sm text-gray-500 cursor-pointer hover:text-gray-700">Geçmiş Üyelikler ({{ $pastMemberships->count() }})</summary>
+    <div class="mt-2 space-y-1">
+        @foreach($pastMemberships as $m)
+        <div class="flex items-center justify-between text-sm py-1 border-b border-gray-100 {{ !$m->is_active ? 'text-red-400' : 'text-gray-500' }}">
+            <span>
+                {{ $m->starts_at->format('d.m.Y') }} - {{ $m->expires_at->format('d.m.Y') }}
+                @if(!$m->is_active)
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-red-50 text-red-500 ml-1">İptal Edildi</span>
+                @endif
+            </span>
+            <span>{{ number_format($m->amount, 2, ',', '.') }} ₺</span>
+        </div>
+        @endforeach
+    </div>
+</details>
             @endif
         </div>
     </div>

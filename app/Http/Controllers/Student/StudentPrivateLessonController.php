@@ -484,7 +484,7 @@ private function sendSubmissionSMS($session, $homework, $submission, $isLate)
                 \Illuminate\Support\Facades\Log::info("ÖĞRENCİ ÖDEV TESLİM SMS GÖNDERME - Telefon: {$studentPhone}, İçerik: {$studentSmsContent}");
                 
                 // Öğrenciye SMS gönder
-                $studentResult = \App\Services\SmsService::sendSms($studentPhone, $studentSmsContent);
+                // $studentResult = \App\Services\SmsService::sendSms($studentPhone, $studentSmsContent);
                 
                 \Illuminate\Support\Facades\Log::info("ÖĞRENCİ ÖDEV TESLİM SMS SONUCU: " . json_encode($studentResult));
                 
@@ -511,7 +511,7 @@ private function sendSubmissionSMS($session, $homework, $submission, $isLate)
                 \Illuminate\Support\Facades\Log::info("ÖĞRETMEN ÖDEV TESLİM SMS GÖNDERME - Telefon: {$teacherPhone}, İçerik: {$teacherSmsContent}");
                 
                 // Öğretmene SMS gönder
-                $teacherResult = \App\Services\SmsService::sendSms($teacherPhone, $teacherSmsContent);
+                // $teacherResult = \App\Services\SmsService::sendSms($teacherPhone, $teacherSmsContent);
                 
                 \Illuminate\Support\Facades\Log::info("ÖĞRETMEN ÖDEV TESLİM SMS SONUCU: " . json_encode($teacherResult));
                 
@@ -538,7 +538,7 @@ private function sendSubmissionSMS($session, $homework, $submission, $isLate)
             try {
                 \Illuminate\Support\Facades\Log::info("VELİ-1 ÖDEV TESLİM SMS GÖNDERME - Telefon: {$parentPhone}, İçerik: {$parentSmsContent}");
                 
-                $parentResult = \App\Services\SmsService::sendSms($parentPhone, $parentSmsContent);
+                // $parentResult = \App\Services\SmsService::sendSms($parentPhone, $parentSmsContent);
                 
                 \Illuminate\Support\Facades\Log::info("VELİ-1 ÖDEV TESLİM SMS SONUCU: " . json_encode($parentResult));
                 
@@ -562,7 +562,7 @@ private function sendSubmissionSMS($session, $homework, $submission, $isLate)
             try {
                 \Illuminate\Support\Facades\Log::info("VELİ-2 ÖDEV TESLİM SMS GÖNDERME - Telefon: {$parentPhone2}, İçerik: {$parentSmsContent}");
                 
-                $parent2Result = \App\Services\SmsService::sendSms($parentPhone2, $parentSmsContent);
+                // $parent2Result = \App\Services\SmsService::sendSms($parentPhone2, $parentSmsContent);
                 
                 \Illuminate\Support\Facades\Log::info("VELİ-2 ÖDEV TESLİM SMS SONUCU: " . json_encode($parent2Result));
                 

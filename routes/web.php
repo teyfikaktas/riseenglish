@@ -262,6 +262,10 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         Route::post('/questions/{question}/clone', [QuestionController::class, 'clone'])->name('questions.clone');
 
         // Users
+
+Route::get('/users/pro-students', [AdminUserController::class, 'proStudents'])->name('users.proStudents');
+Route::get('/users/pro-students/{group}/pdf', [AdminUserController::class, 'proStudentsPdf'])->name('users.proStudents.pdf');
+
         Route::resource('users', AdminUserController::class);
         Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('users.approve');
         Route::post('/users/{user}/unapprove', [AdminUserController::class, 'unapprove'])->name('users.unapprove');
@@ -270,6 +274,8 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         Route::put('/users/{user}/courses/{course}', [AdminUserController::class, 'updateCourseEnrollment'])->name('users.updateCourseEnrollment');
         Route::delete('/users/{user}/courses/{course}', [AdminUserController::class, 'unenrollCourse'])->name('users.unenrollCourse');
         Route::get('/users/{user}/courses/{course}/enrollment-data', [AdminUserController::class, 'getEnrollmentData'])->name('users.enrollmentData');
+
+
 
         // User Membership
         Route::post('/users/{user}/membership', [AdminUserController::class, 'addMembership'])->name('users.addMembership');
@@ -310,6 +316,9 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         Route::delete('/contacts/{contact}', [App\Http\Controllers\Admin\ContactController::class, 'destroy'])->name('contacts.destroy');
     });
 });
+
+
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/self-exam', [ExamController::class, 'selfCreate'])->name('exams.self-create');
     Route::post('/self-exam', [ExamController::class, 'selfStore'])->name('exams.self-store');

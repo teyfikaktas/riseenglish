@@ -73,7 +73,7 @@
                     <input type="range"
                            name="time_per_question"
                            id="time_slider"
-                           min="15" max="30" value="15" step="5"
+                           min="15" max="15" value="15" step="5"
                            class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1a2e5a]">
                     <span id="time_display" class="text-2xl font-bold text-[#1a2e5a] min-w-[60px] text-center">15 sn</span>
                 </div>
@@ -189,7 +189,7 @@ function checkDates() {
         return;
     }
 
-    summaryTxt.textContent = `📅 ${diffDays} gün boyunca (${start} → ${end}) her gün sınav oluşturulacak.`;
+summaryTxt.textContent = `📅 ${diffDays} gün boyunca (${start} → ${end}) her gün saat ${document.getElementById('exam_time').value} 'de sınav oluşturulacak.`;
     summary.classList.remove('hidden');
 }
 
@@ -211,7 +211,7 @@ startInput?.addEventListener('change', function() {
 
     checkDates();
 });
-
+document.getElementById('exam_time')?.addEventListener('change', checkDates);
 endInput?.addEventListener('change', checkDates);
 </script>
 @endsection

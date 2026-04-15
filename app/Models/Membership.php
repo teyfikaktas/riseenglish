@@ -12,6 +12,7 @@ class Membership extends Model
         'expires_at',
         'is_active',
         'notes',
+        'amount'
     ];
 
     protected function casts(): array

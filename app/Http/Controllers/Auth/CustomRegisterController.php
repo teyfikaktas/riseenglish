@@ -46,6 +46,13 @@ class CustomRegisterController extends Controller
         // Kullanıcıya öğrenci rolünü ver
         $user->assignRole('ogrenci');
 
+        $user->chainProgress()->create([
+    'days_completed' => 0,
+    'current_streak' => 0,
+    'longest_streak' => 0,
+    'last_completed_at' => null,
+]);
+
         event(new Registered($user));
 
         Auth::login($user);

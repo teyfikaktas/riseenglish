@@ -693,7 +693,7 @@ public function showCourseDetail($slug)
             
             // Öğrenciye SMS gönder
             if ($student->phone) {
-                $studentResult = \App\Services\SmsService::sendSms($student->phone, $personalizedMessage);
+                // $studentResult = \App\Services\SmsService::sendSms($student->phone, $personalizedMessage);
                 
                 if ($studentResult['success']) {
                     $sentCount++;
@@ -724,7 +724,7 @@ public function showCourseDetail($slug)
                     $parentMessage = substr($parentMessage, 0, 157) . '...';
                 }
                 
-                $parentResult = \App\Services\SmsService::sendSms($student->parent_phone_number, $parentMessage);
+                // $parentResult = \App\Services\SmsService::sendSms($student->parent_phone_number, $parentMessage);
                 
                 if ($parentResult['success']) {
                     $sentCount++;

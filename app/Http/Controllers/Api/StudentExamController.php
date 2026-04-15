@@ -245,7 +245,7 @@ public function index(Request $request)
                         );
                     }
                     
-                    $smsResult = \App\Services\SmsService::sendSms($phone['number'], $smsContent);
+                    // $smsResult = \App\Services\SmsService::sendSms($phone['number'], $smsContent);
                     
                     if ($smsResult) {
                         Log::info('Exam entry SMS gönderildi', [
@@ -407,13 +407,13 @@ public function submitResult(Request $request, $examId)
             ]
         );
         
-        // ✅ İhlal yoksa veliye sonuç SMS'i gönder
-        if (!($validated['violation'] ?? false)) {
-            $this->sendExamResultSms($student, $exam, $result);
-        } else {
-            // İhlal varsa öğretmene bildir
-            $this->sendViolationNotification($student, $exam, $validated['violation_reason']);
-        }
+        // // ✅ İhlal yoksa veliye sonuç SMS'i gönder
+        // if (!($validated['violation'] ?? false)) {
+        //     $this->sendExamResultSms($student, $exam, $result);
+        // } else {
+        //     // İhlal varsa öğretmene bildir
+        //     $this->sendViolationNotification($student, $exam, $validated['violation_reason']);
+        // }
         
         DB::commit();
         
