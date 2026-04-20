@@ -45,7 +45,7 @@ class OtpController extends Controller
             $response = $otpService->otp([
                 'message' => 'Doğrulama kodunuz: ' . $otp,
                 'no' => $phoneNumber,
-                'header' => '3326062804'  // SMS başlık numarası
+                'header' => 'H.EKINCI'  // SMS başlık numarası
             ]);
             
             // Geliştirme aşamasında OTP'yi loglayalım
