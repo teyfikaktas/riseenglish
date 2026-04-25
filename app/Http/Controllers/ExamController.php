@@ -15,19 +15,16 @@ public function index(Request $request)
 {
     $today = \Carbon\Carbon::today();
     
-    // Bugünün sınavları (ayrı query, pagination yok)
     $todayExamsQuery = Exam::where('teacher_id', auth()->id())
         ->whereDate('start_time', $today)
         ->withCount('students')
         ->with('wordSets');
     
-    // Diğer sınavlar (paginated)
     $query = Exam::where('teacher_id', auth()->id())
         ->whereDate('start_time', '!=', $today)
         ->withCount('students')
         ->with('wordSets');
     
-    // Arama
     if ($request->filled('search')) {
         $search = $request->search;
         
@@ -61,15 +58,18 @@ public function index(Request $request)
         ->orderBy('name')
         ->get();
 
-    // Öğretmenin tüm sınavlarındaki öğrencileri unique olarak çek
-    $allStudents = Exam::where('teacher_id', auth()->id())
-        ->with('students:id,name')
-        ->get()
-        ->pluck('students')
-        ->flatten()
-        ->unique('id')
-        ->sortBy('name')
-        ->values();
+    // Memory dostu: subquery ile direkt SQL
+    $allStudents = User::whereIn('id', function($q) {
+            $q->select('student_id')
+              ->from('exam_student')
+              ->whereIn('exam_id', function($q2) {
+                  $q2->select('id')
+                     ->from('exams')
+                     ->where('teacher_id', auth()->id());
+              });
+        })
+        ->orderBy('name')
+        ->get(['id', 'name']);
 
     return view('exams.index', compact('exams', 'todayExams', 'examNames', 'groups', 'allStudents'));
 }
