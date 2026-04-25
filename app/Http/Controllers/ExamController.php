@@ -73,6 +73,106 @@ public function index(Request $request)
 
     return view('exams.index', compact('exams', 'todayExams', 'examNames', 'groups', 'allStudents'));
 }
+
+/**
+ * Sınav Oluşturma Raporu
+ */
+public function downloadExamCreationReport(Request $request)
+{
+    $request->validate(['date' => 'required|date']);
+    $date = \Carbon\Carbon::parse($request->date);
+    $teacherId = auth()->id();
+
+    $examsCreatedToday = Exam::whereDate('created_at', $date->toDateString())
+        ->where(function ($q) use ($teacherId) {
+            $q->where('teacher_id', $teacherId)
+              ->orWhere('name', 'like', 'Kendi Sınavım%');
+        })
+        ->with(['students:id,name'])
+        ->get();
+
+    if ($examsCreatedToday->isEmpty()) {
+        return back()->with('error', 'Bu tarihte hiç sınav oluşturulmamış.');
+    }
+
+    $involvedStudentIds = collect();
+
+    $teacherExams = $examsCreatedToday->where('teacher_id', $teacherId);
+    foreach ($teacherExams as $exam) {
+        foreach ($exam->students as $student) {
+            $involvedStudentIds->push($student->id);
+        }
+    }
+
+    $selfExams = $examsCreatedToday->filter(fn($e) => str_starts_with($e->name, 'Kendi Sınavım'));
+    foreach ($selfExams as $exam) {
+        $involvedStudentIds->push($exam->teacher_id);
+    }
+
+    $involvedStudentIds = $involvedStudentIds->unique()->values();
+
+    if ($involvedStudentIds->isEmpty()) {
+        return back()->with('error', 'Bu tarihte hiç sınav oluşturulmamış.');
+    }
+
+    $students = User::whereIn('id', $involvedStudentIds)->get(['id', 'name']);
+
+    $report = [];
+    foreach ($students as $student) {
+        $selfCount = $selfExams
+            ->where('teacher_id', $student->id)
+            ->count();
+
+        $teacherCount = $teacherExams
+            ->filter(fn($e) => $e->students->contains('id', $student->id))
+            ->count();
+
+        if ($selfCount === 0 && $teacherCount === 0) continue;
+
+        $report[] = [
+            'student_name'          => $student->name,
+            'self_created_count'    => $selfCount,
+            'teacher_created_count' => $teacherCount,
+            'status_class'          => $this->getCreationStatusClass($selfCount, $teacherCount),
+        ];
+    }
+
+    $statusPriority = [
+        'both'             => 1,
+        'self-created'     => 2,
+        'teacher-created'  => 3,
+    ];
+
+    $report = collect($report)->sortBy([
+        fn($a, $b) => $statusPriority[$a['status_class']] <=> $statusPriority[$b['status_class']],
+        ['self_created_count', 'desc'],
+        ['teacher_created_count', 'desc'],
+        ['student_name', 'asc'],
+    ])->values();
+
+    $bothCount    = $report->where('status_class', 'both')->count();
+    $selfCount    = $report->where('status_class', 'self-created')->count();
+    $teacherCount = $report->where('status_class', 'teacher-created')->count();
+
+    $pdf = PDF::loadView('exams.exam-creation-report-pdf', [
+        'report'        => $report,
+        'date'          => $date,
+        'teacher'       => auth()->user(),
+        'bothCount'     => $bothCount,
+        'selfCount'     => $selfCount,
+        'teacherCount'  => $teacherCount,
+        'totalStudents' => $report->count(),
+    ]);
+
+    return $pdf->download('Sinav_Olusturma_Raporu_' . $date->format('d-m-Y') . '.pdf');
+}
+
+private function getCreationStatusClass($selfCount, $teacherCount)
+{
+    if ($selfCount > 0 && $teacherCount > 0) return 'both';
+    if ($selfCount > 0) return 'self-created';
+    return 'teacher-created';
+}
     /**
  * Sınavı sil
  */
