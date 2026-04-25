@@ -1,18 +1,52 @@
 @extends('layouts.app')
 
 @section('content')
+
+@if(session('error'))
+<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4">
+    <div class="flex items-center">
+        <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <strong>Hata:</strong>&nbsp;{{ session('error') }}
+    </div>
+</div>
+@endif
+
+@if(session('success'))
+<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-4">
+    {{ session('success') }}
+</div>
+@endif
     <div class="container mx-auto px-4 py-8">
         <div class="flex flex-col space-y-6">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-[#1a2e5a]">Öğrenme Paneli</h1>
-                <div class="px-3 py-1 bg-[#e63946] text-white rounded-full text-xs font-bold">
-                    Öğrenci Girişi
-                </div>
-<a href="{{ route('exams.self-create') }}" 
-   class="px-5 py-2.5 bg-[#1a2e5a] text-white rounded-full text-sm font-bold hover:bg-[#2a4a7a] transition-colors">
-    📝 Sınav Oluştur
-</a>
-            </div>
+<div class="flex items-center justify-between flex-wrap gap-3">
+    <h1 class="text-2xl font-bold text-[#1a2e5a]">Öğrenme Paneli</h1>
+    
+    <div class="flex items-center gap-3 flex-wrap">
+        <div class="px-3 py-1 bg-[#e63946] text-white rounded-full text-xs font-bold">
+            Öğrenci Girişi
+        </div>
+        
+        <a href="{{ route('exams.self-create') }}" 
+           class="px-5 py-2.5 bg-[#1a2e5a] text-white rounded-full text-sm font-bold hover:bg-[#2a4a7a] transition-colors">
+            📝 Sınav Oluştur
+        </a>
+        
+        @hasrole('ogretmen')
+        <form method="GET" action="{{ route('exams.exam-creation-report') }}" class="inline-flex items-center gap-2">
+            <input type="date" 
+                   name="date" 
+                   value="{{ date('Y-m-d') }}" 
+                   class="px-3 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]">
+            <button type="submit" 
+                    class="px-5 py-2.5 bg-[#16a34a] text-white rounded-full text-sm font-bold hover:bg-[#15803d] transition-colors whitespace-nowrap">
+                📋 Sınav Oluşturma Raporu
+            </button>
+        </form>
+        @endhasrole
+    </div>
+</div>
 
             <div class="bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] rounded-lg p-4 text-white">
                 <h2 class="text-lg font-semibold mb-2">İngilizce öğrenmek için interaktif araçlar</h2>

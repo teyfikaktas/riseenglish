@@ -42,24 +42,37 @@ public function index(Request $request)
               ->orWhereDate('start_time', 'like', "%{$search}%");
         });
     }
-$examNames = Exam::where('teacher_id', auth()->id())
-    ->selectRaw("TRIM(SUBSTRING_INDEX(name, ' - ', 1)) as base_name")
-    ->distinct()
-    ->orderBy('base_name')
-    ->pluck('base_name');
+
+    $examNames = Exam::where('teacher_id', auth()->id())
+        ->selectRaw("TRIM(SUBSTRING_INDEX(name, ' - ', 1)) as base_name")
+        ->distinct()
+        ->orderBy('base_name')
+        ->pluck('base_name');
+
     $todayExams = $todayExamsQuery->orderBy('start_time', 'asc')->get();
     
     $exams = $query->orderBy('is_active', 'desc')
         ->orderBy('start_time', 'desc')
         ->paginate(10);
     
-$groups = \App\Models\Group::where('is_active', true)
-    ->with('teacher')
-    ->withCount('students')
-    ->orderBy('name')
-    ->get();
+    $groups = \App\Models\Group::where('is_active', true)
+        ->with('teacher')
+        ->withCount('students')
+        ->orderBy('name')
+        ->get();
 
-return view('exams.index', compact('exams', 'todayExams', 'examNames', 'groups'));}
+    // Öğretmenin tüm sınavlarındaki öğrencileri unique olarak çek
+    $allStudents = Exam::where('teacher_id', auth()->id())
+        ->with('students:id,name')
+        ->get()
+        ->pluck('students')
+        ->flatten()
+        ->unique('id')
+        ->sortBy('name')
+        ->values();
+
+    return view('exams.index', compact('exams', 'todayExams', 'examNames', 'groups', 'allStudents'));
+}
     /**
  * Sınavı sil
  */
@@ -133,6 +146,161 @@ public function bulkDelete(Request $request)
     return redirect()->route('exams.index')->with('success', $examIds->count() . ' sınav silindi.');
 }
 
+/**
+ * Tek öğrenci için günlük rapor (mevcut grup mantığını kullanır)
+ * Route: GET /student-daily-report/{user}?date=2026-04-26
+ */
+public function studentDailyReport(Request $request, \App\Models\User $user)
+{
+    $request->validate(['date' => 'required|date']);
+    $date = \Carbon\Carbon::parse($request->date);
+    $teacherId = auth()->id();
+
+    // Bugünkü tüm sınavları çek - sadece bu öğrencinin atandıkları
+    $allExams = Exam::where('teacher_id', $teacherId)
+        ->whereDate('start_time', $date->toDateString())
+        ->with(['results', 'students'])
+        ->orderBy('start_time')
+        ->get();
+
+    // Sadece bu öğrenciye atanmış sınavları filtrele
+    $exams = $allExams->filter(function ($exam) use ($user) {
+        return $exam->students->contains('id', $user->id);
+    })->values();
+
+    if ($exams->isEmpty()) {
+        return back()->with('error', $user->name . ' için bugün sınav bulunamadı.');
+    }
+
+    // Tek öğrencilik bir collection oluştur
+    $students = collect([$user]);
+
+    // Matris oluştur (grup raporundakiyle birebir aynı yapı)
+    $matrix = [];
+    $row = [];
+    foreach ($exams as $exam) {
+        $result = $exam->results->where('student_id', $user->id)->first();
+        if ($result && $result->score > 0) {
+            $row[$exam->id] = [
+                'success_rate' => $result->success_rate,
+                'correct'      => $result->getCorrectAnswersCount(),
+                'wrong'        => $result->getWrongAnswersCount(),
+            ];
+        } else {
+            $row[$exam->id] = null;
+        }
+    }
+    $matrix[$user->id] = $row;
+
+    // Sahte bir "grup" objesi oluştur (view'ı bozmamak için)
+    $fakeGroup = (object) [
+        'id'   => 'student-' . $user->id,
+        'name' => $user->name . ' (Bireysel)',
+    ];
+
+    $pdf = PDF::loadView('exams.group-daily-report-pdf', [
+        'group'    => $fakeGroup,
+        'students' => $students,
+        'exams'    => $exams,
+        'matrix'   => $matrix,
+        'date'     => $date,
+        'teacher'  => auth()->user(),
+    ]);
+
+    $pdf->setPaper('A4', 'landscape');
+
+    $fileName = 'Bireysel_Rapor_' . str_replace(' ', '_', $user->name) . '_' . $date->format('d-m-Y') . '.pdf';
+    return $pdf->download($fileName);
+}
+
+/**
+ * Tek öğrenci için haftalık rapor (Pazartesi-Cumartesi 6 gün)
+ * Route: GET /student-weekly-report/{user}?start_date=2026-04-20
+ */
+public function studentWeeklyReport(Request $request, \App\Models\User $user)
+{
+    $request->validate(['start_date' => 'required|date']);
+
+    $startDate = \Carbon\Carbon::parse($request->start_date);
+    $endDate   = $startDate->copy()->addDays(5); // 6 gün: Pazartesi-Cumartesi
+    $teacherId = auth()->id();
+
+    // 6 günlük dizi
+    $days = [];
+    for ($i = 0; $i < 6; $i++) {
+        $currentDate = $startDate->copy()->addDays($i);
+        $days[] = [
+            'date' => $currentDate,
+            'key'  => $currentDate->format('Y-m-d'),
+        ];
+    }
+
+    // Tüm tarih aralığındaki sınavları çek
+    $allExams = Exam::where('teacher_id', $teacherId)
+        ->whereDate('start_time', '>=', $startDate->toDateString())
+        ->whereDate('start_time', '<=', $endDate->toDateString())
+        ->with(['results', 'students'])
+        ->orderBy('start_time')
+        ->get();
+
+    // Sadece bu öğrenciye atanmış sınavlar
+    $exams = $allExams->filter(function ($exam) use ($user) {
+        return $exam->students->contains('id', $user->id);
+    })->values();
+
+    if ($exams->isEmpty()) {
+        return back()->with('error', $user->name . ' için bu hafta sınav bulunamadı.');
+    }
+
+    $students = collect([$user]);
+
+    // Matris başlangıçta null
+    $matrix = [];
+    foreach ($days as $dayData) {
+        $matrix[$user->id][$dayData['key']] = null;
+    }
+
+    // Doldur
+    foreach ($exams as $exam) {
+        $examDate = \Carbon\Carbon::parse($exam->start_time)->format('Y-m-d');
+        $result = $exam->results->where('student_id', $user->id)->first();
+
+        if ($result && $result->score > 0) {
+            $correct = $result->getCorrectAnswersCount();
+            $wrong   = $result->getWrongAnswersCount();
+
+            if ($matrix[$user->id][$examDate] !== null) {
+                $matrix[$user->id][$examDate]['correct'] += $correct;
+                $matrix[$user->id][$examDate]['wrong']   += $wrong;
+            } else {
+                $matrix[$user->id][$examDate] = [
+                    'correct' => $correct,
+                    'wrong'   => $wrong,
+                ];
+            }
+        }
+    }
+
+    $fakeGroup = (object) [
+        'id'   => 'student-' . $user->id,
+        'name' => $user->name . ' (Bireysel)',
+    ];
+
+    $pdf = PDF::loadView('exams.group-weekly-report-pdf', [
+        'group'     => $fakeGroup,
+        'students'  => $students,
+        'days'      => $days,
+        'matrix'    => $matrix,
+        'startDate' => $startDate,
+        'endDate'   => $endDate,
+        'teacher'   => auth()->user(),
+    ]);
+
+    $pdf->setPaper('A4', 'landscape');
+
+    $fileName = 'Bireysel_Haftalik_Rapor_' . str_replace(' ', '_', $user->name) . '_' . $startDate->format('d-m-Y') . '.pdf';
+    return $pdf->download($fileName);
+}
 
 public function downloadDailyReport(Request $request)
 {

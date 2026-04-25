@@ -118,7 +118,7 @@ Route::get('/word-sets/{wordSet}/export-turkish', [WordSetsController::class, 'e
 Route::get('/word-sets/{wordSet}/export-english', [WordSetsController::class, 'exportPdfEnglish'])->name('word-sets.export-english');
 
 // Leaderboard Export
-Route::get('/export/leaderboard', [App\Http\Controllers\LeaderboardExportController::class, 'export'])->name('export.leaderboard');
+//Route::get('/export/leaderboard', [App\Http\Controllers\LeaderboardExportController::class, 'export'])->name('export.leaderboard');
 
 // ============================================================
 // AUTH REQUIRED (basic)
@@ -218,6 +218,7 @@ Route::middleware(['auth', 'verified.phone', 'teacher.approved'])->group(functio
 
 Route::middleware(['auth', 'role:ogretmen'])->group(function () {
     Route::get('/exams/daily-report', [ExamController::class, 'downloadDailyReport'])->name('exams.daily-report');
+    Route::get('/exams/exam-creation-report', [ExamController::class, 'downloadExamCreationReport'])->name('exams.exam-creation-report');
     Route::get('/exams/bulk-delete-preview', [ExamController::class, 'bulkDeletePreview'])->name('exams.bulk-delete.preview');
     Route::delete('/exams/bulk-delete', [ExamController::class, 'bulkDelete'])->name('exams.bulk-delete');
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
@@ -231,7 +232,13 @@ Route::middleware(['auth', 'role:ogretmen'])->group(function () {
 Route::get('/group-daily-report', [App\Http\Controllers\GroupDailyReportController::class, 'index'])->name('group-daily-report.index');
 Route::get('/group-daily-report/{group}', [ExamController::class, 'groupDailyReport'])->name('exams.group-daily-report');
 Route::get('/group-weekly-report/{group}', [ExamController::class, 'groupWeeklyReport'])->name('exams.group-weekly-report')->middleware('auth');
+Route::get('/student-daily-report/{user}', [ExamController::class, 'studentDailyReport'])
+    ->name('exams.student-daily-report')
+    ->middleware('auth');
 
+Route::get('/student-weekly-report/{user}', [ExamController::class, 'studentWeeklyReport'])
+    ->name('exams.student-weekly-report')
+    ->middleware('auth');
 // ============================================================
 // ADMIN
 // ============================================================
