@@ -47,16 +47,23 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        Grup Günlük Raporu
+        Grup / Bireysel Günlük Raporu
     </h2>
     <div class="flex flex-col sm:flex-row gap-3 items-end">
         <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Grup Seç</label>
-            <select name="group_id" id="group_report_group" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400">
-                <option value="">-- Grup Seçin --</option>
-                @foreach($groups as $group)
-                    <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->students_count }} öğrenci)</option>
-                @endforeach
+            <label class="block text-sm font-medium text-gray-700 mb-1">Grup veya Öğrenci Seç</label>
+            <select id="group_report_target" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400">
+                <option value="">-- Seçim Yapın --</option>
+                <optgroup label="📁 Gruplar">
+                    @foreach($groups as $group)
+                        <option value="group:{{ $group->id }}">{{ $group->name }} ({{ $group->students_count }} öğrenci)</option>
+                    @endforeach
+                </optgroup>
+                <optgroup label="👤 Bireysel Öğrenciler">
+                    @foreach($allStudents as $student)
+                        <option value="student:{{ $student->id }}">{{ $student->name }}</option>
+                    @endforeach
+                </optgroup>
             </select>
         </div>
         <div>
@@ -67,7 +74,7 @@
             📊 Rapor Al
         </button>
     </div>
-    <p class="text-xs text-gray-500 mt-2">Seçilen grubun belirtilen tarihteki sınav sonuçlarını indirir.</p>
+    <p class="text-xs text-gray-500 mt-2">Grup veya tek bir öğrenci için belirtilen tarihteki sınav sonuçlarını indirir.</p>
 </div>
 
 <div class="bg-white rounded-xl shadow-lg p-4 mb-6 border border-green-100">
@@ -75,16 +82,23 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-        Grup Haftalık Raporu
+        Grup / Bireysel Haftalık Raporu
     </h2>
     <div class="flex flex-col sm:flex-row gap-3 items-end">
         <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Grup Seç</label>
-            <select id="weekly_report_group" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400">
-                <option value="">-- Grup Seçin --</option>
-                @foreach($groups as $group)
-                    <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->students_count }} öğrenci)</option>
-                @endforeach
+            <label class="block text-sm font-medium text-gray-700 mb-1">Grup veya Öğrenci Seç</label>
+            <select id="weekly_report_target" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400">
+                <option value="">-- Seçim Yapın --</option>
+                <optgroup label="📁 Gruplar">
+                    @foreach($groups as $group)
+                        <option value="group:{{ $group->id }}">{{ $group->name }} ({{ $group->students_count }} öğrenci)</option>
+                    @endforeach
+                </optgroup>
+                <optgroup label="👤 Bireysel Öğrenciler">
+                    @foreach($allStudents as $student)
+                        <option value="student:{{ $student->id }}">{{ $student->name }}</option>
+                    @endforeach
+                </optgroup>
             </select>
         </div>
         <div>
@@ -95,7 +109,7 @@
             📅 Haftalık Rapor Al
         </button>
     </div>
-    <p class="text-xs text-gray-500 mt-2">Seçilen grupun Pazartesi'den Cumartesi'ye kadar 6 günlük sınav sonuçlarını indirir.</p>
+    <p class="text-xs text-gray-500 mt-2">Grup veya tek öğrenci için Pazartesi'den Cumartesi'ye kadar 6 günlük sınav sonuçlarını indirir.</p>
 </div>
 <!-- Toplu Sınav Sil -->
 <div class="bg-white rounded-xl shadow-lg p-4 mb-6 border border-red-100">
@@ -399,12 +413,13 @@ function deleteExam(examId, examName) {
 function closeDeleteModal() {
     document.getElementById('deleteModal').classList.add('hidden');
 }
+
 function getGroupReport() {
-    const groupId = document.getElementById('group_report_group').value;
+    const target = document.getElementById('group_report_target').value;
     const date = document.getElementById('group_report_date').value;
 
-    if (!groupId) {
-        alert('Lütfen bir grup seçin.');
+    if (!target) {
+        alert('Lütfen bir grup veya öğrenci seçin.');
         return;
     }
     if (!date) {
@@ -412,23 +427,37 @@ function getGroupReport() {
         return;
     }
 
-    window.location.href = `/group-daily-report/${groupId}?date=${date}`;
+    const [type, id] = target.split(':');
+
+    if (type === 'group') {
+        window.location.href = `/group-daily-report/${id}?date=${date}`;
+    } else if (type === 'student') {
+        window.location.href = `/student-daily-report/${id}?date=${date}`;
+    }
 }
+
 function getWeeklyReport() {
-    const groupId = document.getElementById('weekly_report_group').value;
+    const target = document.getElementById('weekly_report_target').value;
     const startDate = document.getElementById('weekly_report_start').value;
- 
-    if (!groupId) {
-        alert('Lütfen bir grup seçin.');
+
+    if (!target) {
+        alert('Lütfen bir grup veya öğrenci seçin.');
         return;
     }
     if (!startDate) {
         alert('Lütfen hafta başlangıç tarihini seçin.');
         return;
     }
- 
-    window.location.href = `/group-weekly-report/${groupId}?start_date=${startDate}`;
+
+    const [type, id] = target.split(':');
+
+    if (type === 'group') {
+        window.location.href = `/group-weekly-report/${id}?start_date=${startDate}`;
+    } else if (type === 'student') {
+        window.location.href = `/student-weekly-report/${id}?start_date=${startDate}`;
+    }
 }
+
 async function bulkDeletePreview() {
     const start = document.getElementById('bulk_start').value;
     const end   = document.getElementById('bulk_end').value;
