@@ -103,15 +103,14 @@
             </select>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Hafta Başlangıcı (Pazartesi)</label>
+<label class="block text-sm font-medium text-gray-700 mb-1">Hafta Başlangıcı (Pazar)</label>
             <input type="date" id="weekly_report_start" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400">
         </div>
         <button onclick="getWeeklyReport()" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition shadow-md">
             📅 Haftalık Rapor Al
         </button>
     </div>
-    <p class="text-xs text-gray-500 mt-2">Grup veya tek öğrenci için Pazartesi'den Cumartesi'ye kadar 6 günlük sınav sonuçlarını indirir.</p>
-</div>
+<p class="text-xs text-gray-500 mt-2">Grup veya tek öğrenci için Pazar'dan Cumartesi'ye kadar 7 günlük sınav sonuçlarını indirir.</p></div>
 <!-- Toplu Sınav Sil -->
 <div class="bg-white rounded-xl shadow-lg p-4 mb-6 border border-red-100">
     <h2 class="text-base font-semibold text-red-700 mb-3 flex items-center gap-2">
@@ -385,21 +384,18 @@
 // Haftalık rapor tarih input'unu sadece Pazartesi günleriyle sınırla
 const weeklyInput = document.getElementById('weekly_report_start');
 
-// Varsayılan olarak bu haftanın Pazartesi'sini set et
+// Varsayılan olarak bu haftanın Pazarını set et
 const today = new Date();
-const dayOfWeek = today.getDay(); // 0=Pazar, 1=Pazartesi, ..., 6=Cumartesi
-const daysBack = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-const lastMonday = new Date(today);
-lastMonday.setDate(today.getDate() - daysBack);
-weeklyInput.value = lastMonday.toISOString().split('T')[0];
+const dayOfWeek = today.getDay(); // 0=Pazar
+const lastSunday = new Date(today);
+lastSunday.setDate(today.getDate() - dayOfWeek);
+weeklyInput.value = lastSunday.toISOString().split('T')[0];
 
 weeklyInput.addEventListener('change', function() {
     const selected = new Date(this.value + 'T00:00:00');
-    if (selected.getDay() !== 1) {
-        alert('Lütfen bir Pazartesi günü seçin.');
-        const day = selected.getDay();
-        const back = day === 0 ? 6 : day - 1;
-        selected.setDate(selected.getDate() - back);
+    if (selected.getDay() !== 0) {
+        alert('Lütfen bir Pazar günü seçin.');
+        selected.setDate(selected.getDate() - selected.getDay());
         this.value = selected.toISOString().split('T')[0];
     }
 });

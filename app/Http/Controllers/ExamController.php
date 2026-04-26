@@ -314,7 +314,7 @@ public function studentDailyReport(Request $request, \App\Models\User $user)
 }
 
 /**
- * Tek öğrenci için haftalık rapor (Pazartesi-Cumartesi 6 gün)
+ * Tek öğrenci için haftalık rapor
  * Route: GET /student-weekly-report/{user}?start_date=2026-04-20
  */
 public function studentWeeklyReport(Request $request, \App\Models\User $user)
@@ -322,12 +322,12 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
     $request->validate(['start_date' => 'required|date']);
 
     $startDate = \Carbon\Carbon::parse($request->start_date);
-    $endDate   = $startDate->copy()->addDays(5); // 6 gün: Pazartesi-Cumartesi
+    $endDate   = $startDate->copy()->addDays(6);
     $teacherId = auth()->id();
 
-    // 6 günlük dizi
+    // 7 günlük dizi
     $days = [];
-    for ($i = 0; $i < 6; $i++) {
+    for ($i = 0; $i < 7; $i++) {
         $currentDate = $startDate->copy()->addDays($i);
         $days[] = [
             'date' => $currentDate,
@@ -645,102 +645,100 @@ $exam->wordSets()->attach([$validated['word_set']]);        $exam->students()->a
 }
 
 /**
-     * Grup Haftalık Rapor - Pazartesi-Cumartesi arası günlük toplamlar
-     * Route: GET /group-weekly-report/{group}?start_date=2025-03-08
-     */
-    public function groupWeeklyReport(Request $request, \App\Models\Group $group)
-    {
-        $request->validate(['start_date' => 'required|date']);
+ * Grup Haftalık Rapor
+ * Route: GET /group-weekly-report/{group}?start_date=2025-03-08
+ */
+public function groupWeeklyReport(Request $request, \App\Models\Group $group)
+{
+    $request->validate(['start_date' => 'required|date']);
 
-        $startDate = \Carbon\Carbon::parse($request->start_date);
-        $endDate   = $startDate->copy()->addDays(6); // 7 gün: Pzt-Pazar
-        $teacherId = auth()->id();
+    $startDate = \Carbon\Carbon::parse($request->start_date);
+    $endDate   = $startDate->copy()->addDays(6);
+    $teacherId = auth()->id();
 
-        // Gruptaki öğrenci ID'leri
-        $studentIds = $group->students()->pluck('users.id')->toArray();
+    // Gruptaki öğrenci ID'leri
+    $studentIds = $group->students()->pluck('users.id')->toArray();
 
-        if (empty($studentIds)) {
-            return back()->with('error', 'Bu grupta öğrenci bulunamadı.');
+    if (empty($studentIds)) {
+        return back()->with('error', 'Bu grupta öğrenci bulunamadı.');
+    }
+
+    // Gruptaki öğrenciler
+    $students = $group->students()->orderBy('name')->get();
+
+    // 7 günlük dizi oluştur
+    $days = [];
+    for ($i = 0; $i < 7; $i++) {
+        $currentDate = $startDate->copy()->addDays($i);
+        $days[] = [
+            'date' => $currentDate,
+            'key'  => $currentDate->format('Y-m-d'),
+        ];
+    }
+
+    // Tüm tarih aralığındaki sınavları çek
+    $allExams = Exam::where('teacher_id', $teacherId)
+        ->whereDate('start_time', '>=', $startDate->toDateString())
+        ->whereDate('start_time', '<=', $endDate->toDateString())
+        ->with(['results', 'students'])
+        ->orderBy('start_time')
+        ->get();
+
+    // Sadece bu gruptaki öğrencilere atanmış sınavları filtrele
+    $exams = $allExams->filter(function ($exam) use ($studentIds) {
+        return $exam->students->whereIn('id', $studentIds)->isNotEmpty();
+    })->values();
+
+    if ($exams->isEmpty()) {
+        return back()->with('error', 'Bu tarih aralığında bu gruba ait sınav bulunamadı.');
+    }
+
+    // Matris oluştur: student_id => date_key => { correct, wrong }
+    $matrix = [];
+    foreach ($students as $student) {
+        foreach ($days as $dayData) {
+            $matrix[$student->id][$dayData['key']] = null;
         }
+    }
 
-        // Gruptaki öğrenciler
-        $students = $group->students()->orderBy('name')->get();
+    foreach ($exams as $exam) {
+        $examDate = \Carbon\Carbon::parse($exam->start_time)->format('Y-m-d');
 
-        // 7 günlük dizi oluştur
-        $days = [];
-        for ($i = 0; $i < 7; $i++) {
-            $currentDate = $startDate->copy()->addDays($i);
-            $days[] = [
-                'date' => $currentDate,
-                'key'  => $currentDate->format('Y-m-d'),
-            ];
-        }
-
-        // Tüm tarih aralığındaki sınavları çek
-        $allExams = Exam::where('teacher_id', $teacherId)
-            ->whereDate('start_time', '>=', $startDate->toDateString())
-            ->whereDate('start_time', '<=', $endDate->toDateString())
-            ->with(['results', 'students'])
-            ->orderBy('start_time')
-            ->get();
-
-        // Sadece bu gruptaki öğrencilere atanmış sınavları filtrele
-        $exams = $allExams->filter(function ($exam) use ($studentIds) {
-            return $exam->students->whereIn('id', $studentIds)->isNotEmpty();
-        })->values();
-
-        if ($exams->isEmpty()) {
-            return back()->with('error', 'Bu tarih aralığında bu gruba ait sınav bulunamadı.');
-        }
-
-        // Matris oluştur: student_id => date_key => { correct, wrong }
-        $matrix = [];
         foreach ($students as $student) {
-            foreach ($days as $dayData) {
-                $matrix[$student->id][$dayData['key']] = null;
-            }
-        }
+            $result = $exam->results->where('student_id', $student->id)->first();
 
-        foreach ($exams as $exam) {
-            $examDate = \Carbon\Carbon::parse($exam->start_time)->format('Y-m-d');
+            if ($result && $result->score > 0) {
+                $correct = $result->getCorrectAnswersCount();
+                $wrong   = $result->getWrongAnswersCount();
 
-            foreach ($students as $student) {
-                $result = $exam->results->where('student_id', $student->id)->first();
-
-                if ($result && $result->score > 0) {
-                    $correct = $result->getCorrectAnswersCount();
-                    $wrong   = $result->getWrongAnswersCount();
-
-                    // Aynı gün birden fazla sınav varsa topla
-                    if ($matrix[$student->id][$examDate] !== null) {
-                        $matrix[$student->id][$examDate]['correct'] += $correct;
-                        $matrix[$student->id][$examDate]['wrong']   += $wrong;
-                    } else {
-                        $matrix[$student->id][$examDate] = [
-                            'correct' => $correct,
-                            'wrong'   => $wrong,
-                        ];
-                    }
+                if ($matrix[$student->id][$examDate] !== null) {
+                    $matrix[$student->id][$examDate]['correct'] += $correct;
+                    $matrix[$student->id][$examDate]['wrong']   += $wrong;
+                } else {
+                    $matrix[$student->id][$examDate] = [
+                        'correct' => $correct,
+                        'wrong'   => $wrong,
+                    ];
                 }
             }
         }
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exams.group-weekly-report-pdf', [
-            'group'     => $group,
-            'students'  => $students,
-            'days'      => $days,
-            'matrix'    => $matrix,
-            'startDate' => $startDate,
-            'endDate'   => $endDate,
-            'teacher'   => auth()->user(),
-        ]);
-
-        $pdf->setPaper('A4', 'landscape');
-
-        $fileName = 'Haftalik_Rapor_' . $group->name . '_' . $startDate->format('d-m-Y') . '.pdf';
-        return $pdf->download($fileName);
     }
 
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exams.group-weekly-report-pdf', [
+        'group'     => $group,
+        'students'  => $students,
+        'days'      => $days,
+        'matrix'    => $matrix,
+        'startDate' => $startDate,
+        'endDate'   => $endDate,
+        'teacher'   => auth()->user(),
+    ]);
+
+    $pdf->setPaper('A4', 'landscape');
+
+    $fileName = 'Haftalik_Rapor_' . $group->name . '_' . $startDate->format('d-m-Y') . '.pdf';
+    return $pdf->download($fileName);
+}
 public function store(Request $request)
 {
     try {
