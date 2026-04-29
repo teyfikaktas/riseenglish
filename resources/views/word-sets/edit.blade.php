@@ -84,6 +84,7 @@
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+@hasrole('ogretmen')
 <!-- Kategori Seçimi -->
 <div>
     <label for="category_id" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -112,6 +113,7 @@
         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
     @enderror
 </div>
+@endhasrole
                 <!-- Buttons -->
                 <div class="flex gap-4 pt-4 border-t border-gray-100">
                     <a href="{{ route('word-sets.show', $wordSet) }}" 
