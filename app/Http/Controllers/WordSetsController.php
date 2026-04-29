@@ -10,17 +10,27 @@ use Illuminate\Support\Facades\Auth;
 
 class WordSetsController extends Controller
 {
-    // Ana sayfa - Kelime setlerini listele
-    public function index()
-    {
-        $wordSets = WordSet::where('user_id', Auth::id())
-            ->withCount('userWords')
-            ->orderBy('created_at', 'desc')
-            ->get();
+public function index()
+{
+    $categoryTree = \App\Models\WordSetCategory::whereNull('parent_id')
+        ->with('allChildren')
+        ->orderBy('sort_order')
+        ->get();
 
-        return view('word-sets.index', compact('wordSets'));
-    }
+    $uncategorizedSets = WordSet::where('user_id', Auth::id())
+        ->whereNull('category_id')
+        ->withCount('userWords as words_count')
+        ->orderBy('created_at', 'desc')
+        ->get();
 
+    $categorizedSets = WordSet::where('user_id', Auth::id())
+        ->whereNotNull('category_id')
+        ->withCount('userWords as words_count')
+        ->get()
+        ->groupBy('category_id');
+
+    return view('word-sets.index', compact('categoryTree', 'uncategorizedSets', 'categorizedSets'));
+}
     // Yeni set oluşturma sayfası
     public function create()
     {
@@ -95,41 +105,43 @@ public function exportPdfEnglish(WordSet $wordSet)
         return redirect()->route('word-sets.index')
             ->with('success', 'Kelime seti başarıyla oluşturuldu!');
     }
-
-    // Set düzenleme sayfası
-    public function edit(WordSet $wordSet)
-    {
-        // Kullanıcının kendi seti mi kontrol et
-        if ($wordSet->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        return view('word-sets.edit', compact('wordSet'));
+public function edit(WordSet $wordSet)
+{
+    if ($wordSet->user_id !== Auth::id()) {
+        abort(403);
     }
 
-    // Set güncelleme
-    public function update(Request $request, WordSet $wordSet)
-    {
-        // Kullanıcının kendi seti mi kontrol et
-        if ($wordSet->user_id !== Auth::id()) {
-            abort(403);
-        }
+    $categories = \App\Models\WordSetCategory::whereNull('parent_id')
+        ->with('children.children')
+        ->orderBy('sort_order')
+        ->get();
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:500',
-            'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/'
-        ]);
+    return view('word-sets.edit', compact('wordSet', 'categories'));
+}
 
-        $wordSet->update([
-            'name' => $request->name,
-            'description' => $request->description,
-            'color' => $request->color,
-        ]);
-
-        return redirect()->route('word-sets.index')
-            ->with('success', 'Kelime seti başarıyla güncellendi!');
+public function update(Request $request, WordSet $wordSet)
+{
+    if ($wordSet->user_id !== Auth::id()) {
+        abort(403);
     }
+
+    $request->validate([
+        'name'        => 'required|string|max:255',
+        'description' => 'nullable|string|max:500',
+        'color'       => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
+        'category_id' => 'nullable|exists:word_set_categories,id',
+    ]);
+
+    $wordSet->update([
+        'name'        => $request->name,
+        'description' => $request->description,
+        'color'       => $request->color,
+        'category_id' => $request->category_id,
+    ]);
+
+    return redirect()->route('word-sets.index')
+        ->with('success', 'Kelime seti başarıyla güncellendi!');
+}
 
     // Set silme
     public function destroy(WordSet $wordSet)

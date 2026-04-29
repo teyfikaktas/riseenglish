@@ -15,6 +15,7 @@ class WordSet extends Model
         'description',
         'color',
         'is_active',
+        'category_id', // ekle
         'word_count'
     ];
 
@@ -64,4 +65,9 @@ class WordSet extends Model
         $totalWords = $this->words()->count();
         return $totalWords > 0 ? ceil($totalWords / $perPage) : 0;
     }
+    // category ilişkisi ekle
+public function category()
+{
+    return $this->belongsTo(WordSetCategory::class, 'category_id');
+}
 }

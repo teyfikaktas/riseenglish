@@ -26,6 +26,7 @@ use App\Http\Controllers\Ogrenci\TestCategoryController;
 use App\Http\Controllers\Ogrenci\TestController;
 use App\Http\Controllers\Teacher\TeacherPrivateLessonController;
 use App\Http\Controllers\Student\StudentPrivateLessonController;
+use App\Http\Controllers\Admin\WordSetCategoryController;
 
 if (env('APP_ENV') === 'production') {
     URL::forceScheme('https');
@@ -252,7 +253,7 @@ Route::middleware(['auth', 'role:yonetici'])->group(function () {
         Route::resource('groups', App\Http\Controllers\Admin\AdminGroupController::class);
         Route::post('/groups/{group}/add-student', [App\Http\Controllers\Admin\AdminGroupController::class, 'addStudent'])->name('groups.add-student');
         Route::delete('/groups/{group}/students/{user}', [App\Http\Controllers\Admin\AdminGroupController::class, 'removeStudent'])->name('groups.remove-student');
-
+Route::resource('word-set-categories', WordSetCategoryController::class);
         // Tests
         Route::get('/test-dashboard', [TestDashboardController::class, 'index'])->name('test-dashboard.index');
         Route::resource('test-categories', AdminTestCategoryController::class);
