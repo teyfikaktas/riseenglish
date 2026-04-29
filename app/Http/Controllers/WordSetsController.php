@@ -31,11 +31,18 @@ public function index()
 
     return view('word-sets.index', compact('categoryTree', 'uncategorizedSets', 'categorizedSets'));
 }
-    // Yeni set oluşturma sayfası
-    public function create()
-    {
-        return view('word-sets.create');
+public function create()
+{
+    $categories = collect();
+    if (auth()->user()->hasRole('ogretmen')) {
+        $categories = \App\Models\WordSetCategory::whereNull('parent_id')
+            ->with('children.children')
+            ->orderBy('sort_order')
+            ->get();
     }
+
+    return view('word-sets.create', compact('categories'));
+}
 // PDF Export - Tümü (Kelime + Türkçe)
 public function exportPdfAll(WordSet $wordSet)
 {
@@ -87,24 +94,26 @@ public function exportPdfEnglish(WordSet $wordSet)
     return $pdf->download('kelimeler_' . $wordSet->id . '.pdf');
 }
     // Yeni set kaydetme
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:500',
-            'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/'
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'name'        => 'required|string|max:255',
+        'description' => 'nullable|string|max:500',
+        'color'       => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
+        'category_id' => 'nullable|exists:word_set_categories,id',
+    ]);
 
-        WordSet::create([
-            'user_id' => Auth::id(),
-            'name' => $request->name,
-            'description' => $request->description,
-            'color' => $request->color,
-        ]);
+    WordSet::create([
+        'user_id'     => Auth::id(),
+        'name'        => $request->name,
+        'description' => $request->description,
+        'color'       => $request->color,
+        'category_id' => $request->category_id,
+    ]);
 
-        return redirect()->route('word-sets.index')
-            ->with('success', 'Kelime seti başarıyla oluşturuldu!');
-    }
+    return redirect()->route('word-sets.index')
+        ->with('success', 'Kelime seti başarıyla oluşturuldu!');
+}
 public function edit(WordSet $wordSet)
 {
     if ($wordSet->user_id !== Auth::id()) {

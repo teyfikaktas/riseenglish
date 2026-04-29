@@ -83,7 +83,32 @@
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
-
+@hasrole('ogretmen')
+<div>
+    <label for="category_id" class="block text-sm font-semibold text-gray-700 mb-2">
+        Kategori <span class="text-gray-400">(İsteğe bağlı)</span>
+    </label>
+    <select id="category_id" name="category_id"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all">
+        <option value="">— Kategorisiz —</option>
+        @foreach($categories as $cat)
+            <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
+                {{ $cat->name }}
+            </option>
+            @foreach($cat->children as $child)
+                <option value="{{ $child->id }}" {{ old('category_id') == $child->id ? 'selected' : '' }}>
+                    &nbsp;&nbsp;&nbsp;› {{ $child->name }}
+                </option>
+                @foreach($child->children as $grandchild)
+                    <option value="{{ $grandchild->id }}" {{ old('category_id') == $grandchild->id ? 'selected' : '' }}>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;› {{ $grandchild->name }}
+                    </option>
+                @endforeach
+            @endforeach
+        @endforeach
+    </select>
+</div>
+@endhasrole
                 <!-- Buttons -->
                 <div class="flex gap-4 pt-4 border-t border-gray-100">
                     <a href="{{ route('word-sets.index') }}" 
