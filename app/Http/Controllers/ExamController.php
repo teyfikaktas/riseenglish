@@ -677,9 +677,9 @@ public function groupWeeklyReport(Request $request, \App\Models\Group $group)
     }
 
     // Tüm tarih aralığındaki sınavları çek
-    $allExams = Exam::where('teacher_id', $teacherId)
-        ->whereDate('start_time', '>=', $startDate->toDateString())
+    $allExams = Exam::whereDate('start_time', '>=', $startDate->toDateString())
         ->whereDate('start_time', '<=', $endDate->toDateString())
+        ->whereHas('students', fn($q) => $q->whereIn('users.id', $studentIds))
         ->with(['results', 'students'])
         ->orderBy('start_time')
         ->get();
