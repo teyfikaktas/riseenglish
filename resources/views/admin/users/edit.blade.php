@@ -143,7 +143,52 @@
             </form>
         </div>
     </div>
+<!-- ====== TELEFON ONAY BÖLÜMÜ ====== -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden mt-6">
+    <div class="p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Telefon Onayı</h2>
 
+        @if($user->phone_verified)
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mb-1">ONAYLANDI</span>
+                        @if($user->phone_verified_at)
+                            <p class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($user->phone_verified_at)->format('d.m.Y H:i') }}</p>
+                        @endif
+                        @if($user->phone)
+                            <p class="text-sm text-gray-700 mt-1">📱 {{ $user->phone }}</p>
+                        @endif
+                    </div>
+                    <form action="{{ route('admin.users.unverifyPhone', $user->id) }}" method="POST"
+                          onsubmit="return confirm('Telefon onayını kaldırmak istediğinize emin misiniz?')">
+                        @csrf
+                        <button type="submit" class="text-xs px-3 py-1.5 rounded bg-red-100 text-red-700 hover:bg-red-200">
+                            Onayı Kaldır
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @else
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">ONAYLANMADI</span>
+                        @if($user->phone)
+                            <p class="text-sm text-gray-700 mt-1">📱 {{ $user->phone }}</p>
+                        @endif
+                    </div>
+                    <form action="{{ route('admin.users.verifyPhone', $user->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="text-xs px-3 py-1.5 rounded bg-green-100 text-green-700 hover:bg-green-200 font-semibold">
+                            ✅ Telefonu Onayla
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endif
+    </div>
+</div>
     <!-- ====== PRO ÜYELİK BÖLÜMÜ (Ana formun DIŞINDA) ====== -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden mt-6">
         <div class="p-6">

@@ -282,7 +282,8 @@ Route::get('/users/pro-students/{group}/pdf', [AdminUserController::class, 'proS
         Route::put('/users/{user}/courses/{course}', [AdminUserController::class, 'updateCourseEnrollment'])->name('users.updateCourseEnrollment');
         Route::delete('/users/{user}/courses/{course}', [AdminUserController::class, 'unenrollCourse'])->name('users.unenrollCourse');
         Route::get('/users/{user}/courses/{course}/enrollment-data', [AdminUserController::class, 'getEnrollmentData'])->name('users.enrollmentData');
-
+Route::post('/users/{user}/verify-phone',   [AdminUserController::class, 'verifyPhone'])->name('users.verifyPhone');
+Route::post('/users/{user}/unverify-phone', [AdminUserController::class, 'unverifyPhone'])->name('users.unverifyPhone');
 
 
         // User Membership

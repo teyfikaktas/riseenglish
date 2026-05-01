@@ -133,7 +133,25 @@ public function proStudents()
     return view('admin.users.pro-students', compact('groups'));
 }
 
+public function verifyPhone(User $user)
+{
+    $user->update([
+        'phone_verified'    => true,
+        'phone_verified_at' => now(),
+    ]);
 
+    return back()->with('success', $user->name . ' için telefon onayı verildi.');
+}
+
+public function unverifyPhone(User $user)
+{
+    $user->update([
+        'phone_verified'    => false,
+        'phone_verified_at' => null,
+    ]);
+
+    return back()->with('success', $user->name . ' için telefon onayı kaldırıldı.');
+}
 /**
  * Pro Öğrenciler PDF Rapor
  * Route: GET /admin/pro-students/{group}/pdf
