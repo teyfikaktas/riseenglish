@@ -303,19 +303,13 @@ public function studentDailyReport(Request $request, \App\Models\User $user)
     return $pdf->download($fileName);
 }
 
-/**
- * Tek öğrenci için haftalık rapor
- * Route: GET /student-weekly-report/{user}?start_date=2026-04-20
- */
 public function studentWeeklyReport(Request $request, \App\Models\User $user)
 {
     $request->validate(['start_date' => 'required|date']);
 
     $startDate = \Carbon\Carbon::parse($request->start_date);
     $endDate   = $startDate->copy()->addDays(6);
-    $teacherId = auth()->id();
 
-    // 7 günlük dizi
     $days = [];
     for ($i = 0; $i < 7; $i++) {
         $currentDate = $startDate->copy()->addDays($i);
@@ -325,15 +319,12 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
         ];
     }
 
-    // Tüm tarih aralığındaki sınavları çek
-    $allExams = Exam::where('teacher_id', $teacherId)
-        ->whereDate('start_time', '>=', $startDate->toDateString())
+    $allExams = Exam::whereDate('start_time', '>=', $startDate->toDateString())
         ->whereDate('start_time', '<=', $endDate->toDateString())
         ->with(['results', 'students'])
         ->orderBy('start_time')
         ->get();
 
-    // Sadece bu öğrenciye atanmış sınavlar
     $exams = $allExams->filter(function ($exam) use ($user) {
         return $exam->students->contains('id', $user->id);
     })->values();
@@ -342,15 +333,11 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
         return back()->with('error', $user->name . ' için bu hafta sınav bulunamadı.');
     }
 
-    $students = collect([$user]);
-
-    // Matris başlangıçta null
     $matrix = [];
     foreach ($days as $dayData) {
         $matrix[$user->id][$dayData['key']] = null;
     }
 
-    // Doldur
     foreach ($exams as $exam) {
         $examDate = \Carbon\Carbon::parse($exam->start_time)->format('Y-m-d');
         $result = $exam->results->where('student_id', $user->id)->first();
@@ -378,12 +365,10 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
 
     $pdf = PDF::loadView('exams.group-weekly-report-pdf', [
         'group'     => $fakeGroup,
-        'students'  => $students,
         'days'      => $days,
         'matrix'    => $matrix,
         'startDate' => $startDate,
         'endDate'   => $endDate,
-        'teacher'   => auth()->user(),
     ]);
 
     $pdf->setPaper('A4', 'landscape');
