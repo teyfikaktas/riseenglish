@@ -333,6 +333,8 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
         return back()->with('error', $user->name . ' için bu hafta sınav bulunamadı.');
     }
 
+    $students = collect([$user]);
+
     $matrix = [];
     foreach ($days as $dayData) {
         $matrix[$user->id][$dayData['key']] = null;
@@ -365,6 +367,7 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
 
     $pdf = PDF::loadView('exams.group-weekly-report-pdf', [
         'group'     => $fakeGroup,
+        'students'  => $students,
         'days'      => $days,
         'matrix'    => $matrix,
         'startDate' => $startDate,
