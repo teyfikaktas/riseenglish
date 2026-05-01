@@ -247,35 +247,26 @@ public function bulkDelete(Request $request)
 }
 
 /**
- * Tek öğrenci için günlük rapor (mevcut grup mantığını kullanır)
+ * Tek öğrenci için günlük rapor
  * Route: GET /student-daily-report/{user}?date=2026-04-26
  */
 public function studentDailyReport(Request $request, \App\Models\User $user)
 {
     $request->validate(['date' => 'required|date']);
     $date = \Carbon\Carbon::parse($request->date);
-    $teacherId = auth()->id();
 
-    // Bugünkü tüm sınavları çek - sadece bu öğrencinin atandıkları
-    $allExams = Exam::where('teacher_id', $teacherId)
-        ->whereDate('start_time', $date->toDateString())
+    $exams = Exam::whereDate('start_time', $date->toDateString())
+        ->whereHas('students', fn($q) => $q->where('users.id', $user->id))
         ->with(['results', 'students'])
         ->orderBy('start_time')
         ->get();
-
-    // Sadece bu öğrenciye atanmış sınavları filtrele
-    $exams = $allExams->filter(function ($exam) use ($user) {
-        return $exam->students->contains('id', $user->id);
-    })->values();
 
     if ($exams->isEmpty()) {
         return back()->with('error', $user->name . ' için bugün sınav bulunamadı.');
     }
 
-    // Tek öğrencilik bir collection oluştur
     $students = collect([$user]);
 
-    // Matris oluştur (grup raporundakiyle birebir aynı yapı)
     $matrix = [];
     $row = [];
     foreach ($exams as $exam) {
@@ -292,7 +283,6 @@ public function studentDailyReport(Request $request, \App\Models\User $user)
     }
     $matrix[$user->id] = $row;
 
-    // Sahte bir "grup" objesi oluştur (view'ı bozmamak için)
     $fakeGroup = (object) [
         'id'   => 'student-' . $user->id,
         'name' => $user->name . ' (Bireysel)',
@@ -470,8 +460,7 @@ public function create()
 {
     try {
         $userId = auth()->id();
-        
-        // Öğrencileri ve onların setlerini çek
+
         $students = User::role('ogrenci')
             ->with(['wordSets' => function($query) {
                 $query->where('is_active', 1)
@@ -482,37 +471,42 @@ public function create()
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get();
-        
-        // Grupları çek (aktif gruplar ve öğrencileriyle)
+
         $groups = \App\Models\Group::where('is_active', true)
             ->with(['students', 'teacher'])
             ->withCount('students')
             ->orderBy('name')
             ->get();
-        
-        // Öğretmenin ve genel setleri
-        $teacherWordSets = WordSet::where('is_active', 1)
+
+        // Kategori ağacı
+        $categoryTree = \App\Models\WordSetCategory::whereNull('parent_id')
+            ->with('allChildren')
+            ->orderBy('sort_order')
+            ->get();
+
+        // Setleri çek (map'siz, Eloquent collection olarak)
+        $teacherWordSetsRaw = WordSet::where('is_active', 1)
             ->where(function($query) use ($userId) {
                 $query->where('user_id', 1)
                       ->orWhere('user_id', 36)
                       ->orWhere('user_id', $userId);
             })
             ->withCount('words')
-            ->select('id', 'name', 'description', 'color', 'user_id', 'word_count')
+            ->select('id', 'name', 'description', 'color', 'user_id', 'word_count', 'category_id')
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function($set) use ($userId) {
-                return [
-                    'id' => $set->id,
-                    'name' => $set->name,
-                    'description' => $set->description,
-                    'color' => $set->color,
-                    'word_count' => $set->words_count ?? $set->word_count,
-                ];
-            });
-        
-        return view('exams.create', compact('teacherWordSets', 'students', 'groups'));
-        
+            ->get();
+
+        // Kategorisiz setler
+        $uncategorizedSets = $teacherWordSetsRaw->whereNull('category_id')->values();
+
+        // Kategorili setler (category_id => collection)
+        $categorizedSets = $teacherWordSetsRaw->whereNotNull('category_id')->groupBy('category_id');
+
+        return view('exams.create', compact(
+            'students', 'groups',
+            'categoryTree', 'categorizedSets', 'uncategorizedSets'
+        ));
+
     } catch (\Exception $e) {
         Log::error('Exam Create Error: ' . $e->getMessage());
         return back()->with('error', 'Bir hata oluştu');

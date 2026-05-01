@@ -191,38 +191,100 @@
                 @endif
             </div>
 
-            <!-- Genel Kelime Setleri -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-[#1a2e5a] mb-4">Genel Kelime Setleri</h2>
-                
-                @if(isset($teacherWordSets) && count($teacherWordSets) > 0)
-                    <div class="space-y-3">
-                        @foreach($teacherWordSets as $set)
-                            <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-[#1a2e5a] cursor-pointer transition-all">
-                                <input type="checkbox" 
-                                       name="word_sets[]" 
-                                       value="{{ $set['id'] }}"
-                                       class="w-5 h-5 text-[#1a2e5a] rounded focus:ring-[#1a2e5a]">
-                                <div class="ml-4 flex-1">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-4 h-4 rounded" style="background-color: {{ $set['color'] }}"></div>
-                                        <span class="font-semibold text-gray-900">{{ $set['name'] }}</span>
-                                        <span class="text-sm text-gray-500">({{ $set['word_count'] }} kelime)</span>
-                                    </div>
-                                    @if($set['description'])
-                                        <p class="text-sm text-gray-600 mt-1 ml-7">{{ $set['description'] }}</p>
-                                    @endif
-                                </div>
-                            </label>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-8 text-gray-500">
-                        <p>Genel kelime seti bulunmuyor.</p>
-                    </div>
-                @endif
-            </div>
+<!-- Genel Kelime Setleri -->
+<div class="bg-white rounded-xl shadow-lg p-6">
+    <h2 class="text-xl font-bold text-[#1a2e5a] mb-4">Genel Kelime Setleri</h2>
 
+    @if($categoryTree->isNotEmpty() || $uncategorizedSets->isNotEmpty())
+
+        @php
+        function examHasSets($category, $categorizedSets) {
+            if (isset($categorizedSets[$category->id]) && $categorizedSets[$category->id]->count() > 0) return true;
+            foreach ($category->children as $child) {
+                if (examHasSets($child, $categorizedSets)) return true;
+            }
+            return false;
+        }
+
+        function renderExamCategory($category, $categorizedSets, $depth = 0) {
+            if (!examHasSets($category, $categorizedSets)) return '';
+            $sets   = $categorizedSets[$category->id] ?? collect();
+            $catId  = 'exam-cat-' . $category->id;
+            $color  = $category->color;
+            $name   = htmlspecialchars($category->name);
+            $cnt    = $sets->count();
+            $badge  = $cnt > 0 ? "<span style='font-size:12px;color:#9ca3af;margin-left:6px;'>({$cnt} set)</span>" : '';
+            $pl     = $depth * 16;
+
+            $html  = "<div style='margin-left:{$pl}px;margin-bottom:8px;'>";
+            $html .= "<div style='border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;'>";
+            $html .= "<button type='button' onclick=\"toggleExamCat('{$catId}')\" style='width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f9fafb;border:none;cursor:pointer;'>";
+            $html .= "<div style='display:flex;align-items:center;gap:8px;'>";
+            $html .= "<span style='width:10px;height:10px;border-radius:50%;background:{$color};display:inline-block;'></span>";
+            $html .= "<span style='font-weight:600;color:#1a2e5a;font-size:14px;'>{$name}</span>{$badge}";
+            $html .= "</div>";
+            $html .= "<svg id='{$catId}-icon' style='width:16px;height:16px;color:#9ca3af;transition:transform 0.2s;' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/></svg>";
+            $html .= "</button>";
+            $html .= "<div id='{$catId}' style='display:none;padding:12px;background:#fff;border-top:1px solid #e5e7eb;'>";
+
+            foreach ($category->children as $child) {
+                $html .= renderExamCategory($child, $categorizedSets, 0);
+            }
+
+            foreach ($sets as $set) {
+                $wc    = $set->words_count ?? $set->word_count ?? 0;
+                $sname = htmlspecialchars($set->name);
+                $sdesc = $set->description ? "<p style='font-size:12px;color:#6b7280;margin:2px 0 0 28px;'>" . htmlspecialchars($set->description) . "</p>" : '';
+                $html .= "
+                <label style='display:flex;flex-direction:column;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px;cursor:pointer;transition:border-color 0.15s;' onmouseover=\"this.style.borderColor='#1a2e5a'\" onmouseout=\"this.style.borderColor='#e5e7eb'\">
+                    <div style='display:flex;align-items:center;gap:10px;'>
+                        <input type='checkbox' name='word_sets[]' value='{$set->id}' style='width:16px;height:16px;accent-color:#1a2e5a;flex-shrink:0;'>
+                        <span style='width:10px;height:10px;border-radius:3px;background:{$set->color};display:inline-block;flex-shrink:0;'></span>
+                        <span style='font-weight:500;color:#111827;font-size:14px;'>{$sname}</span>
+                        <span style='font-size:12px;color:#9ca3af;margin-left:auto;'>{$wc} kelime</span>
+                    </div>
+                    {$sdesc}
+                </label>";
+            }
+
+            $html .= "</div></div></div>";
+            return $html;
+        }
+        @endphp
+
+        {{-- Kategorili setler --}}
+        @foreach($categoryTree as $category)
+            @if(examHasSets($category, $categorizedSets))
+                {!! renderExamCategory($category, $categorizedSets, 0) !!}
+            @endif
+        @endforeach
+
+        {{-- Kategorisiz setler --}}
+        @if($uncategorizedSets->isNotEmpty())
+            <div class="mt-4">
+                <p class="text-sm font-semibold text-gray-500 mb-2">Kategorisiz</p>
+                <div class="space-y-2">
+                    @foreach($uncategorizedSets as $set)
+                        <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:border-[#1a2e5a] cursor-pointer transition-all">
+                            <input type="checkbox" name="word_sets[]" value="{{ $set->id }}"
+                                   class="w-4 h-4 text-[#1a2e5a] rounded focus:ring-[#1a2e5a]">
+                            <div class="ml-3 flex items-center gap-2 flex-1">
+                                <div class="w-3 h-3 rounded" style="background-color: {{ $set->color }}"></div>
+                                <span class="font-medium text-gray-900">{{ $set->name }}</span>
+                                <span class="text-sm text-gray-500 ml-auto">{{ $set->words_count ?? $set->word_count }} kelime</span>
+                            </div>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+    @else
+        <div class="text-center py-8 text-gray-500">
+            <p>Genel kelime seti bulunmuyor.</p>
+        </div>
+    @endif
+</div>
             <!-- Butonlar -->
             <div class="flex items-center justify-between">
                 <a href="{{ route('word-sets.index') }}" 
@@ -335,7 +397,13 @@ document.getElementById('student-search')?.addEventListener('input', function() 
     // "Tüm öğrencileri seç" checkbox'ını güncelle
     updateSelectAllCheckbox();
 });
-
+function toggleExamCat(id) {
+    const el   = document.getElementById(id);
+    const icon = document.getElementById(id + '-icon');
+    const open = el.style.display === 'none' || el.style.display === '';
+    el.style.display   = open ? 'block' : 'none';
+    icon.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+}
 // Toplu sınav checkbox toggle
 document.getElementById('is_recurring')?.addEventListener('change', function() {
     const endDateContainer = document.getElementById('end_date_container');
