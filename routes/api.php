@@ -101,7 +101,38 @@ Route::get('/words/{categoryId}/{page}/{lang?}', function($categoryId, $page = 1
         ]);
     }
 });
-
+Route::get('/tts', function (Request $request) {
+    $text = trim($request->query('text', ''));
+    
+    if ($text === '') {
+        return response()->json(['error' => 'text parametresi gerekli'], 400);
+    }
+    
+    // Çok uzun text engelle (abuse önleme)
+    if (mb_strlen($text) > 200) {
+        return response()->json(['error' => 'text çok uzun'], 400);
+    }
+    
+    try {
+        $response = \Illuminate\Support\Facades\Http::timeout(15)
+            ->get('http://193.35.154.194:5050/tts', ['text' => $text]);
+        
+        if (!$response->successful()) {
+            \Log::error('TTS upstream error: ' . $response->status());
+            return response()->json(['error' => 'TTS sunucusu yanıt vermedi'], 502);
+        }
+        
+        return response($response->body(), 200, [
+            'Content-Type' => 'audio/mpeg',
+            'Access-Control-Allow-Origin' => '*',
+            'Accept-Ranges' => 'bytes',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('TTS Proxy Error: ' . $e->getMessage());
+        return response()->json(['error' => 'TTS hatası'], 500);
+    }
+});
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
