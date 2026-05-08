@@ -327,7 +327,18 @@ Route::post('/users/{user}/unverify-phone', [AdminUserController::class, 'unveri
 });
 
 
+// ============================================================
+// MOCK EXAMS (Deneme Sınavı - Teacher)
+// ============================================================
 
+Route::middleware(['auth', 'role:ogretmen'])->group(function () {
+    Route::get('/mock-exams',                           [App\Http\Controllers\MockExamController::class, 'index'])->name('mock-exams.index');
+    Route::get('/mock-exams/create',                    [App\Http\Controllers\MockExamController::class, 'create'])->name('mock-exams.create');
+    Route::post('/mock-exams',                          [App\Http\Controllers\MockExamController::class, 'store'])->name('mock-exams.store');
+    Route::get('/mock-exams/{mockExam}/report',         [App\Http\Controllers\MockExamController::class, 'downloadReport'])->name('mock-exams.report');
+    Route::delete('/mock-exams/{mockExam}',             [App\Http\Controllers\MockExamController::class, 'destroy'])->name('mock-exams.destroy');
+    Route::post('/mock-exams/{mockExam}/toggle-active', [App\Http\Controllers\MockExamController::class, 'toggleActive'])->name('mock-exams.toggle-active');
+});
 Route::middleware(['auth'])->group(function () {
     Route::get('/self-exam', [ExamController::class, 'selfCreate'])->name('exams.self-create');
     Route::post('/self-exam', [ExamController::class, 'selfStore'])->name('exams.self-store');

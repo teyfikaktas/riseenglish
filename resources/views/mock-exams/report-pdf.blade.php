@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rise English - Deneme Sınavı Raporu</title>
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-image: url('{{ public_path('images/bgreport.jpg') }}');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: left top;
+        }
+
+        * {
+            font-weight: bold;
+        }
+
+        .cover-page {
+            min-height: 100vh;
+            padding: 60px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #1a2e5a;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            height: 50px;
+            margin-right: 15px;
+        }
+
+        .company-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .company-name {
+            color: #1a2e5a;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .company-details {
+            font-size: 10px;
+            color: #666;
+            margin: 3px 0 0 0;
+        }
+
+        .document-info {
+            text-align: right;
+        }
+
+        .document-title {
+            margin: 0;
+            color: #1a2e5a;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .document-date {
+            margin: 5px 0 0 0;
+            color: #e63946;
+            font-size: 16px;
+        }
+
+        .motto-container {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 20px;
+        }
+
+        .motto-container .red {
+            color: #e63946;
+        }
+
+        .motto-container .blue {
+            color: #1a2e5a;
+        }
+
+        /* Sınav bilgileri kutusu */
+        .exam-info-box {
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 2px solid #1a2e5a;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px auto;
+            width: 80%;
+        }
+
+        .exam-info-row {
+            display: table;
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .exam-info-label {
+            display: table-cell;
+            font-size: 12px;
+            color: #6b7280;
+            width: 30%;
+        }
+
+        .exam-info-value {
+            display: table-cell;
+            font-size: 13px;
+            color: #1a2e5a;
+        }
+
+        .exam-code {
+            font-family: monospace;
+            color: #e63946;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        /* İstatistik kutuları */
+        .stats-grid {
+            display: table;
+            width: 60%;
+            margin: 20px auto;
+            border-spacing: 10px;
+        }
+
+        .stat-row {
+            display: table-row;
+        }
+
+        .stat-box {
+            display: table-cell;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px;
+            background-color: rgba(249, 250, 251, 0.95);
+            border: 2px solid #eee;
+            width: 50%;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .completed {
+            border-top: 4px solid #16a34a;
+        }
+        .completed .stat-number {
+            color: #16a34a;
+        }
+
+        .avg-score {
+            border-top: 4px solid #1a2e5a;
+        }
+        .avg-score .stat-number {
+            color: #1a2e5a;
+        }
+
+        .section-title {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            padding-left: 10px;
+            border-left: 4px solid;
+            color: #16a34a;
+            border-left-color: #16a34a;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+
+        .results-table th {
+            background-color: #1a2e5a;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .results-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+            background-color: rgba(255, 255, 255, 0.95);
+            text-align: center;
+        }
+
+        .results-table tr:nth-child(even) td {
+            background-color: rgba(249, 250, 251, 0.95);
+        }
+
+        .student-name {
+            text-align: left !important;
+        }
+
+        .rank-1 td {
+            background-color: #FFD700 !important;
+        }
+
+        .rank-2 td {
+            background-color: #C0C0C0 !important;
+        }
+
+        .rank-3 td {
+            background-color: #CD7F32 !important;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .footer-logo {
+            height: 40px;
+            margin-bottom: 10px;
+        }
+
+        .bottom-logo {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .bottom-logo img {
+            max-width: 600px;
+            height: auto;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cover-page">
+        <div class="header">
+            <div class="logo-container">
+                <img src="{{ public_path('images/logo.png') }}" alt="Rise English Logo" class="logo">
+                <div class="company-info">
+                    <p class="company-name">RISE ENGLISH</p>
+                    <p class="company-details">Profesyonel Dil Eğitimi</p>
+                    <p class="company-details">www.risenglish.com</p>
+                </div>
+            </div>
+            <div class="document-info">
+                <h1 class="document-title">DENEME SINAVI RAPORU</h1>
+                <p class="document-date">{{ \Carbon\Carbon::parse($date)->locale('tr')->isoFormat('D MMMM YYYY, dddd') }}</p>
+            </div>
+        </div>
+
+        <div class="motto-container">
+            <span class="red">Struggle</span> <span class="blue">Now</span> ·
+            <span class="red">Rise</span> <span class="blue">English</span>
+        </div>
+
+        <!-- Sınav Bilgileri -->
+        <div class="exam-info-box">
+            <div class="exam-info-row">
+                <span class="exam-info-label">Sınav Adı:</span>
+                <span class="exam-info-value">{{ $mockExam->name }}</span>
+            </div>
+            <div class="exam-info-row">
+                <span class="exam-info-label">Sınav Kodu:</span>
+                <span class="exam-info-value exam-code">{{ $mockExam->code }}</span>
+            </div>
+            <div class="exam-info-row">
+                <span class="exam-info-label">Kelime Seti:</span>
+                <span class="exam-info-value">{{ $mockExam->wordSet?->name ?? '-' }}</span>
+            </div>
+            <div class="exam-info-row">
+                <span class="exam-info-label">Tarih / Saat:</span>
+                <span class="exam-info-value">{{ \Carbon\Carbon::parse($mockExam->start_time)->format('d.m.Y H:i') }}</span>
+            </div>
+            <div class="exam-info-row">
+                <span class="exam-info-label">Soru Başı Süre:</span>
+                <span class="exam-info-value">{{ $mockExam->time_per_question }} saniye</span>
+            </div>
+        </div>
+
+        <!-- İstatistik Kutuları -->
+        @php
+            $avgSuccess = $enteredCount > 0 ? round($enteredResults->avg('success_rate')) : 0;
+        @endphp
+        <div class="stats-grid">
+            <div class="stat-row">
+                <div class="stat-box completed">
+                    <div class="stat-label">Sınava Giren</div>
+                    <div class="stat-number">{{ $enteredCount }}</div>
+                </div>
+                <div class="stat-box avg-score">
+                    <div class="stat-label">Ortalama Başarı</div>
+                    <div class="stat-number">%{{ $avgSuccess }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sınava Girenler -->
+        @if($enteredCount > 0)
+        <h2 class="section-title">✓ Sınava Giren Öğrenciler</h2>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 35%;">Öğrenci</th>
+                    <th style="width: 15%;">Doğru</th>
+                    <th style="width: 15%;">Yanlış</th>
+                    <th style="width: 15%;">Süre (sn)</th>
+                    <th style="width: 15%;">Başarı</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php $rank = 1; @endphp
+                @foreach($enteredResults as $result)
+                    @php
+                        $dogru = $result->score;
+                        $yanlis = max(0, $result->total_questions - $result->score);
+                        $successRate = round($result->success_rate);
+
+                        $rowClass = '';
+                        if ($rank == 1) $rowClass = 'rank-1';
+                        elseif ($rank == 2) $rowClass = 'rank-2';
+                        elseif ($rank == 3) $rowClass = 'rank-3';
+                    @endphp
+                    <tr class="{{ $rowClass }}">
+                        <td>{{ $rank }}</td>
+                        <td class="student-name">{{ $result->student->name ?? '-' }}</td>
+                        <td>{{ $dogru }}</td>
+                        <td>{{ $yanlis }}</td>
+                        <td>{{ $result->time_spent ?? 0 }}</td>
+                        <td>%{{ $successRate }}</td>
+                    </tr>
+                    @php $rank++; @endphp
+                @endforeach
+            </tbody>
+        </table>
+        @endif
+
+        <div class="footer">
+            <img src="{{ public_path('images/logo.png') }}" alt="Rise English" class="footer-logo">
+            <p>© {{ date('Y') }} Rise English - Tüm Hakları Saklıdır</p>
+            <p>Oluşturma: {{ now()->locale('tr')->isoFormat('D MMMM YYYY, HH:mm') }}</p>
+        </div>
+
+        <div class="bottom-logo">
+            <img src="{{ public_path('images/rs.jpg') }}" alt="RS Logo">
+        </div>
+    </div>
+</body>
+</html>

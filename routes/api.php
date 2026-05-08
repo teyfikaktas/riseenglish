@@ -11,6 +11,10 @@ use App\Models\WordSet;
 // Auth routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+// Guest Sınav
+Route::post('/guest-exam/verify', [App\Http\Controllers\MockExamController::class, 'guestVerify']);
+Route::post('/guest-exam/submit', [App\Http\Controllers\MockExamController::class, 'guestSubmit']);
+Route::post('/guest-exam/check', [App\Http\Controllers\MockExamController::class, 'guestCheckExam']);
 
 // OTP
 Route::post('/send-otp', [OtpController::class, 'sendOtp']);
@@ -281,4 +285,5 @@ Route::middleware('auth:sanctum')->group(function () {
             ], 500);
         }
     });
+    
 }); 
