@@ -7,6 +7,7 @@ use App\Models\MockExam;
 use App\Models\WordSet;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\GuestExamResult;
 
 class MockExamController extends Controller
 {
