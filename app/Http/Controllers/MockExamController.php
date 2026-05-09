@@ -11,9 +11,6 @@ use App\Models\GuestExamResult;
 
 class MockExamController extends Controller
 {
-    /**
-     * Deneme sınavları listesi (öğretmenin oluşturdukları)
-     */
     public function index(Request $request)
     {
         $query = MockExam::where('teacher_id', auth()->id())
@@ -36,21 +33,16 @@ class MockExamController extends Controller
         return view('mock-exams.index', compact('mockExams'));
     }
 
-    /**
-     * Deneme sınavı oluşturma formu
-     */
     public function create()
     {
         try {
             $userId = auth()->id();
 
-            // Kategori ağacı
             $categoryTree = \App\Models\WordSetCategory::whereNull('parent_id')
                 ->with('allChildren')
                 ->orderBy('sort_order')
                 ->get();
 
-            // Setleri çek (Exam create ile aynı mantık)
             $teacherWordSetsRaw = WordSet::where('is_active', 1)
                 ->where(function ($query) use ($userId) {
                     $query->where('user_id', 1)
@@ -75,9 +67,6 @@ class MockExamController extends Controller
         }
     }
 
-    /**
-     * Deneme sınavını kaydet
-     */
     public function store(Request $request)
     {
         try {
@@ -97,7 +86,6 @@ class MockExamController extends Controller
                 'start_time'        => $validated['start_time'],
                 'time_per_question' => $validated['time_per_question'],
                 'is_active'         => true,
-                // 'code' otomatik olarak boot() içinde üretilir
             ]);
 
             return redirect()
@@ -109,230 +97,216 @@ class MockExamController extends Controller
             return back()->withInput()->with('error', 'Deneme sınavı oluşturulurken bir hata oluştu.');
         }
     }
-public function guestVerify(Request $request)
-{
-    $request->validate([
-        'code'  => 'required|string',
-        'name'  => 'required|string',
-        'phone' => 'required|string',
-        'email' => 'required|email',
-    ]);
 
-    $mockExam = MockExam::where('code', strtoupper($request->code))
-        ->where('is_active', true)
-        ->with('wordSet.words')
-        ->first();
+    public function guestCheckExam(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+        ]);
 
-    if (!$mockExam) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Geçersiz veya pasif sınav kodu.',
-        ], 404);
-    }
+        $mockExam = MockExam::where('code', strtoupper($request->code))
+            ->where('is_active', true)
+            ->first();
 
-    // Aynı telefon daha önce bu sınava girmiş mi?
-    $existing = GuestExamResult::where('mock_exam_id', $mockExam->id)
-        ->where('phone', $request->phone)
-        ->first();
-
-    if ($existing) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Bu telefon numarası ile daha önce bu sınava giriş yapılmıştır.',
-        ], 409);
-    }
-
-    // Kaydı oluştur
-    GuestExamResult::create([
-        'mock_exam_id' => $mockExam->id,
-        'phone'        => $request->phone,
-        'name'         => $request->name,
-        'email'        => $request->email,
-    ]);
-
-    $words = $mockExam->wordSet->words->shuffle();
-
-    $questions = $words->map(function ($word) use ($words) {
-        $wrongOptions = $words
-            ->where('id', '!=', $word->id)
-            ->shuffle()
-            ->take(3)
-            ->pluck('turkish')
-            ->toArray();
-
-        $options = collect($wrongOptions)
-            ->push($word->turkish)
-            ->shuffle()
-            ->values()
-            ->toArray();
-
-        return [
-            'id'             => $word->id,
-            'question'       => $word->english,
-            'options'        => $options,
-            'correct_answer' => $word->turkish,
-        ];
-    });
-
-    return response()->json([
-        'success' => true,
-        'exam' => [
-            'id'                => $mockExam->id,
-            'name'              => $mockExam->name,
-            'time_per_question' => $mockExam->time_per_question,
-            'total_questions'   => $questions->count(),
-            'questions'         => $questions,
-        ],
-    ]);
-}
-
-/**
- * Sınav koduna göre sınav durumunu kontrol et
- */
-public function guestCheckExam(Request $request)
-{
-    $request->validate([
-        'code' => 'required|string',
-    ]);
-
-    $mockExam = MockExam::where('code', strtoupper($request->code))
-        ->where('is_active', true)
-        ->first();
-
-    if (!$mockExam) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Geçersiz veya pasif sınav kodu.',
-        ], 404);
-    }
-
-    $now = now();
-
-    if ($mockExam->start_time > $now) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Sınav henüz başlamadı.',
-            'start_time' => $mockExam->start_time,
-        ], 403);
-    }
-
-    if ($mockExam->start_time < $now->copy()->subMinutes(5)) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Sınav giriş süresi dolmuştur.',
-        ], 403);
-    }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Sınav aktif, giriş yapabilirsiniz.',
-        'exam' => [
-            'id'         => $mockExam->id,
-            'name'       => $mockExam->name,
-            'start_time' => $mockExam->start_time,
-        ],
-    ]);
-}
-/**
- * Cevapları kaydet - Guest
- * phone = kullanıcı kimliği
- */
-public function guestSubmit(Request $request)
-{
-    $request->validate([
-        'mock_exam_id' => 'required|exists:mock_exams,id',
-        'name'         => 'required|string',
-        'phone'        => 'required|string',
-        'email'        => 'required|email',
-        'answers'      => 'required|array',
-    ]);
-
-    try {
-        $answers         = $request->answers;
-        $totalQuestions  = count($answers);
-        $correct         = 0;
-        $detailedAnswers = [];
-
-        foreach ($answers as $answer) {
-            $isCorrect = $answer['selected'] === $answer['correct'];
-            if ($isCorrect) $correct++;
-
-            $detailedAnswers[] = [
-                'word_id'    => $answer['word_id'],
-                'selected'   => $answer['selected'],
-                'correct'    => $answer['correct'],
-                'is_correct' => $isCorrect,
-            ];
+        if (!$mockExam) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Geçersiz veya pasif sınav kodu.',
+            ], 404);
         }
 
-        $successRate = $totalQuestions > 0
-            ? round(($correct / $totalQuestions) * 100, 2)
-            : 0;
+        $now = now();
+
+        if ($mockExam->start_time > $now) {
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Sınav henüz başlamadı.',
+                'start_time' => $mockExam->start_time,
+            ], 403);
+        }
+
+        if ($mockExam->start_time < $now->copy()->subMinutes(5)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sınav giriş süresi dolmuştur.',
+            ], 403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sınav aktif, giriş yapabilirsiniz.',
+            'exam'    => [
+                'id'         => $mockExam->id,
+                'name'       => $mockExam->name,
+                'start_time' => $mockExam->start_time,
+            ],
+        ]);
+    }
+
+    public function guestVerify(Request $request)
+    {
+        $request->validate([
+            'code'  => 'required|string',
+            'name'  => 'required|string',
+            'phone' => 'required|string',
+            'email' => 'required|email',
+        ]);
+
+        $mockExam = MockExam::where('code', strtoupper($request->code))
+            ->where('is_active', true)
+            ->with('wordSet.words')
+            ->first();
+
+        if (!$mockExam) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Geçersiz veya pasif sınav kodu.',
+            ], 404);
+        }
+
+        $existing = GuestExamResult::where('mock_exam_id', $mockExam->id)
+            ->where('phone', $request->phone)
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bu telefon numarası ile daha önce bu sınava giriş yapılmıştır.',
+            ], 409);
+        }
 
         GuestExamResult::create([
-            'mock_exam_id'    => $request->mock_exam_id,
-            'name'            => $request->name,
-            'phone'           => $request->phone,
-            'email'           => $request->email,
-            'score'           => $correct,
-            'total_questions' => $totalQuestions,
-            'success_rate'    => $successRate,
-            'answers'         => $detailedAnswers,
-            'completed_at'    => now(),
+            'mock_exam_id' => $mockExam->id,
+            'phone'        => $request->phone,
+            'name'         => $request->name,
+            'email'        => $request->email,
         ]);
 
+        $words = $mockExam->wordSet->words->shuffle();
+
+        $questions = $words->map(function ($word) use ($words) {
+            $wrongOptions = $words
+                ->where('id', '!=', $word->id)
+                ->shuffle()
+                ->take(3)
+                ->pluck('definition')
+                ->toArray();
+
+            $options = collect($wrongOptions)
+                ->push($word->definition)
+                ->shuffle()
+                ->values()
+                ->toArray();
+
+            return [
+                'id'             => $word->id,
+                'question'       => $word->word,
+                'options'        => $options,
+                'correct_answer' => $word->definition,
+            ];
+        });
+
         return response()->json([
-            'success'         => true,
-            'score'           => $correct,
-            'total_questions' => $totalQuestions,
-            'success_rate'    => $successRate,
+            'success' => true,
+            'exam'    => [
+                'id'                => $mockExam->id,
+                'name'              => $mockExam->name,
+                'time_per_question' => $mockExam->time_per_question,
+                'total_questions'   => $questions->count(),
+                'questions'         => $questions,
+            ],
+        ]);
+    }
+
+    public function guestSubmit(Request $request)
+    {
+        $request->validate([
+            'mock_exam_id' => 'required|exists:mock_exams,id',
+            'name'         => 'required|string',
+            'phone'        => 'required|string',
+            'email'        => 'required|email',
+            'answers'      => 'required|array',
         ]);
 
-    } catch (\Exception $e) {
-        Log::error('GuestExam Submit Error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Bir hata oluştu.',
-        ], 500);
+        try {
+            $answers         = $request->answers;
+            $totalQuestions  = count($answers);
+            $correct         = 0;
+            $detailedAnswers = [];
+
+            foreach ($answers as $answer) {
+                $isCorrect = $answer['selected'] === $answer['correct'];
+                if ($isCorrect) $correct++;
+
+                $detailedAnswers[] = [
+                    'word_id'    => $answer['word_id'],
+                    'selected'   => $answer['selected'],
+                    'correct'    => $answer['correct'],
+                    'is_correct' => $isCorrect,
+                ];
+            }
+
+            $successRate = $totalQuestions > 0
+                ? round(($correct / $totalQuestions) * 100, 2)
+                : 0;
+
+            GuestExamResult::where('mock_exam_id', $request->mock_exam_id)
+                ->where('phone', $request->phone)
+                ->update([
+                    'score'           => $correct,
+                    'total_questions' => $totalQuestions,
+                    'success_rate'    => $successRate,
+                    'answers'         => json_encode($detailedAnswers),
+                    'completed_at'    => now(),
+                ]);
+
+            return response()->json([
+                'success'         => true,
+                'score'           => $correct,
+                'total_questions' => $totalQuestions,
+                'success_rate'    => $successRate,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('GuestExam Submit Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Bir hata oluştu.',
+            ], 500);
+        }
     }
-}
-/**
- * Deneme sınavı sonuç raporu (PDF)
- */
-public function downloadReport(MockExam $mockExam)
-{
-    if ($mockExam->teacher_id !== auth()->id()) {
-        abort(403, 'Bu sınava erişim yetkiniz yok.');
+
+    public function downloadReport(MockExam $mockExam)
+    {
+        if ($mockExam->teacher_id !== auth()->id()) {
+            abort(403, 'Bu sınava erişim yetkiniz yok.');
+        }
+
+        $enteredResults = $mockExam->results()
+            ->whereNotNull('completed_at')
+            ->where('score', '>=', 0)
+            ->with('student:id,name')
+            ->orderByDesc('success_rate')
+            ->orderByDesc('score')
+            ->get();
+
+        if ($enteredResults->isEmpty()) {
+            return back()->with('error', 'Bu deneme sınavına henüz katılan öğrenci yok.');
+        }
+
+        $pdf = PDF::loadView('mock-exams.report-pdf', [
+            'mockExam'       => $mockExam,
+            'enteredResults' => $enteredResults,
+            'enteredCount'   => $enteredResults->count(),
+            'date'           => $mockExam->start_time,
+            'teacher'        => auth()->user(),
+        ]);
+
+        $fileName = 'Deneme_Sinav_Raporu_' . $mockExam->code . '_' . $mockExam->start_time->format('d-m-Y') . '.pdf';
+
+        return $pdf->download($fileName);
     }
 
-    // Sınava giren tüm öğrencilerin sonuçlarını al
-    $enteredResults = $mockExam->results()
-        ->whereNotNull('completed_at')
-        ->where('score', '>=', 0)
-        ->with('student:id,name')
-        ->orderByDesc('success_rate')
-        ->orderByDesc('score')
-        ->get();
-
-    if ($enteredResults->isEmpty()) {
-        return back()->with('error', 'Bu deneme sınavına henüz katılan öğrenci yok.');
-    }
-
-    $pdf = PDF::loadView('mock-exams.report-pdf', [
-        'mockExam'       => $mockExam,
-        'enteredResults' => $enteredResults,
-        'enteredCount'   => $enteredResults->count(),
-        'date'           => $mockExam->start_time,
-        'teacher'        => auth()->user(),
-    ]);
-
-    $fileName = 'Deneme_Sinav_Raporu_' . $mockExam->code . '_' . $mockExam->start_time->format('d-m-Y') . '.pdf';
-
-    return $pdf->download($fileName);
-}
-    /**
-     * Deneme sınavını sil
-     */
     public function destroy(MockExam $mockExam)
     {
         if ($mockExam->teacher_id !== auth()->id()) {
@@ -348,9 +322,6 @@ public function downloadReport(MockExam $mockExam)
             ->with('success', 'Deneme sınavı silindi!');
     }
 
-    /**
-     * Aktif/Pasif toggle
-     */
     public function toggleActive(MockExam $mockExam)
     {
         if ($mockExam->teacher_id !== auth()->id()) {
