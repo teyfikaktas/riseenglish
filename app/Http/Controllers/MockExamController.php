@@ -184,65 +184,7 @@ public function guestVerify(Request $request)
         ],
     ]);
 }
-/**
- * Sınav kodunu doğrula - Guest
- */
-public function guestVerify(Request $request)
-{
-    $request->validate([
-        'code'  => 'required|string',
-        'name'  => 'required|string',
-        'phone' => 'required|string',
-        'email' => 'required|email',
-    ]);
 
-    $mockExam = MockExam::where('code', strtoupper($request->code))
-        ->where('is_active', true)
-        ->with('wordSet.words')
-        ->first();
-
-    if (!$mockExam) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Geçersiz veya pasif sınav kodu.',
-        ], 404);
-    }
-
-    $words = $mockExam->wordSet->words->shuffle();
-
-    $questions = $words->map(function ($word) use ($words) {
-        $wrongOptions = $words
-            ->where('id', '!=', $word->id)
-            ->shuffle()
-            ->take(3)
-            ->pluck('turkish')
-            ->toArray();
-
-        $options = collect($wrongOptions)
-            ->push($word->turkish)
-            ->shuffle()
-            ->values()
-            ->toArray();
-
-        return [
-            'id'             => $word->id,
-            'question'       => $word->english,
-            'options'        => $options,
-            'correct_answer' => $word->turkish,
-        ];
-    });
-
-    return response()->json([
-        'success' => true,
-        'exam' => [
-            'id'                => $mockExam->id,
-            'name'              => $mockExam->name,
-            'time_per_question' => $mockExam->time_per_question,
-            'total_questions'   => $questions->count(),
-            'questions'         => $questions,
-        ],
-    ]);
-}
 /**
  * Sınav koduna göre sınav durumunu kontrol et
  */
