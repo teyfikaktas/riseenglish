@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\StudentExamController;
 use App\Models\Word;
 use App\Models\WordSet;
+use App\Http\Controllers\MockExamController;
 
 // Auth routes
 Route::post('/register', [AuthController::class, 'register']);
