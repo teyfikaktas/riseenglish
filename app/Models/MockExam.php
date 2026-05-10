@@ -78,10 +78,10 @@ class MockExam extends Model
             ->withTimestamps();
     }
 
-    public function results()
-    {
-        return $this->hasMany(MockExamResult::class);
-    }
+public function results()
+{
+    return $this->hasMany(GuestExamResult::class);
+}
 
     // ============================================================
     // Yardımcı Metodlar (Exam ile aynı)

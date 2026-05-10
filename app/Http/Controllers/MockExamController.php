@@ -276,36 +276,35 @@ class MockExamController extends Controller
         }
     }
 
-    public function downloadReport(MockExam $mockExam)
-    {
-        if ($mockExam->teacher_id !== auth()->id()) {
-            abort(403, 'Bu sınava erişim yetkiniz yok.');
-        }
-
-        $enteredResults = $mockExam->results()
-            ->whereNotNull('completed_at')
-            ->where('score', '>=', 0)
-            ->with('student:id,name')
-            ->orderByDesc('success_rate')
-            ->orderByDesc('score')
-            ->get();
-
-        if ($enteredResults->isEmpty()) {
-            return back()->with('error', 'Bu deneme sınavına henüz katılan öğrenci yok.');
-        }
-
-        $pdf = PDF::loadView('mock-exams.report-pdf', [
-            'mockExam'       => $mockExam,
-            'enteredResults' => $enteredResults,
-            'enteredCount'   => $enteredResults->count(),
-            'date'           => $mockExam->start_time,
-            'teacher'        => auth()->user(),
-        ]);
-
-        $fileName = 'Deneme_Sinav_Raporu_' . $mockExam->code . '_' . $mockExam->start_time->format('d-m-Y') . '.pdf';
-
-        return $pdf->download($fileName);
+public function downloadReport(MockExam $mockExam)
+{
+    if ($mockExam->teacher_id !== auth()->id()) {
+        abort(403, 'Bu sınava erişim yetkiniz yok.');
     }
+
+    $enteredResults = $mockExam->results()
+        ->whereNotNull('completed_at')
+        ->where('score', '>=', 0)
+        ->orderByDesc('success_rate')
+        ->orderByDesc('score')
+        ->get();
+
+    if ($enteredResults->isEmpty()) {
+        return back()->with('error', 'Bu deneme sınavına henüz katılan öğrenci yok.');
+    }
+
+    $pdf = PDF::loadView('mock-exams.report-pdf', [
+        'mockExam'       => $mockExam,
+        'enteredResults' => $enteredResults,
+        'enteredCount'   => $enteredResults->count(),
+        'date'           => $mockExam->start_time,
+        'teacher'        => auth()->user(),
+    ]);
+
+    $fileName = 'Deneme_Sinav_Raporu_' . $mockExam->code . '_' . $mockExam->start_time->format('d-m-Y') . '.pdf';
+
+    return $pdf->download($fileName);
+}
 
     public function destroy(MockExam $mockExam)
     {
