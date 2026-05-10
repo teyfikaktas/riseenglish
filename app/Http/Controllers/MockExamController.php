@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\MockExam;
 use App\Models\WordSet;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\GuestExamResult;
 
@@ -143,13 +144,69 @@ class MockExamController extends Controller
         ]);
     }
 
+    public function guestSendOtp(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string',
+        ]);
+
+        $otp = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+
+        Cache::put('guest_otp_' . $request->phone, $otp, now()->addMinutes(5));
+
+        $smsContent = sprintf(
+            'Rise English deneme sınavı giriş kodunuz: %s (5 dakika geçerlidir)',
+            $otp
+        );
+
+        try {
+            \App\Services\SmsService::sendSms($request->phone, $smsContent);
+            Log::info('Guest OTP gönderildi', ['phone' => $request->phone]);
+        } catch (\Exception $e) {
+            Log::error('Guest OTP SMS hatası: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'SMS gönderilemedi. Lütfen tekrar deneyin.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Doğrulama kodu gönderildi.',
+        ]);
+    }
+
+    public function guestVerifyOtp(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string',
+            'otp'   => 'required|string',
+        ]);
+
+        $stored = Cache::get('guest_otp_' . $request->phone);
+
+        if (!$stored || $stored !== $request->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kod hatalı veya süresi dolmuş.',
+            ], 422);
+        }
+
+        Cache::forget('guest_otp_' . $request->phone);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Telefon numarası doğrulandı.',
+        ]);
+    }
+
     public function guestVerify(Request $request)
     {
         $request->validate([
             'code'  => 'required|string',
             'name'  => 'required|string',
             'phone' => 'required|string',
-            'email' => 'required|email',
+            'email' => 'nullable|email',
         ]);
 
         $mockExam = MockExam::where('code', strtoupper($request->code))
@@ -179,7 +236,7 @@ class MockExamController extends Controller
             'mock_exam_id' => $mockExam->id,
             'phone'        => $request->phone,
             'name'         => $request->name,
-            'email'        => $request->email,
+            'email'        => $request->email ?? null,
         ]);
 
         $words = $mockExam->wordSet->words->shuffle();
@@ -224,7 +281,6 @@ class MockExamController extends Controller
             'mock_exam_id' => 'required|exists:mock_exams,id',
             'name'         => 'required|string',
             'phone'        => 'required|string',
-            'email'        => 'required|email',
             'answers'      => 'required|array',
         ]);
 
@@ -276,35 +332,35 @@ class MockExamController extends Controller
         }
     }
 
-public function downloadReport(MockExam $mockExam)
-{
-    if ($mockExam->teacher_id !== auth()->id()) {
-        abort(403, 'Bu sınava erişim yetkiniz yok.');
+    public function downloadReport(MockExam $mockExam)
+    {
+        if ($mockExam->teacher_id !== auth()->id()) {
+            abort(403, 'Bu sınava erişim yetkiniz yok.');
+        }
+
+        $enteredResults = $mockExam->results()
+            ->whereNotNull('completed_at')
+            ->where('score', '>=', 0)
+            ->orderByDesc('success_rate')
+            ->orderByDesc('score')
+            ->get();
+
+        if ($enteredResults->isEmpty()) {
+            return back()->with('error', 'Bu deneme sınavına henüz katılan öğrenci yok.');
+        }
+
+        $pdf = PDF::loadView('mock-exams.report-pdf', [
+            'mockExam'       => $mockExam,
+            'enteredResults' => $enteredResults,
+            'enteredCount'   => $enteredResults->count(),
+            'date'           => $mockExam->start_time,
+            'teacher'        => auth()->user(),
+        ]);
+
+        $fileName = 'Deneme_Sinav_Raporu_' . $mockExam->code . '_' . $mockExam->start_time->format('d-m-Y') . '.pdf';
+
+        return $pdf->download($fileName);
     }
-
-    $enteredResults = $mockExam->results()
-        ->whereNotNull('completed_at')
-        ->where('score', '>=', 0)
-        ->orderByDesc('success_rate')
-        ->orderByDesc('score')
-        ->get();
-
-    if ($enteredResults->isEmpty()) {
-        return back()->with('error', 'Bu deneme sınavına henüz katılan öğrenci yok.');
-    }
-
-    $pdf = PDF::loadView('mock-exams.report-pdf', [
-        'mockExam'       => $mockExam,
-        'enteredResults' => $enteredResults,
-        'enteredCount'   => $enteredResults->count(),
-        'date'           => $mockExam->start_time,
-        'teacher'        => auth()->user(),
-    ]);
-
-    $fileName = 'Deneme_Sinav_Raporu_' . $mockExam->code . '_' . $mockExam->start_time->format('d-m-Y') . '.pdf';
-
-    return $pdf->download($fileName);
-}
 
     public function destroy(MockExam $mockExam)
     {

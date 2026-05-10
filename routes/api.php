@@ -15,7 +15,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/guest-exam/verify', [App\Http\Controllers\MockExamController::class, 'guestVerify']);
 Route::post('/guest-exam/submit', [App\Http\Controllers\MockExamController::class, 'guestSubmit']);
 Route::post('/guest-exam/check', [App\Http\Controllers\MockExamController::class, 'guestCheckExam']);
-
+Route::post('/guest-exam/send-otp', [MockExamController::class, 'guestSendOtp']);
+Route::post('/guest-exam/verify-otp', [MockExamController::class, 'guestVerifyOtp']);
 // OTP
 Route::post('/send-otp', [OtpController::class, 'sendOtp']);
 
