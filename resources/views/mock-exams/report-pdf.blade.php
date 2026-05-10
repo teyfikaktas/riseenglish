@@ -357,6 +357,7 @@
                         $yanlis = max(0, $result->total_questions - $result->score);
                         $successRate = round($result->success_rate);
 
+
                         $rowClass = '';
                         if ($rank == 1) $rowClass = 'rank-1';
                         elseif ($rank == 2) $rowClass = 'rank-2';
@@ -364,7 +365,7 @@
                     @endphp
                     <tr class="{{ $rowClass }}">
                         <td>{{ $rank }}</td>
-                        <td class="student-name">{{ $result->student->name ?? '-' }}</td>
+                        <td class="student-name">{{ $result->name ?? '-' }}</td>
                         <td>{{ $dogru }}</td>
                         <td>{{ $yanlis }}</td>
                         <td>{{ $result->time_spent ?? 0 }}</td>
