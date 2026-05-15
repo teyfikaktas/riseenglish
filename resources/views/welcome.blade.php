@@ -1,10 +1,10 @@
 <!-- resources/views/welcome.blade.php -->
 @extends('layouts.app')
-@include('partials.preloader')
+<!-- @include('partials.preloader') -->
 
 @section('content')
 
-    @if (!auth()->check())
+    {{-- @if (!auth()->check())
         <div id="fortuneWheelModal"
             class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             style="display: none;">
@@ -76,7 +76,8 @@
                         0 0 60px rgba(255, 107, 53, 0.4),
                         0 0 120px rgba(247, 147, 30, 0.2),
                         inset 0 0 40px rgba(255, 255, 255, 0.1);
-                        transition: transform 6s cubic-bezier(0, 0, 0.2, 1); /* ⬅️ DEĞİŞTİRİLDİ: İlk 5 sn hızlı, son 1 sn yavaş */
+                    transition: transform 6s cubic-bezier(0, 0, 0.2, 1);
+                    /* ⬅️ DEĞİŞTİRİLDİ: İlk 5 sn hızlı, son 1 sn yavaş */
                     border: 10px solid rgba(255, 255, 255, 0.9);
                 }
 
@@ -540,14 +541,16 @@
                 </div>
             </div>
         </div>
-    @endif
+    @endif --}}
     <div id="demoModal" class="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         style="background: rgba(0, 0, 0, 0.3);">
         <div
             class="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl transform transition-all duration-300 scale-100 relative">
-            <button id="closeModal" class="absolute top-3 right-3 w-10 h-10 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full transition-all duration-200 hover:rotate-90 z-20 shadow-md flex items-center justify-center">
+            <button id="closeModal"
+                class="absolute top-3 right-3 w-10 h-10 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full transition-all duration-200 hover:rotate-90 z-20 shadow-md flex items-center justify-center">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
                 </svg>
             </button>
 
@@ -564,7 +567,7 @@
                         <span class="text-3xl">🎓</span>
                     </div>
                     <h2 class="text-2xl font-bold text-white mb-2">Ücretsiz Demo Ders</h2>
-                    <p class="text-white text-opacity-90">Kurucu Hocamızdan</p>
+                    <p class="text-white text-opacity-90">Kurucu Hocalarımızdan</p>
                 </div>
             </div>
 
@@ -578,7 +581,8 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-bold text-[#1a2e5a] mb-3">Bizimle İletişime Geçebilirsin</h3>
-                    <p class="text-gray-600 mb-6">Kurucu Hocamızdan ücretsiz Demo ders randevusu al! Hemen WhatsApp'tan
+                    <p class="text-gray-600 mb-6">Kurucu Hocalarımızdan istediğin derste ücretsiz Demo ders randevusu al!
+                        Hemen WhatsApp'tan
                         iletişime geç.</p>
                 </div>
 
@@ -621,426 +625,451 @@
             <div id="successMessageProgress" class="h-1 bg-green-500 mt-2 w-full transform origin-left"></div>
         </div>
     @endif
-    <div class="relative overflow-hidden">
-        <div class="absolute inset-0 opacity-10">
-            <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <defs>
-                    <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" />
-                    </pattern>
-                </defs>
-                <rect width="100" height="100" fill="url(#grid)" />
-            </svg>
+    <div class="relative py-20 overflow-hidden hero-section">
+        <div class="absolute inset-0 bg-gradient-to-br from-[#1a2e5a] via-[#2d4373] to-[#1a2e5a]"></div>
+        <div class="absolute inset-0 hero-bg opacity-0 transition-opacity duration-700"
+            data-bg="{{ asset('images/free.webp') }}" data-bg-fallback="{{ asset('images/free.jpg') }}">
         </div>
+        <div class="absolute inset-0 bg-black opacity-30"></div>
 
-<div class="relative py-20 overflow-hidden hero-section">
-    <!-- Placeholder gradient - Hemen yüklenir -->
-    <div class="absolute inset-0 bg-gradient-to-br from-[#1a2e5a] via-[#2d4373] to-[#1a2e5a]"></div>
-    
-    <!-- Asıl arka plan resmi - Lazy load -->
-    <div class="absolute inset-0 hero-bg opacity-0 transition-opacity duration-700" 
-         data-bg="{{ asset('images/free.webp') }}"
-         data-bg-fallback="{{ asset('images/free.jpg') }}">
-    </div>
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="flex flex-col md:flex-row items-center md:space-x-12">
 
-    <div class="absolute inset-0 bg-black opacity-30"></div>
+                <div class="w-full md:w-1/2 text-center md:text-left mb-12 md:mb-0">
 
-    <div class="container mx-auto px-6 relative z-10">
-        <div class="flex flex-col md:flex-row items-center md:space-x-12"> <!-- space-x eklendi -->
-            <div class="w-full md:w-1/2 text-center md:text-left mb-12 md:mb-0">
-                @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
-                    <div class="mb-6"> <!-- mb-4 -> mb-6 artırıldı -->
-                        <span
-                            class="bg-[#e63946] text-white text-xl px-4 py-2 rounded-lg shadow-lg inline-block transform -rotate-2 hover:rotate-0 transition-transform duration-300 font-bold">
-                            <i class="fas fa-graduation-cap mr-2"></i>KURSLARINIZ
-                        </span>
-                    </div>
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                        Öğrenmeye <span class="text-[#e63946]">Devam</span> Edin!
-                    </h1>
-                    <p class="text-xl text-white mb-8 max-w-lg mx-auto md:mx-0">
-                        Eğitim yolculuğunuzda size yardımcı olmak için buradayız. Kurslarınıza hemen erişin.
-                    </p>
-                @else
-                    <!-- GİRİŞ YAPMAYAN KULLANICI İÇİN STANDART MESAJ -->
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                        Rise English ile <span class="text-[#e63946]">Öğrenmeye</span> Başlayın
-                    </h1>
-                    <p class="text-xl text-white mb-8 max-w-lg mx-auto md:mx-0">
-                        Eğitim platformumuzda profesyonel eğitmenlerle yeni beceriler kazanın ve kariyerinizde bir
-                        adım
-                        öne çıkın.
-                    </p>
-                @endif
-
-                <div class="relative rounded-xl overflow-hidden shadow-xl mb-8 mt-8"> <!-- mt-8 eklendi -->
-                    <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
-                        <div class="video-thumbnail absolute inset-0" data-video-id="VRqM2zyqJeI">
-                            <img src="https://i.ytimg.com/vi/VRqM2zyqJeI/hqdefault.jpg" alt="Rise English Tanıtım"
-                                class="w-full h-full object-cover">
-
-                            <div
-                                class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-[#e63946] flex items-center justify-center z-10 shadow-lg">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white"
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-
-                            <div class="absolute inset-0  bg-opacity-30"></div>
-                        </div>
-                        <div class="video-iframe-container absolute inset-0 hidden"></div>
-                    </div>
-
-                    <div class="absolute top-4 right-4">
-                        <div class="bg-[#e63946] text-white text-sm font-bold py-1 px-3 rounded-full shadow-lg">
-                            <i class="fas fa-play-circle mr-1"></i> Tanıtım Videosu
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Buton Bölümü - En Altta -->
-                <div class="flex flex-col sm:flex-row justify-center md:justify-start gap-4 mt-8">
-                    <!-- mt-8 eklendi -->
                     @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
-                        <!-- Giriş yapmış öğrenci için kurslarım butonu -->
-                        <a href="{{ url('/ogrenci/kurslarim') }}"
-                            class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-                            <i class="fas fa-book-reader mr-2"></i>Kurslarıma Git
-                        </a>
-                        <a href="{{ url('/egitimler') }}"
-                            class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-                            <i class="fas fa-book-open mr-2"></i>Yeni Eğitimler
-                        </a>
-                    @else
-                        <!-- Giriş yapmamış kullanıcı için standart butonlar -->
-                        <a href="{{ url('/egitimler') }}"
-                            class="bg-[#e63946] hover:bg-[#d62836] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-                            Eğitimleri Keşfet
-                        </a>
-                        <a href="{{ url('/kayit-ol') }}"
-                            class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
-                            Hemen Başla
-                        </a>
-                    @endif
-                </div>
-
-                <!-- Giriş yapmamış kullanıcılar için indirim banner'ı -->
-                @if (!auth()->check() || !auth()->user()->hasRole('ogrenci'))
-                    <div
-                        class="mt-6 bg-gradient-to-r from-[#e63946] to-[#d62836] rounded-lg p-3 shadow-lg transform -rotate-1 hover:rotate-0 transition-transform duration-300 mx-auto sm:mx-0 max-w-xs">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="text-white font-bold text-lg">%40 İNDİRİM</div>
-                                <div class="text-xs text-white opacity-90">Tüm eğitimlerde geçerli</div>
-                            </div>
-                            <div class="bg-white text-[#e63946] text-xs font-bold py-1 px-3 rounded-full shadow">
-                                RiseEnglish
-                            </div>
-                        </div>
-                        <div class="w-full h-1 bg-white bg-opacity-30 mt-2 rounded-full overflow-hidden">
-                            <div class="w-1/2 h-full bg-white rounded-full animate-pulse"></div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <div class="w-full md:w-1/2">
-                <div class="relative">
-                    <!-- Tüm kullanıcılar için İdiom görsel -->
-                    <div class="w-full bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
-                        <!-- Üst başlık - Genel site tasarımına uygun -->
-                        <div class="p-4 bg-[#1a2e5a] text-center relative">
-                            <h2 class="text-2xl font-bold text-white">IDIOM OF THE DAY</h2>
-
-                            <div class="absolute -right-2 top-2 transform rotate-12">
-                                <div
-                                    class="bg-[#e63946] text-white text-xs font-bold py-1 px-3 rounded-full shadow-lg">
-                                    RiseEnglish
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- İdiom Gösterim Alanı -->
-                        <div class="p-6 bg-gray-50">
-                            @if (isset($dailyIdiom))
-                                <!-- İngilizce İdiom -->
-                                <div class="bg-white rounded-lg p-4 mb-4 shadow-md border-l-4 border-[#e63946]">
-                                    <div class="text-xl font-bold text-[#1a2e5a] mb-1">
-                                        "{{ $dailyIdiom->english_phrase }}"</div>
-                                    <div class="text-md text-gray-500 italic">
-                                        {{ $dailyIdiom->turkish_translation }}
-                                    </div>
-                                </div>
-
-                                <!-- Örnek Cümleler -->
-                                <div class="bg-white rounded-lg p-4 shadow-md border-l-4 border-[#1a2e5a]">
-                                    <div class="text-lg font-bold text-[#1a2e5a]">Örnek Cümleler:</div>
-                                    <div class="text-md text-gray-600 mt-2">- {{ $dailyIdiom->example_sentence_1 }}
-                                    </div>
-                                    @if ($dailyIdiom->example_sentence_2)
-                                        <div class="text-md text-gray-600">- {{ $dailyIdiom->example_sentence_2 }}
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <!-- Karakter Görseli - Ortalanmış -->
-                                <div class="relative mt-6 flex justify-center">
-                                    @if ($dailyIdiom->image_path)
-                                        <img src="{{ asset('storage/' . $dailyIdiom->image_path) }}"
-                                            alt="İdiom Görseli" class="h-80 object-contain z-10">
-                                    @else
-                                        <img src="{{ asset('images/1.jpg') }}" alt="Varsayılan İdiom Görseli"
-                                            class="h-80 object-contain z-10">
-                                    @endif
-                                    <div class="absolute top-0 right-10 animate-bounce z-20">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#e63946]"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            @else
-                                <!-- Veri yoksa gösterilecek alan -->
-                                <div class="bg-white rounded-lg p-4 shadow-md text-center">
-                                    <div class="text-lg text-gray-500 italic">Bugün için deyim bulunamadı.</div>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Alt Banner -->
-                        <div class="py-3 px-4 bg-gray-100 text-center relative border-t border-gray-200">
-                            <span class="inline-block text-[#1a2e5a] font-medium">
-                                Günlük İngilizce Deyimi
+                        <div class="mb-6">
+                            <span
+                                class="bg-[#FF6B35] text-white text-xl px-4 py-2 rounded-lg shadow-lg inline-block transform -rotate-2 hover:rotate-0 transition-transform duration-300 font-bold">
+                                <i class="fas fa-graduation-cap mr-2"></i>HOŞ GELDİN!
                             </span>
                         </div>
-                    </div>
-
-                    <!-- Kullanıcı türüne göre farklı bilgi kutuları -->
-                    @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
-                        <!-- Aktif kurs sayısı kutusu - Giriş yapmış öğrenci için -->
-                        <div
-                            class="absolute -top-4 -left-4 bg-[#1a2e5a] text-white rounded-lg p-3 shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                            <div class="flex items-center">
-                                <i class="fas fa-book-open mr-2"></i>
-                                <div>
-                                    <div class="text-lg font-bold">Aktif Kurslar</div>
-                                    <div class="text-2xl font-extrabold">
-                                        {{ auth()->user()->enrolledCourses()->where('is_active', true)->count() }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Kişiselleştirilmiş animasyonlu vurgu kutusu - Giriş yapmış öğrenci için -->
-                        <div class="absolute -bottom-4 -right-4 bg-white rounded-lg p-4 shadow-lg">
-                            <div class="flex items-center">
-                                <div class="bg-[#e63946] rounded-full h-4 w-4 mr-2 animate-pulse"></div>
-                                <span class="font-bold text-[#1a2e5a]">Eğitiminize Devam Edin!</span>
-                            </div>
-                        </div>
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+                            Kaldığın Yerden <span class="text-[#FF6B35]">Devam Et!</span>
+                        </h1>
+                        <p class="text-xl text-white mb-8 max-w-lg mx-auto md:mx-0">
+                            Hocaların seni bekliyor, derslerini kaçırma!
+                        </p>
                     @else
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+                            Doğru Hoca, <span class="text-[#FF6B35]">Doğru Ders,</span><br>Doğru Sonuç!
+                        </h1>
+                        <p class="text-xl text-white mb-8 max-w-lg mx-auto md:mx-0">
+                            Alanında uzman öğretmenlerle birebir ders al, istediğin konuyu seç, hemen başla.
+                        </p>
                     @endif
-                </div>
-            </div>
-        </div>
-    </div>
+
+                    {{-- DERS KATEGORİ SEÇİMİ --}}
+                    <div class="bg-white rounded-2xl p-4 mb-6 shadow-xl max-w-lg mx-auto md:mx-0">
+                        <p class="text-[#1a2e5a] text-sm font-semibold uppercase tracking-wider mb-3">
+                            <i class="fas fa-book mr-1 text-[#FF6B35]"></i> Hangi derste destek istiyorsunuz?
+                        </p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="javascript:void(0)" onclick="contactTeacher('Türkçe')"
+                                class="group flex items-center gap-2 bg-gray-50 hover:bg-[#FF6B35] border border-gray-200 hover:border-[#FF6B35] text-[#1a2e5a] hover:text-white rounded-xl px-3 py-2.5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                <span class="text-lg">📖</span>
+                                <span class="text-sm font-semibold">Türkçe</span>
+                            </a>
+                            <a href="javascript:void(0)" onclick="contactTeacher('Matematik')"
+                                class="group flex items-center gap-2 bg-gray-50 hover:bg-[#FF6B35] border border-gray-200 hover:border-[#FF6B35] text-[#1a2e5a] hover:text-white rounded-xl px-3 py-2.5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                <span class="text-lg">📐</span>
+                                <span class="text-sm font-semibold">Matematik</span>
+                            </a>
+                            <a href="javascript:void(0)" onclick="contactTeacher('Fen Bilimleri')"
+                                class="group flex items-center gap-2 bg-gray-50 hover:bg-[#FF6B35] border border-gray-200 hover:border-[#FF6B35] text-[#1a2e5a] hover:text-white rounded-xl px-3 py-2.5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                <span class="text-lg">🔬</span>
+                                <span class="text-sm font-semibold">Fen · Fizik · Kimya · Bio</span>
+                            </a>
+                            <a href="javascript:void(0)" onclick="contactTeacher('Sosyal Bilgiler')"
+                                class="group flex items-center gap-2 bg-gray-50 hover:bg-[#FF6B35] border border-gray-200 hover:border-[#FF6B35] text-[#1a2e5a] hover:text-white rounded-xl px-3 py-2.5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                <span class="text-lg">🌍</span>
+                                <span class="text-sm font-semibold">Sosyal Bilgiler</span>
+                            </a>
+                            <a href="javascript:void(0)" onclick="contactTeacher('İngilizce')"
+                                class="group flex items-center gap-2 bg-gray-50 hover:bg-[#FF6B35] border border-gray-200 hover:border-[#FF6B35] text-[#1a2e5a] hover:text-white rounded-xl px-3 py-2.5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                <span class="text-lg">🌐</span>
+                                <span class="text-sm font-semibold">İngilizce & Yabancı Dil</span>
+                            </a>
+                            <a href="javascript:void(0)" onclick="contactTeacher('Eğitim Koçluğu')"
+                                class="group flex items-center gap-2 bg-gray-50 hover:bg-[#FF6B35] border border-gray-200 hover:border-[#FF6B35] text-[#1a2e5a] hover:text-white rounded-xl px-3 py-2.5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                <span class="text-lg">🎯</span>
+                                <span class="text-sm font-semibold">Eğitim Koçluğu</span>
+                            </a>
+                            <a href="javascript:void(0)" onclick="contactTeacher('Hızlı Okuma')"
+                                class="group col-span-2 flex items-center justify-center gap-2 bg-gray-50 hover:bg-[#FF6B35] border border-gray-200 hover:border-[#FF6B35] text-[#1a2e5a] hover:text-white rounded-xl px-3 py-2.5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                <span class="text-lg">⚡</span>
+                                <span class="text-sm font-semibold">Hızlı Okuma</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Mesaj gönderme fonksiyonu için JS kodu --}}
+                    <script>
+                        function contactTeacher(lessonName) {
+                            const phoneNumber = '905457624498'; // Senin numaran
+                            const message = encodeURIComponent(
+                                `Merhaba, ${lessonName} dersi hakkında bilgi almak ve ücretsiz demo ders randevusu oluşturmak istiyorum.`
+                                );
+                            window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                        }
+                    </script>
+
+                    {{-- BUTONLAR --}}
+                    <div class="flex flex-col sm:flex-row justify-center md:justify-start gap-4">
+                        @if (auth()->check() && auth()->user()->hasRole('ogrenci'))
+                            {{-- Giriş yapmış öğrenci için butonlar --}}
+                            <a href="{{ url('/ogrenci/kurslarim') }}"
+                                class="bg-[#FF6B35] hover:bg-[#e55a25] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1 text-center">
+                                <i class="fas fa-book-reader mr-2"></i>Derslerime Git
+                            </a>
+                            <a href="{{ url('/egitimler') }}"
+                                class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1 text-center">
+                                <i class="fas fa-search mr-2"></i>Yeni Ders Bul
+                            </a>
+                        @else
+                            {{-- Giriş yapmamış kullanıcı için butonlar --}}
+<!-- ÜCRETSİZ DEMO DERS AL -->
+<a href="javascript:void(0)" onclick="contactTeacher('demo')"
+    class="bg-[#FF6B35] hover:bg-[#e55a25] text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1 text-center">
+    <i class="fas fa-search mr-2"></i>
+    Ücretsiz Demo Ders Al
+</a>
+
+<!-- ÜCRETSİZ EĞİTMEN OL -->
+<a href="javascript:void(0)" onclick="contactTeacher('egitmen')"
+    class="bg-white hover:bg-gray-100 text-[#1a2e5a] font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-1 text-center">
+    <i class="fas fa-chalkboard-teacher mr-2"></i>
+    Ücretsiz Eğitmen Ol
+</a>
+
+<script>
+    function contactTeacher(type) {
+        const phoneNumber = '905457624498'; 
+        let messageText = "";
+
+        // Küçük harfe çevirip sağındaki solundaki boşluğu atalım ki hata yapmasın
+        const action = type.toLowerCase().trim();
+
+        if (action === 'demo') {
+            messageText = "Merhaba, platformunuz hakkında bilgi almak ve ücretsiz bir demo ders randevusu oluşturmak istiyorum.";
+        } else if (action === 'egitmen') {
+            messageText = "Merhaba, platformunuzda eğitmen olmak istiyorum. Başvuru süreci ve şartlar hakkında bilgi alabilir miyim?";
+        } else {
+            // Bunlar dışındaki her şey (Matematik, Türkçe vb.) buraya düşer
+            messageText = `Merhaba, ${type} dersi hakkında bilgi almak ve ücretsiz demo ders randevusu oluşturmak istiyorum.`;
+        }
+
+        const message = encodeURIComponent(messageText);
+        window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+    }
+</script>            @endif
+                    </div>
+
+                    {{-- JavaScript Fonksiyonu (Eğer sayfada daha önce tanımlamadıysan ekle) --}}
+                    <script>
+                        if (typeof contactTeacher !== 'function') {
+                            function contactTeacher(lessonName) {
+                                // Doğru numara: 905457624498
+                                const phoneNumber = '905457624498';
+                                let messageText = "";
+
+                                if (lessonName === 'Genel/Demo') {
+                                    messageText =
+                                        "Merhaba, platformunuz hakkında bilgi almak ve ücretsiz bir demo ders randevusu oluşturmak istiyorum.";
+                                } else {
+                                    messageText =
+                                        `Merhaba, ${lessonName} dersi hakkında bilgi almak ve ücretsiz demo ders randevusu oluşturmak istiyorum.`;
+                                }
+
+                                const message = encodeURIComponent(messageText);
+                                window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                            }
+                        }
+                    </script>
+
+                    {{-- Eğer bir önceki cevabımdaki script kodunu eklemediysen bunu da en alta ekle --}}
+                    <script>
+                        if (typeof contactTeacher !== 'function') {
+                            function contactTeacher(lessonName) {
+                                const phoneNumber = '905457624498';
+                                let messageText = lessonName === 'Genel/Demo' ?
+                                    "Merhaba, ücretsiz bir demo ders randevusu oluşturmak ve süreç hakkında bilgi almak istiyorum." :
+                                    `Merhaba, ${lessonName} dersi hakkında bilgi almak ve ücretsiz demo ders randevusu oluşturmak istiyorum.`;
+
+                                const message = encodeURIComponent(messageText);
+                                window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                            }
+                        }
+                    </script>
+
+                    {{-- İNDİRİM BANNER --}}
+                    @if (!auth()->check() || !auth()->user()->hasRole('ogrenci'))
+                        <div
+                            class="mt-6 bg-gradient-to-r from-[#FF6B35] to-[#e55a25] rounded-lg p-3 shadow-lg transform -rotate-1 hover:rotate-0 transition-transform duration-300 mx-auto sm:mx-0 max-w-xs">
+                            <div class="flex items-center justify-between">
+<div>
+    <div class="text-white font-black text-lg tracking-tight">İLK DERS ÜCRETSİZ!</div>
+    <div class="text-xs text-white opacity-90 font-medium">Hemen dene, kararını sonra ver.</div>
 </div>
-        <div class="relative bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] py-16 overflow-hidden">
-            <div class="absolute inset-0 opacity-10">
-                <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <defs>
-                        <pattern id="video-grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5" />
-                        </pattern>
-                    </defs>
-                    <rect width="100" height="100" fill="url(#video-grid)" />
-                </svg>
-            </div>
+                                <div class="bg-white text-[#FF6B35] text-xs font-bold py-1 px-3 rounded-full shadow">
+                                    ÖzelDersCepte
+                                </div>
+                            </div>
+                            <div class="w-full h-1 bg-white bg-opacity-30 mt-2 rounded-full overflow-hidden">
+                                <div class="w-1/2 h-full bg-white rounded-full animate-pulse"></div>
+                            </div>
+                        </div>
+                    @endif
 
-            <div class="container mx-auto px-4 relative z-10">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-white mb-2">Öğrencilerimiz Ne Dedi?</h2>
-                    <div class="w-20 h-1 bg-[#e63946] mx-auto"></div>
-                    <p class="mt-4 text-blue-100 max-w-2xl mx-auto">Başarı hikayelerini öğrencilerimizden dinleyin.</p>
                 </div>
 
-                <div class="student-videos-slider relative">
-                    <div class="slider-controls">
-                        <button id="prevVideo"
-                            class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-5 bg-white p-3 rounded-full shadow-lg z-10 text-[#1a2e5a]">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                        <button id="nextVideo"
-                            class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-5 bg-white p-3 rounded-full shadow-lg z-10 text-[#1a2e5a]">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
+                {{-- SAĞ: Görsel + kartlar --}}
+                <div class="hidden md:block w-full md:w-1/2 relative" style="height: 450px;">
+
+                    <img src="{{ asset('images/hero-person.png') }}" alt="Özel Ders Cepte"
+                        class="absolute bottom-0 right-0 h-full object-contain object-bottom" style="z-index: 1;"
+                        onerror="this.style.display='none'">
+
+                    <div class="absolute top-4 left-4 bg-white rounded-2xl shadow-2xl px-5 py-4 flex items-center gap-4"
+                        style="z-index: 100;">
+                        <div class="w-12 h-12 bg-[#FF6B35]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-chalkboard-teacher text-[#FF6B35] text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-black text-[#1a2e5a]">75+</div>
+                            <div class="text-gray-400 text-xs font-semibold">Uzman Eğitmen</div>
+                        </div>
                     </div>
 
-                    <div class="video-slides-container overflow-hidden">
-                        <div id="videoSlidesWrapper" class="flex transition-transform duration-500 ease-in-out">
+                    <div class="absolute right-4 bg-white rounded-2xl shadow-2xl px-5 py-4 flex items-center gap-4"
+                        style="z-index: 100; top: 50%; transform: translateY(-50%);">
+                        <div class="w-12 h-12 bg-[#1a2e5a]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-users text-[#1a2e5a] text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-black text-[#1a2e5a]">500+</div>
+                            <div class="text-gray-400 text-xs font-semibold">Başarılı Öğrenci</div>
+                        </div>
+                    </div>
 
-                            <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
-                                <div
-                                    class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
-                                    <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
-                                        <div class="video-thumbnail absolute inset-0" data-video-id="Kw0ezq06ruU">
-                                            <img src="https://i.ytimg.com/vi/Kw0ezq06ruU/hqdefault.jpg"
-                                                alt="Video thumbnail" class="w-full h-full object-cover">
+                    <div class="absolute bottom-8 left-4 bg-white rounded-2xl shadow-2xl px-5 py-4 flex items-center gap-4"
+                        style="z-index: 100;">
+                        <div class="w-12 h-12 bg-[#FF6B35]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-star text-[#FF6B35] text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-black text-[#1a2e5a]">4.9</div>
+                            <div class="text-gray-400 text-xs font-semibold">Ortalama Puan</div>
+                        </div>
+                    </div>
 
-                                            <div
-                                                class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {{-- İSTATİSTİK BÖLÜMÜ --}}
+    <div class="container mx-auto px-4 md:px-10 my-10"> {{-- Boşluk veren ana kapsayıcı --}}
+        <div class="flex flex-col md:flex-row overflow-hidden rounded-3xl shadow-xl" style="min-height: 300px;">
+            {{-- rounded-3xl ile köşeleri oval yaptık --}}
+
+            {{-- Sol Turuncu Alan --}}
+            <div class="bg-[#FF6B35] p-10 md:p-14 flex flex-col justify-center md:w-1/3">
+                <div class="mb-8">
+                    <div class="text-5xl md:text-6xl font-black text-white">75+</div>
+                    <div class="text-white/80 text-lg mt-1">Uzman Eğitmen</div>
+                </div>
+                <div class="mb-8">
+                    <div class="text-5xl md:text-6xl font-black text-white">40 dk</div>
+                    <div class="text-white/80 text-lg mt-1">1 Ders Süresi</div>
+                </div>
+                <div>
+                    <div class="text-5xl md:text-6xl font-black text-white">600 TL</div>
+                    <div class="text-white/80 text-lg mt-1">Saatlik Başlangıç</div>
+                </div>
+            </div>
+
+            {{-- Sağ Görsel Alanı --}}
+            <div class="relative md:w-2/3 overflow-hidden" style="min-height: 300px;">
+                <img src="{{ asset('images/imagesstats-bg.png') }}" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black opacity-50"></div>
+                <div class="relative z-10 flex flex-col justify-center h-full p-10 md:p-16">
+                    <h2 class="text-3xl md:text-4xl font-black text-white mb-2">Öğretmenin Her An Yanında</h2>
+                    <p class="text-white/80 text-lg max-w-lg mb-6">Sınav ve yazılılar öncesinde eksiklerini hızla kapatman
+                        için 750'den fazla öğretmenimiz birebir canlı derslerle her zaman seninle.</p>
+
+                    <div class="flex gap-8">
+                        <div>
+                            <span class="block text-2xl font-bold text-white">750+</span>
+                            <span class="text-white/60 text-sm italic">Uzman Öğretmen</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {{-- VİDEO SLIDER --}}
+    <div class="relative bg-gradient-to-r from-[#1a2e5a] to-[#283b6a] py-16 overflow-hidden">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-white mb-2">Öğrencilerimiz Ne Dedi?</h2>
+                <div class="w-20 h-1 bg-[#FF6B35] mx-auto"></div>
+                <p class="mt-4 text-blue-100 max-w-2xl mx-auto">Başarı hikayelerini öğrencilerimizden dinleyin.</p>
+            </div>
+            <div class="student-videos-slider relative">
+                <button id="prevVideo"
+                    class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-5 bg-white p-3 rounded-full shadow-lg z-10 text-[#1a2e5a]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button id="nextVideo"
+                    class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-5 bg-white p-3 rounded-full shadow-lg z-10 text-[#1a2e5a]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+                <div class="video-slides-container overflow-hidden">
+                    <div id="videoSlidesWrapper" class="flex transition-transform duration-500 ease-in-out">
+                        <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
+                            <div
+                                class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                                <div class="relative pb-[56.25%]">
+                                    <div class="video-thumbnail absolute inset-0" data-video-id="Kw0ezq06ruU">
+                                        <img src="https://i.ytimg.com/vi/Kw0ezq06ruU/hqdefault.jpg" alt="Video thumbnail"
+                                            class="w-full h-full object-cover">
+                                        <div
+                                            class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                         </div>
-                                        <div class="video-iframe-container absolute inset-0 hidden"></div>
                                     </div>
-                                    <div class="p-4 text-center bg-[#1a2e5a] text-white">
-                                        <h3 class="font-semibold">EREĞLİ YÖK DİL BİRİNCİMİZ</h3>
-                                    </div>
+                                    <div class="video-iframe-container absolute inset-0 hidden"></div>
+                                </div>
+                                <div class="p-4 text-center bg-[#1a2e5a] text-white">
+                                    <h3 class="font-semibold">EREĞLİ YÖK DİL BİRİNCİMİZ</h3>
                                 </div>
                             </div>
-
-                            <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
-                                <div
-                                    class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
-                                    <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
-                                        <div class="video-thumbnail absolute inset-0" data-video-id="WMfARGd1fkQ">
-                                            <img src="https://i.ytimg.com/vi/WMfARGd1fkQ/hqdefault.jpg"
-                                                alt="Video thumbnail" class="w-full h-full object-cover">
-
-                                            <div
-                                                class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
+                        </div>
+                        <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
+                            <div
+                                class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                                <div class="relative pb-[56.25%]">
+                                    <div class="video-thumbnail absolute inset-0" data-video-id="WMfARGd1fkQ">
+                                        <img src="https://i.ytimg.com/vi/WMfARGd1fkQ/hqdefault.jpg" alt="Video thumbnail"
+                                            class="w-full h-full object-cover">
+                                        <div
+                                            class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                         </div>
-                                        <div class="video-iframe-container absolute inset-0 hidden"></div>
                                     </div>
-                                    <div class="p-4 text-center bg-[#1a2e5a] text-white">
-                                        <h3 class="font-semibold">Öğrencilerimiz</h3>
-                                    </div>
+                                    <div class="video-iframe-container absolute inset-0 hidden"></div>
+                                </div>
+                                <div class="p-4 text-center bg-[#1a2e5a] text-white">
+                                    <h3 class="font-semibold">Öğrencilerimiz</h3>
                                 </div>
                             </div>
-
-                            <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
-                                <div
-                                    class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
-                                    <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
-                                        <div class="video-thumbnail absolute inset-0" data-video-id="cVPIqxeLPWI">
-                                            <img src="https://i.ytimg.com/vi/cVPIqxeLPWI/hqdefault.jpg"
-                                                alt="Video thumbnail" class="w-full h-full object-cover">
-
-                                            <div
-                                                class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
+                        </div>
+                        <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
+                            <div
+                                class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                                <div class="relative pb-[56.25%]">
+                                    <div class="video-thumbnail absolute inset-0" data-video-id="cVPIqxeLPWI">
+                                        <img src="https://i.ytimg.com/vi/cVPIqxeLPWI/hqdefault.jpg" alt="Video thumbnail"
+                                            class="w-full h-full object-cover">
+                                        <div
+                                            class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                         </div>
-                                        <div class="video-iframe-container absolute inset-0 hidden"></div>
                                     </div>
-                                    <div class="p-4 text-center bg-[#1a2e5a] text-white">
-                                        <h3 class="font-semibold">Öğrencilerimiz</h3>
-                                    </div>
+                                    <div class="video-iframe-container absolute inset-0 hidden"></div>
+                                </div>
+                                <div class="p-4 text-center bg-[#1a2e5a] text-white">
+                                    <h3 class="font-semibold">Öğrencilerimiz</h3>
                                 </div>
                             </div>
-
-
-                            <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
-                                <div
-                                    class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
-                                    <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
-                                        <div class="video-thumbnail absolute inset-0" data-video-id="GBxGfpVM5E8">
-                                            <img src="https://i.ytimg.com/vi/GBxGfpVM5E8/hqdefault.jpg"
-                                                alt="Video thumbnail" class="w-full h-full object-cover">
-
-                                            <div
-                                                class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
+                        </div>
+                        <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
+                            <div
+                                class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                                <div class="relative pb-[56.25%]">
+                                    <div class="video-thumbnail absolute inset-0" data-video-id="GBxGfpVM5E8">
+                                        <img src="https://i.ytimg.com/vi/GBxGfpVM5E8/hqdefault.jpg" alt="Video thumbnail"
+                                            class="w-full h-full object-cover">
+                                        <div
+                                            class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                         </div>
-                                        <div class="video-iframe-container absolute inset-0 hidden"></div>
                                     </div>
-                                    <div class="p-4 text-center bg-[#1a2e5a] text-white">
-                                        <h3 class="font-semibold">Öğrencilerimiz</h3>
-                                    </div>
+                                    <div class="video-iframe-container absolute inset-0 hidden"></div>
+                                </div>
+                                <div class="p-4 text-center bg-[#1a2e5a] text-white">
+                                    <h3 class="font-semibold">Öğrencilerimiz</h3>
                                 </div>
                             </div>
-
-                            <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
-                                <div
-                                    class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
-                                    <div class="relative pb-[56.25%]"> <!-- 16:9 aspect ratio -->
-                                        <div class="video-thumbnail absolute inset-0" data-video-id="cVPIqxeLPWI">
-                                            <img src="https://i.ytimg.com/vi/cVPIqxeLPWI/hqdefault.jpg"
-                                                alt="Video thumbnail" class="w-full h-full object-cover">
-
-
-                                            <div
-                                                class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
+                        </div>
+                        <div class="video-slide flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-4">
+                            <div
+                                class="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                                <div class="relative pb-[56.25%]">
+                                    <div class="video-thumbnail absolute inset-0" data-video-id="cVPIqxeLPWI">
+                                        <img src="https://i.ytimg.com/vi/cVPIqxeLPWI/hqdefault.jpg" alt="Video thumbnail"
+                                            class="w-full h-full object-cover">
+                                        <div
+                                            class="play-button absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#e63946] flex items-center justify-center z-10">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                         </div>
-                                        <div class="video-iframe-container absolute inset-0 hidden"></div>
                                     </div>
-                                    <div class="p-4 text-center bg-[#1a2e5a] text-white">
-                                        <h3 class="font-semibold">Öğrencilerimiz</h3>
-                                    </div>
+                                    <div class="video-iframe-container absolute inset-0 hidden"></div>
+                                </div>
+                                <div class="p-4 text-center bg-[#1a2e5a] text-white">
+                                    <h3 class="font-semibold">Öğrencilerimiz</h3>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-
-                    <div class="flex justify-center mt-6">
-                        <div id="videoSliderDots" class="flex space-x-2">
-                            <!-- Dots will be added with JS -->
-                        </div>
-                    </div>
-
+                </div>
+                <div class="flex justify-center mt-6">
+                    <div id="videoSliderDots" class="flex space-x-2"></div>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="bg-white py-16">
         <div class="container mx-auto px-6">
             <div class="flex flex-col md:flex-row items-center gap-12">
@@ -1050,41 +1079,41 @@
                         class="rounded-lg shadow-lg w-full h-auto object-cover">
                 </div>
 
+<div class="w-full md:w-3/5">
+    <!-- English Section -->
+    <h2 class="text-3xl font-bold text-[#1a2e5a] mb-6">Welcome to Özel Ders Cepte!</h2>
+    <div class="mb-8 text-gray-700">
+        <p class="mb-4">As the founder of Özel Ders Cepte, I am proud to present a platform designed to provide high-quality, 
+            personalized education that empowers students to achieve academic excellence. Our mission is simple: 
+            to connect learners with expert educators, helping every student rise to their full potential through 
+            an accessible and motivating learning environment.</p>
+        <p class="mb-4">At Özel Ders Cepte, we believe that education should be engaging, flexible, and outcome-oriented. 
+            Whether you are preparing for central exams, seeking help with school subjects, or looking to master a new skill 
+            — our expert tutors are here to guide you every step of the way.</p>
+        <p class="mb-4">This journey began with a passion for modern education and the belief that with the right support, 
+            success is within everyone's reach. I’m excited to see how far we can go — together.</p>
+        <p class="mb-2 font-semibold">Let’s learn, grow, and succeed together.</p>
+        <p class="font-bold text-[#e63946]">Hakan Ekinci</p>
+    </div>
 
-                <div class="w-full md:w-3/5">
-                    <h2 class="text-3xl font-bold text-[#1a2e5a] mb-6">Welcome to Rise English!</h2>
-                    <div class="mb-8 text-gray-700">
-                        <p class="mb-4">As the founder of Rise English, I am proud to present a platform designed not
-                            just to teach English, but to inspire confidence, growth, and real communication skills. Our
-                            mission is simple: to help every learner rise to their full potential through quality,
-                            personalized, and motivating English education.</p>
-                        <p class="mb-4">At Rise English, we believe language learning should be engaging, practical, and
-                            goal-oriented. Whether you're preparing for an exam, improving your speaking, or starting from
-                            scratch — we are here to guide you every step of the way.</p>
-                        <p class="mb-4">This journey started with a passion for education and a belief that with the
-                            right support, anyone can master English. I'm excited to see how far we can go — together.</p>
-                        <p class="mb-2 font-semibold">Let's rise, learn, and grow</p>
-                        <p class="font-bold text-[#e63946]">Hakan Ekinci</p>
-                    </div>
-
-                    <div class="pt-6 border-t border-gray-200">
-                        <h2 class="text-3xl font-bold text-[#1a2e5a] mb-6">Rise English'e Hoş Geldiniz!</h2>
-                        <div class="text-gray-700">
-                            <p class="mb-4">Rise English'in kurucusu olarak sizlere sadece bir dil kursu değil, aynı
-                                zamanda özgüven kazandıran, gelişimi destekleyen ve gerçek iletişim becerileri kazandıran
-                                bir öğrenme ortamı sunmaktan gurur duyuyorum. Amacımız basit: Her öğrencinin kendi
-                                potansiyelini keşfetmesine yardımcı olmak ve onu en iyi şekilde ortaya çıkarmak.</p>
-                            <p class="mb-4">Rise English'te dil öğrenmenin ilham verici, pratik ve hedef odaklı olması
-                                gerektiğine inanıyoruz. İster sınava hazırlanıyor olun, ister konuşma becerilerinizi
-                                geliştirmek ya da sıfırdan başlamak istiyor olun — bu yolculukta her adımda yanınızdayız.
-                            </p>
-                            <p class="mb-4">Bu platform, eğitime duyduğum tutku ve doğru destekle herkesin İngilizceyi
-                                öğrenebileceğine olan inancımla doğdu. Şimdi birlikte ne kadar yol kat edebileceğimizi
-                                görmek için sabırsızlanıyorum.</p>
-                            <p class="font-bold text-[#e63946]">Hakan Ekinci</p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Türkçe Bölüm -->
+    <div class="pt-6 border-t border-gray-200">
+        <h2 class="text-3xl font-bold text-[#1a2e5a] mb-6">Özel Ders Cepte'ye Hoş Geldiniz!</h2>
+        <div class="text-gray-700">
+            <p class="mb-4">Özel Ders Cepte'nin kurucusu olarak, sizlere sadece bir eğitim platformu değil, aynı zamanda 
+                akademik başarıyı destekleyen, özgüven kazandıran ve kişiselleştirilmiş öğrenme deneyimi sunan modern bir 
+                ekosistem sunmaktan gurur duyuyorum. Amacımız basit: Her öğrenciyi alanında uzman eğitmenlerle buluşturarak, 
+                potansiyellerini en üst seviyeye çıkarmalarına yardımcı olmak.</p>
+            <p class="mb-4">Özel Ders Cepte'de eğitimin ilham verici, esnek ve hedef odaklı olması gerektiğine inanıyoruz. 
+                İster merkezi sınavlara hazırlanıyor olun, ister okul derslerinizde destek arayın — bu yolculuğun her adımında, 
+                Türkiye'nin en seçkin öğretmen kadrosuyla yanınızdayız.</p>
+            <p class="mb-4">Bu platform, eğitime duyduğumuz tutku ve doğru destekle her öğrencinin başarılı olabileceğine olan 
+                inancımızla doğdu. Şimdi birlikte ne kadar büyük başarılar elde edebileceğimizi görmek için sabırsızlanıyorum.</p>
+            <p class="mb-2 font-semibold">Geleceği birlikte inşa edelim.</p>
+            <p class="font-bold text-[#e63946]">Hakan Ekinci</p>
+        </div>
+    </div>
+</div>
             </div>
         </div>
     </div>
@@ -1125,8 +1154,7 @@
                                 class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-2 group h-full">
                                 <div class="h-48 bg-gray-200 relative overflow-hidden">
                                     @if ($course->thumbnail)
-                                        <img src="{{ asset('storage/' . $course->thumbnail) }}"
-                                            alt="{{ $course->name }}"
+                                        <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->name }}"
                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     @else
                                         <div class="flex items-center justify-center h-full bg-gray-100">
@@ -1579,7 +1607,8 @@
                     Eğitimlere Katılın
                 </h3>
 
-                <p class="text-blue-100 mb-4 text-sm">Yüzlerce eğitime sınırsız erişim için bugün Rise English'a katılın.
+                <p class="text-blue-100 mb-4 text-sm">Yüzlerce eğitime sınırsız erişim için bugün Özel Ders Cepte'ye
+                    katılın.
                 </p>
 
                 <div class="flex flex-col space-y-2">
@@ -1600,24 +1629,24 @@
         // Düzeltilmiş Video Slider JavaScript - Tam Versiyon
         document.addEventListener('DOMContentLoaded', function() {
 
-                const heroBg = document.querySelector('.hero-bg');
-    if (heroBg) {
-        const img = new Image();
-        img.onload = function() {
-            heroBg.style.backgroundImage = `url('${this.src}')`;
-            heroBg.style.backgroundSize = 'cover';
-            heroBg.style.backgroundPosition = 'center';
-            heroBg.style.backgroundBlendMode = 'multiply';
-            setTimeout(() => heroBg.style.opacity = '1', 50);
-        };
-        img.onerror = function() {
-            const fallback = heroBg.getAttribute('data-bg-fallback');
-            if (fallback && this.src !== fallback) {
-                this.src = fallback;
+            const heroBg = document.querySelector('.hero-bg');
+            if (heroBg) {
+                const img = new Image();
+                img.onload = function() {
+                    heroBg.style.backgroundImage = `url('${this.src}')`;
+                    heroBg.style.backgroundSize = 'cover';
+                    heroBg.style.backgroundPosition = 'center';
+                    heroBg.style.backgroundBlendMode = 'multiply';
+                    setTimeout(() => heroBg.style.opacity = '1', 50);
+                };
+                img.onerror = function() {
+                    const fallback = heroBg.getAttribute('data-bg-fallback');
+                    if (fallback && this.src !== fallback) {
+                        this.src = fallback;
+                    }
+                };
+                img.src = heroBg.getAttribute('data-bg');
             }
-        };
-        img.src = heroBg.getAttribute('data-bg');
-    }
             // Success message auto-hide functionality
             initSuccessMessage();
 
@@ -1673,15 +1702,15 @@
                 }
 
                 // Modal backdrop (arka plan) tıklama event listener
-            if (demoModal) {
-                demoModal.addEventListener('click', function(e) {
-                    console.log('Modal backdrop tıklandı');
-                    // Sadece arka plana basıldığında kapat
-                    if (!modalContent.contains(e.target)) {
-                        closeModal();
-                    }
-                });
-            }
+                if (demoModal) {
+                    demoModal.addEventListener('click', function(e) {
+                        console.log('Modal backdrop tıklandı');
+                        // Sadece arka plana basıldığında kapat
+                        if (!modalContent.contains(e.target)) {
+                            closeModal();
+                        }
+                    });
+                }
 
 
                 // Modal içeriğine tıklamanın modal'ı kapatmasını engelle
@@ -1700,37 +1729,37 @@
                 });
             }
 
-// closeModal fonksiyonunu güncelle
-function closeModal() {
-    console.log('closeModal fonksiyonu çağrıldı');
-    const modal = document.getElementById('demoModal');
-    if (modal) {
-        modal.style.display = 'none';
-        console.log('Modal kapatıldı');
+            // closeModal fonksiyonunu güncelle
+            function closeModal() {
+                console.log('closeModal fonksiyonu çağrıldı');
+                const modal = document.getElementById('demoModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    console.log('Modal kapatıldı');
 
-        // Body scroll'unu geri getir
-        document.body.style.overflow = '';
+                    // Body scroll'unu geri getir
+                    document.body.style.overflow = '';
 
-        // BANNER'I GÖSTER - 1.5 saniye sonra
-      //   setTimeout(() => {
-         //    showProBanner();
-       //  }, 1500);
+                    // BANNER'I GÖSTER - 1.5 saniye sonra
+                    //   setTimeout(() => {
+                    //    showProBanner();
+                    //  }, 1500);
 
-        // Sadece giriş yapmayan kullanıcılar için şans çarkını göster
-        // Banner'dan sonra
-        @if (!auth()->check())
-            setTimeout(() => {
-                if (!hasSeenFortuneWheel()) {
-                    showFortuneWheel();
-                    setFortuneWheelSeen();
+                    // Sadece giriş yapmayan kullanıcılar için şans çarkını göster
+                    // Banner'dan sonra
+                    @if (!auth()->check())
+                        setTimeout(() => {
+                            if (!hasSeenFortuneWheel()) {
+                                showFortuneWheel();
+                                setFortuneWheelSeen();
+                            }
+                        }, 8000); // Banner gösterildikten 6.5 saniye sonra (1.5 + 6.5 = 8)
+                    @endif
                 }
-            }, 8000); // Banner gösterildikten 6.5 saniye sonra (1.5 + 6.5 = 8)
-        @endif
-    }
-}
+            }
 
-function showProBanner() {
-    const bannerHTML = `
+            function showProBanner() {
+                const bannerHTML = `
     <style>
         #proBannerModal * { box-sizing: border-box; }
 
@@ -2074,51 +2103,51 @@ function showProBanner() {
     </div>
     `;
 
-    const bannerDiv = document.createElement('div');
-    bannerDiv.innerHTML = bannerHTML;
-    document.body.appendChild(bannerDiv);
+                const bannerDiv = document.createElement('div');
+                bannerDiv.innerHTML = bannerHTML;
+                document.body.appendChild(bannerDiv);
 
-    const bannerModal = document.getElementById('proBannerModal');
-    const bannerInner = document.getElementById('proBannerInner');
-    const closeBannerBtn = document.getElementById('closeProBanner');
+                const bannerModal = document.getElementById('proBannerModal');
+                const bannerInner = document.getElementById('proBannerInner');
+                const closeBannerBtn = document.getElementById('closeProBanner');
 
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            bannerModal.style.opacity = '1';
-            bannerInner.style.opacity = '1';
-            bannerInner.style.transform = 'scale(1) translateY(0)';
-        });
-    });
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        bannerModal.style.opacity = '1';
+                        bannerInner.style.opacity = '1';
+                        bannerInner.style.transform = 'scale(1) translateY(0)';
+                    });
+                });
 
-    if (closeBannerBtn && bannerModal) {
-        closeBannerBtn.addEventListener('click', function() {
-            bannerModal.style.opacity = '0';
-            bannerInner.style.transform = 'scale(0.9) translateY(20px)';
-            bannerInner.style.opacity = '0';
+                if (closeBannerBtn && bannerModal) {
+                    closeBannerBtn.addEventListener('click', function() {
+                        bannerModal.style.opacity = '0';
+                        bannerInner.style.transform = 'scale(0.9) translateY(20px)';
+                        bannerInner.style.opacity = '0';
 
-            setTimeout(() => {
-                bannerModal.remove();
+                        setTimeout(() => {
+                            bannerModal.remove();
 
-                @if (!auth()->check())
-                    setTimeout(() => {
-                        if (!hasSeenFortuneWheel()) {
-                            showFortuneWheel();
-                            setFortuneWheelSeen();
-                        }
-                    }, 500);
-                @endif
-            }, 350);
-        });
+                            @if (!auth()->check())
+                                setTimeout(() => {
+                                    if (!hasSeenFortuneWheel()) {
+                                        showFortuneWheel();
+                                        setFortuneWheelSeen();
+                                    }
+                                }, 500);
+                            @endif
+                        }, 350);
+                    });
 
-        bannerModal.addEventListener('click', function(e) {
-            if (e.target === bannerModal) closeBannerBtn.click();
-        });
+                    bannerModal.addEventListener('click', function(e) {
+                        if (e.target === bannerModal) closeBannerBtn.click();
+                    });
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && bannerModal) closeBannerBtn.click();
-        });
-    }
-} // Şans çarkının daha önce görülüp görülmediğini kontrol et
+                    document.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape' && bannerModal) closeBannerBtn.click();
+                    });
+                }
+            } // Şans çarkının daha önce görülüp görülmediğini kontrol et
             function hasSeenFortuneWheel() {
                 return localStorage.getItem('fortuneWheelSeen') === 'true';
             }
@@ -2135,7 +2164,7 @@ function showProBanner() {
             // Global WhatsApp fonksiyonu - Düzeltilmiş
             function openWhatsApp() {
                 console.log('openWhatsApp fonksiyonu çağrıldı');
-                const phoneNumber = '905541383539';
+                const phoneNumber = '905457624498';
                 const message = encodeURIComponent('Merhaba, ücretsiz demo ders hakkında bilgi almak istiyorum.');
                 const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 
@@ -2162,7 +2191,7 @@ function showProBanner() {
                 // WhatsApp butonu
                 if (whatsappBtn) {
                     whatsappBtn.onclick = function() {
-                        const phoneNumber = '905541383539';
+                        const phoneNumber = '905457624498';
                         const message = encodeURIComponent(
                             'Merhaba, ücretsiz demo ders hakkında bilgi almak istiyorum.');
                         window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
@@ -2899,7 +2928,7 @@ function showProBanner() {
 
         function openWhatsApp() {
             console.log('Global openWhatsApp fonksiyonu çağrıldı');
-            const phoneNumber = '905541383539';
+            const phoneNumber = '905457624498';
             const message = encodeURIComponent('Merhaba, ücretsiz demo ders hakkında bilgi almak istiyorum.');
             const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 
@@ -3250,7 +3279,7 @@ function showProBanner() {
                 @if (!auth()->check())
                     if (!this.currentPrizeCode || !this.currentPrizeName) return;
 
-                    const phoneNumber = '905541383539';
+                    const phoneNumber = '905457624498';
                     const message = encodeURIComponent(
                         `Merhaba! Rise English şans çarkından "${this.currentPrizeName}" kazandım. Kod: ${this.currentPrizeCode}`
                     );

@@ -61,7 +61,7 @@
 
     <footer class="bg-gray-800 text-white py-8 mt-12">
         <div class="container mx-auto px-4">
-            <p class="text-center">&copy; {{ date('Y') }} Rise English. Tüm hakları saklıdır.</p>
+            <p class="text-center">&copy; {{ date('Y') }} Özel Ders Cepte. Tüm hakları saklıdır.</p>
         </div>
     </footer>
 
@@ -78,7 +78,7 @@
           <!-- Kategori Başlıkları ve Öğretmen Seçimi -->
           <div class="flex">
             <button id="tab-hakan" class="flex-1 px-4 py-2 bg-green-500 text-white font-medium">
-              <div class="text-sm font-bold">İngilizce Kursları</div>
+              <div class="text-sm font-bold">Özel Ders</div>
               <div class="text-xs">Hakan Hoca</div>
             </button>
             <button id="tab-rumeysa" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 font-medium">
@@ -162,7 +162,7 @@
                 if(teacher === 'hakan'){
                     currentTeacher = 'hakan';
                     teacherName.textContent = 'Hakan Hoca';
-                    teacherRole.textContent = 'İngilizce Kursları';
+                    teacherRole.textContent = 'Kurucu Hoca';
                     tabHakan.classList.replace('bg-gray-200', 'bg-green-500');
                     tabHakan.classList.replace('text-gray-700', 'text-white');
                     tabRumeysa.classList.replace('bg-green-500', 'bg-gray-200');
@@ -195,7 +195,7 @@
                 
                 let messageText = '';
                 if(currentTeacher === 'hakan'){
-                    messageText = "İngilizce Kursları hakkında bilgi almak istiyorum!";
+                    messageText = "Özel dersler hakkında bilgi almak istiyorum!";
                 } else if(currentTeacher === 'rumeysa'){
                     messageText = "rehberlik hakkında bilgi almak istiyorum!";
                 }

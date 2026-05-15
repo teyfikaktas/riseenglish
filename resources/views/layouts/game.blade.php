@@ -367,7 +367,7 @@
           <!-- Teacher Tabs -->
           <div class="flex">
             <button id="tab-hakan" class="flex-1 px-3 py-2 bg-green-500 text-white text-sm">
-              <div class="font-bold">İngilizce Kursları</div>
+              <div class="font-bold">Özel Ders</div>
               <div class="text-xs">Hakan Hoca</div>
             </button>
             <button id="tab-rumeysa" class="flex-1 px-3 py-2 bg-gray-200 text-gray-700 text-sm">
@@ -384,7 +384,7 @@
               </div>
               <div class="text-white">
                 <p id="teacher-name" class="font-bold">Hakan Hoca</p>
-                <p id="teacher-role" class="text-xs">İngilizce Kursları</p>
+                <p id="teacher-role" class="text-xs">Özel Ders</p>
               </div>
             </div>
             <button id="close-chat" class="text-white hover:text-gray-200">
@@ -467,7 +467,7 @@
                 if(teacher === 'hakan'){
                     currentTeacher = 'hakan';
                     teacherName.textContent = 'Hakan Hoca';
-                    teacherRole.textContent = 'İngilizce Kursları';
+                    teacherRole.textContent = 'Özel Ders';
                     teacherIcon.className = 'fas fa-user-tie text-green-600';
                     tabHakan.classList.replace('bg-gray-200', 'bg-green-500');
                     tabHakan.classList.replace('text-gray-700', 'text-white');
@@ -501,7 +501,7 @@
                 
                 let messageText = '';
                 if(currentTeacher === 'hakan'){
-                    messageText = "İngilizce Kursları hakkında bilgi almak istiyorum!";
+                    messageText = "Özel dersler hakkında bilgi almak istiyorum!";
                 } else {
                     messageText = "Rehberlik hakkında bilgi almak istiyorum!";
                 }

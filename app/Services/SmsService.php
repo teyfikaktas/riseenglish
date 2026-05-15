@@ -16,7 +16,7 @@ class SmsService
     /**
      * Admin telefon numarası
      */
-    const ADMIN_PHONE = '5541383539';
+    const ADMIN_PHONE = '5457624498';
 
     /**
      * Varsayılan SMS başlık numarası
