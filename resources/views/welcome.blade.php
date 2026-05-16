@@ -700,9 +700,9 @@
                                 <span class="text-lg">⚡</span>
                                 <span class="text-sm font-semibold">Hızlı Okuma</span>
                             </a>
-                            <a href="javascript:void(0)" onclick="contactTeacher('KPSS')"
-                            class="group flex items-center gap-2 bg-gray-50 hover:bg-[#FF6B35] border border-gray-200 hover:border-[#FF6B35] text-[#1a2e5a] hover:text-white rounded-xl px-3 py-2.5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-                            <span class="text-lg">📝</span>
+                            <a href="javascript:void(0)" onclick="contactTeacher('Hızlı Okuma')"
+                                class="group col-span-2 flex items-center justify-center gap-2 bg-gray-50 hover:bg-[#FF6B35] border border-gray-200 hover:border-[#FF6B35] text-[#1a2e5a] hover:text-white rounded-xl px-3 py-2.5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                <span class="text-lg">⚡</span>
                             <span class="text-sm font-semibold">KPSS Eğitimleri</span>
                         </a>
                         </div>
