@@ -380,6 +380,50 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
     return $pdf->download($fileName);
 }
 
+
+public function publicTodayReport()
+{
+    $date = \Carbon\Carbon::today();
+    $teacherId = 1; // Hakan Hoca sabit
+    
+    $teacher = User::find($teacherId);
+    
+    $exams = Exam::where('teacher_id', $teacherId)
+        ->whereDate('start_time', $date->toDateString())
+        ->with(['students:id,name', 'results.student:id,name'])
+        ->get();
+    
+    if ($exams->isEmpty()) {
+        return view('exams.no-report-today', ['date' => $date, 'teacher' => $teacher]);
+    }
+    
+    $allEnrolledStudents = collect();
+    $enteredResults = collect();
+    
+    foreach ($exams as $exam) {
+        $allEnrolledStudents = $allEnrolledStudents->merge($exam->students);
+        $enteredResults = $enteredResults->merge($exam->results->where('score', '>', 0));
+    }
+    
+    $allEnrolledStudents = $allEnrolledStudents->unique('id');
+    $enteredResults = $enteredResults->sortByDesc('success_rate')->values();
+    $enteredStudentIds = $enteredResults->pluck('student_id')->toArray();
+    
+    $notEnteredStudents = $allEnrolledStudents->filter(function ($student) use ($enteredStudentIds) {
+        return !in_array($student->id, $enteredStudentIds);
+    });
+    
+    $pdf = PDF::loadView('exams.daily-report-pdf', [
+        'enteredResults'    => $enteredResults,
+        'notEnteredResults' => $notEnteredStudents,
+        'date'              => $date,
+        'teacher'           => $teacher,
+        'enteredCount'      => $enteredResults->count(),
+        'notEnteredCount'   => $notEnteredStudents->count(),
+    ]);
+    
+    return $pdf->stream('Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf');
+}
 public function downloadDailyReport(Request $request)
 {
     $request->validate(['date' => 'required|date']);
