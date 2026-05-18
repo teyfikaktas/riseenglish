@@ -380,39 +380,54 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
     return $pdf->download($fileName);
 }
 
-
 public function publicTodayReport()
 {
     $date = \Carbon\Carbon::today();
     $teacherId = 1; // Hakan Hoca sabit
-    
     $teacher = User::find($teacherId);
-    
+
     $exams = Exam::where('teacher_id', $teacherId)
         ->whereDate('start_time', $date->toDateString())
         ->with(['students:id,name', 'results.student:id,name'])
         ->get();
-    
+
     if ($exams->isEmpty()) {
-        return view('exams.no-report-today', ['date' => $date, 'teacher' => $teacher]);
+        return response(
+            '<!DOCTYPE html>
+            <html lang="tr">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Rise English - Günlük Rapor</title>
+            </head>
+            <body style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:#333;background:#f8f9fa;margin:0;">
+                <div style="max-width:500px;margin:0 auto;background:#fff;padding:40px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+                    <h2 style="color:#2c3e50;margin-bottom:20px;">Bugün için sınav sonucu bulunmamaktadır</h2>
+                    <p style="font-size:16px;line-height:1.6;color:#555;">Lütfen yarın tekrar kontrol ediniz.</p>
+                    <p style="margin-top:30px;font-size:14px;color:#999;">Rise English</p>
+                </div>
+            </body>
+            </html>',
+            200
+        )->header('Content-Type', 'text/html; charset=utf-8');
     }
-    
+
     $allEnrolledStudents = collect();
     $enteredResults = collect();
-    
+
     foreach ($exams as $exam) {
         $allEnrolledStudents = $allEnrolledStudents->merge($exam->students);
         $enteredResults = $enteredResults->merge($exam->results->where('score', '>', 0));
     }
-    
+
     $allEnrolledStudents = $allEnrolledStudents->unique('id');
     $enteredResults = $enteredResults->sortByDesc('success_rate')->values();
     $enteredStudentIds = $enteredResults->pluck('student_id')->toArray();
-    
+
     $notEnteredStudents = $allEnrolledStudents->filter(function ($student) use ($enteredStudentIds) {
         return !in_array($student->id, $enteredStudentIds);
     });
-    
+
     $pdf = PDF::loadView('exams.daily-report-pdf', [
         'enteredResults'    => $enteredResults,
         'notEnteredResults' => $notEnteredStudents,
@@ -421,7 +436,7 @@ public function publicTodayReport()
         'enteredCount'      => $enteredResults->count(),
         'notEnteredCount'   => $notEnteredStudents->count(),
     ]);
-    
+
     return $pdf->stream('Gunluk_Rapor_' . $date->format('d-m-Y') . '.pdf');
 }
 public function downloadDailyReport(Request $request)
