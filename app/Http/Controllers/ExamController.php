@@ -383,12 +383,9 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
 public function publicTodayReport()
 {
     $date = \Carbon\Carbon::today();
-    $teacherId = 1; // Hakan Hoca sabit
-    $teacher = User::find($teacherId);
 
-    $exams = Exam::where('teacher_id', $teacherId)
-        ->whereDate('start_time', $date->toDateString())
-        ->with(['students:id,name', 'results.student:id,name'])
+    $exams = Exam::whereDate('start_time', $date->toDateString())
+        ->with(['students:id,name', 'results.student:id,name', 'teacher:id,name'])
         ->get();
 
     if ($exams->isEmpty()) {
@@ -432,7 +429,7 @@ public function publicTodayReport()
         'enteredResults'    => $enteredResults,
         'notEnteredResults' => $notEnteredStudents,
         'date'              => $date,
-        'teacher'           => $teacher,
+        'teacher'           => null,
         'enteredCount'      => $enteredResults->count(),
         'notEnteredCount'   => $notEnteredStudents->count(),
     ]);
