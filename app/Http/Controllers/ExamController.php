@@ -384,7 +384,10 @@ public function publicTodayReport()
 {
     return $this->buildDailyReportResponse(\Carbon\Carbon::today());
 }
-
+public function publicReportIndex()
+{
+    return view('exams.report-index');
+}
 public function publicDailyReport(string $date)
 {
     try {
