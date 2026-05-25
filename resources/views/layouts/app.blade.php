@@ -61,7 +61,7 @@
 
     <footer class="bg-gray-800 text-white py-8 mt-12">
         <div class="container mx-auto px-4">
-            <p class="text-center">&copy; {{ date('Y') }} Özel Ders Cepte. Tüm hakları saklıdır.</p>
+            <p class="text-center">&copy; {{ date('Y') }} RiseEnglish Tüm hakları saklıdır.</p>
         </div>
     </footer>
 
