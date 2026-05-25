@@ -384,10 +384,7 @@ public function publicTodayReport()
 {
     $date = \Carbon\Carbon::today();
 
-    $exams = Exam::where(function ($q) use ($date) {
-            $q->whereDate('start_time', $date->toDateString())
-              ->orWhere('teacher_id', 36);
-        })
+    $exams = Exam::whereDate('start_time', $date->toDateString())
         ->with(['students:id,name', 'results.student:id,name', 'teacher:id,name'])
         ->get();
 
@@ -422,8 +419,8 @@ public function publicTodayReport()
 
     $allEnrolledStudents = $allEnrolledStudents->unique('id');
     $enteredResults = $enteredResults->sortByDesc('success_rate')->values();
-
     $enteredStudentIds = $enteredResults->pluck('student_id')->toArray();
+
     $notEnteredStudents = $allEnrolledStudents->filter(function ($student) use ($enteredStudentIds) {
         return !in_array($student->id, $enteredStudentIds);
     });
