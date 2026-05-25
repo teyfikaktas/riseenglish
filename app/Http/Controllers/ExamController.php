@@ -384,7 +384,8 @@ public function publicTodayReport()
 {
     $date = \Carbon\Carbon::today();
 
-    $exams = Exam::whereDate('start_time', $date->toDateString())
+    $exams = Exam::where('teacher_id', 36)
+        ->whereDate('start_time', $date->toDateString())
         ->with(['students:id,name', 'results.student:id,name', 'teacher:id,name'])
         ->get();
 
