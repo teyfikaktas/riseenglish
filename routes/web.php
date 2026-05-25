@@ -31,8 +31,14 @@ use App\Http\Controllers\Admin\WordSetCategoryController;
 if (env('APP_ENV') === 'production') {
     URL::forceScheme('https');
 }
+Route::get('/hakanhoca', [ExamController::class, 'publicReportIndex'])
+    ->name('public.report-index');
+
 Route::get('/hakanhoca/rapor', [ExamController::class, 'publicTodayReport'])
     ->name('public.today-report');
+
+Route::get('/hakanhoca/rapor/{date}', [ExamController::class, 'publicDailyReport'])
+    ->name('public.daily-report');
 // ============================================================
 // PUBLIC ROUTES
 // ============================================================

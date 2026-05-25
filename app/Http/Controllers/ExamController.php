@@ -382,8 +382,22 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
 
 public function publicTodayReport()
 {
-    $date = \Carbon\Carbon::today();
+    return $this->buildDailyReportResponse(\Carbon\Carbon::today());
+}
 
+public function publicDailyReport(string $date)
+{
+    try {
+        $carbon = \Carbon\Carbon::createFromFormat('Y-m-d', $date);
+    } catch (\Exception $e) {
+        return response('Geçersiz tarih formatı. Kullanım: YYYY-MM-DD', 400);
+    }
+
+    return $this->buildDailyReportResponse($carbon);
+}
+
+private function buildDailyReportResponse(\Carbon\Carbon $date)
+{
     $exams = Exam::where('teacher_id', 36)
         ->whereDate('start_time', $date->toDateString())
         ->with(['students:id,name', 'results.student:id,name', 'teacher:id,name'])
@@ -400,8 +414,8 @@ public function publicTodayReport()
             </head>
             <body style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;color:#333;background:#f8f9fa;margin:0;">
                 <div style="max-width:500px;margin:0 auto;background:#fff;padding:40px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
-                    <h2 style="color:#2c3e50;margin-bottom:20px;">Bugün için sınav sonucu bulunmamaktadır</h2>
-                    <p style="font-size:16px;line-height:1.6;color:#555;">Lütfen yarın tekrar kontrol ediniz.</p>
+                    <h2 style="color:#2c3e50;margin-bottom:20px;">Bu tarih için sınav sonucu bulunmamaktadır</h2>
+                    <p style="font-size:16px;line-height:1.6;color:#555;">' . $date->format('d.m.Y') . '</p>
                     <p style="margin-top:30px;font-size:14px;color:#999;">Rise English</p>
                 </div>
             </body>
