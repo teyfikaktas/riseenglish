@@ -382,16 +382,20 @@ public function studentWeeklyReport(Request $request, \App\Models\User $user)
 
 public function publicTodayReport()
 {
-    $date = \Carbon\Carbon::today();
+    // Memory limitini bu request için yükselt
+    ini_set('memory_limit', '512M');
 
-    $exams = Exam::where(function ($q) use ($date) {
-            $q->whereDate('start_time', $date->toDateString())
+    $date = \Carbon\Carbon::today();
+    $dateStr = $date->toDateString();
+
+    // 1) Bugünün sınavları + teacher_id 36'nın sınavlarının ID'lerini al (hafif sorgu)
+    $examIds = Exam::where(function ($q) use ($dateStr) {
+            $q->whereDate('start_time', $dateStr)
               ->orWhere('teacher_id', 36);
         })
-        ->with(['students:id,name', 'results.student:id,name', 'teacher:id,name'])
-        ->get();
+        ->pluck('id');
 
-    if ($exams->isEmpty()) {
+    if ($examIds->isEmpty()) {
         return response(
             '<!DOCTYPE html>
             <html lang="tr">
@@ -412,21 +416,26 @@ public function publicTodayReport()
         )->header('Content-Type', 'text/html; charset=utf-8');
     }
 
-    $allEnrolledStudents = collect();
-    $enteredResults = collect();
+    // 2) Giren sonuçları DİREKT DB'den, sıralı ve sadece ihtiyacımız olan kolonlar
+    $enteredResults = \App\Models\ExamResult::whereIn('exam_id', $examIds)
+        ->where('score', '>', 0)
+        ->with(['student:id,name'])
+        ->orderByDesc('success_rate')
+        ->get();
 
-    foreach ($exams as $exam) {
-        $allEnrolledStudents = $allEnrolledStudents->merge($exam->students);
-        $enteredResults = $enteredResults->merge($exam->results->where('score', '>', 0));
-    }
+    $enteredStudentIds = $enteredResults->pluck('student_id')->unique()->toArray();
 
-    $allEnrolledStudents = $allEnrolledStudents->unique('id');
-    $enteredResults = $enteredResults->sortByDesc('success_rate')->values();
-
-    $enteredStudentIds = $enteredResults->pluck('student_id')->toArray();
-    $notEnteredStudents = $allEnrolledStudents->filter(function ($student) use ($enteredStudentIds) {
-        return !in_array($student->id, $enteredStudentIds);
-    });
+    // 3) Kayıtlı olup girmeyen öğrencileri pivot üzerinden tek sorguda çek
+    $notEnteredStudents = \App\Models\User::select('users.id', 'users.name')
+        ->whereIn('users.id', function ($q) use ($examIds) {
+            $q->select('student_id')
+              ->from('exam_student') // pivot tablo adın farklıysa burayı düzelt
+              ->whereIn('exam_id', $examIds);
+        })
+        ->when(!empty($enteredStudentIds), function ($q) use ($enteredStudentIds) {
+            $q->whereNotIn('users.id', $enteredStudentIds);
+        })
+        ->get();
 
     $pdf = PDF::loadView('exams.daily-report-pdf', [
         'enteredResults'    => $enteredResults,
