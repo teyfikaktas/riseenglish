@@ -23,7 +23,7 @@
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 ml-1 align-middle">
-                                        Ücretsiz versiyon, Hakan Hoca ile iletişime geçiniz.
+                                        
                                     </span>
                                 @endif
                             </h3>
