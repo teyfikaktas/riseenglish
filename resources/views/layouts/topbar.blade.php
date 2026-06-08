@@ -462,7 +462,7 @@
 <!-- Zinciri Kırma Top Bar (Sadece Öğrenciler İçin) -->
 <!-- Zinciri Kırma Top Bar (Sadece Öğrenciler İçin) -->
 @auth
-    @if (auth()->user()->hasRole('ogrenci') && ($chainProgress = auth()->user()->chainProgress))
+    @if (auth()->user()->hasRole('ogrenci'))
         @livewire('chain-breaker-top-bar')
     @elseif (auth()->user()->hasRole('ogretmen'))
         <div class="flex items-center gap-3">
