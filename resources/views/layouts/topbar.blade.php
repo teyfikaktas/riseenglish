@@ -460,9 +460,27 @@
 </div>
 
 <!-- Zinciri Kırma Top Bar (Sadece Öğrenciler İçin) -->
+<!-- Zinciri Kırma Top Bar (Sadece Öğrenciler İçin) -->
 @auth
     @if (auth()->user()->hasRole('ogrenci') && ($chainProgress = auth()->user()->chainProgress))
         @livewire('chain-breaker-top-bar')
+    @elseif (auth()->user()->hasRole('ogretmen'))
+        <div class="flex items-center gap-3">
+            <a href="{{ route('exams.create') }}"
+               class="bg-[#e63946] hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Sınav Oluştur
+            </a>
+            <a href="{{ route('word-sets.create') }}"
+               class="bg-[#e63946] hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Yeni Set Oluştur
+            </a>
+        </div>
     @endif
 @endauth
 
