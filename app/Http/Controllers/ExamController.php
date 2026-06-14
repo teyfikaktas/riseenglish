@@ -14,25 +14,23 @@ class ExamController extends Controller
 public function index(Request $request)
 {
     $today = \Carbon\Carbon::today();
-    
+
     $todayExamsQuery = Exam::where('teacher_id', auth()->id())
         ->whereDate('start_time', $today)
-        ->withCount('students')
-        ->with('wordSets');
-    
+        ->withCount(['students', 'wordSets']);
+
     $query = Exam::where('teacher_id', auth()->id())
         ->whereDate('start_time', '!=', $today)
-        ->withCount('students')
-        ->with('wordSets');
-    
+        ->withCount(['students', 'wordSets']);
+
     if ($request->filled('search')) {
         $search = $request->search;
-        
+
         $todayExamsQuery->where(function($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
               ->orWhere('description', 'like', "%{$search}%");
         });
-        
+
         $query->where(function($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
               ->orWhere('description', 'like', "%{$search}%")
@@ -47,13 +45,12 @@ public function index(Request $request)
         ->pluck('base_name');
 
     $todayExams = $todayExamsQuery->orderBy('start_time', 'asc')->get();
-    
+
     $exams = $query->orderBy('is_active', 'desc')
         ->orderBy('start_time', 'desc')
         ->paginate(10);
-    
+
     $groups = \App\Models\Group::where('is_active', true)
-        ->with('teacher')
         ->withCount('students')
         ->orderBy('name')
         ->get();
