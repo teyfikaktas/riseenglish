@@ -36,19 +36,24 @@ public function index(Request $request)
               ->orWhere('description', 'like', "%{$search}%")
               ->orWhereDate('start_time', 'like', "%{$search}%");
         });
+    } else {
+        // Arama yoksa sadece son 7 günü göster (performans + kullanışlılık)
+        $query->where('start_time', '>=', $today->copy()->subDays(7));
     }
 
-    $examNames = Exam::where('teacher_id', auth()->id())
-        ->selectRaw("TRIM(SUBSTRING_INDEX(name, ' - ', 1)) as base_name")
-        ->distinct()
-        ->orderBy('base_name')
-        ->pluck('base_name');
+    $examNames = \Cache::remember('exam_names_' . auth()->id(), 600, function () {
+        return Exam::where('teacher_id', auth()->id())
+            ->selectRaw("TRIM(SUBSTRING_INDEX(name, ' - ', 1)) as base_name")
+            ->distinct()
+            ->orderBy('base_name')
+            ->pluck('base_name');
+    });
 
     $todayExams = $todayExamsQuery->orderBy('start_time', 'asc')->get();
 
     $exams = $query->orderBy('is_active', 'desc')
         ->orderBy('start_time', 'desc')
-        ->paginate(10);
+        ->simplePaginate(10);
 
     $groups = \App\Models\Group::where('is_active', true)
         ->withCount('students')
