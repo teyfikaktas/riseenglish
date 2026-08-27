@@ -159,7 +159,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/word-set-categories/tree', function (Request $request) {
         try {
             $userId = auth()->id();
-            $categories = \App\Models\WordSetCategory::tree($userId);
+            $categories = \App\Models\WordSetCategory::tree(1);
 
             return response()->json([
                 'success' => true,
