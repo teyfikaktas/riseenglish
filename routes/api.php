@@ -143,16 +143,36 @@ Route::get('/words/{categoryId}/{page}/{lang?}', function($categoryId, $page = 1
 // });
 Route::get('/tts', function (Request $request) {
     // Minimal geçerli MP3 frame (ses yok, ~100 bytes)
-    $emptyMp3 = base64_decode('//MoxAAHiAIIAUAAAP7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+');
+    $emptyMp3 = base64_decode('//MoxAAHiAIIAUAAAP7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+');
     
     return response($emptyMp3, 200, [
         'Content-Type' => 'audio/mpeg',
         'Access-Control-Allow-Origin' => '*',
     ]);
 });
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+
+    // Kategori Ağacı
+    Route::get('/word-set-categories/tree', function (Request $request) {
+        try {
+            $userId = auth()->id();
+            $categories = \App\Models\WordSetCategory::tree($userId);
+
+            return response()->json([
+                'success' => true,
+                'categories' => $categories,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Category Tree API Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'categories' => []
+            ], 500);
+        }
+    });
 
     // Öğrenci Sınavları
     Route::prefix('student')->group(function () {
@@ -299,4 +319,4 @@ Route::middleware('auth:sanctum')->group(function () {
         }
     });
     
-}); 
+});
