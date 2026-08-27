@@ -154,12 +154,12 @@ Route::get('/tts', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-
-    // Kategori Ağacı
     Route::get('/word-set-categories/tree', function (Request $request) {
         try {
-            $userId = auth()->id();
             $categories = \App\Models\WordSetCategory::tree(1);
+
+            // Root kategorilerin kendi wordSets'ini de yükle (tree() sadece allChildren.wordSets'i yüklüyor)
+            $categories->load('wordSets');
 
             return response()->json([
                 'success' => true,
