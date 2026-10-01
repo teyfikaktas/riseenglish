@@ -28,9 +28,10 @@ class WordSetCategory extends Model
         return $this->hasMany(WordSetCategory::class, 'parent_id')->orderBy('sort_order');
     }
 
+    // Her seviyede hem wordSets hem alt kategoriler yüklenir (sonsuz derinlik)
     public function allChildren(): HasMany
     {
-        return $this->children()->with('allChildren');
+        return $this->children()->with(['wordSets', 'allChildren']);
     }
 
     public function wordSets(): HasMany
@@ -42,7 +43,7 @@ class WordSetCategory extends Model
     {
         return self::where('user_id', $userId)
             ->whereNull('parent_id')
-            ->with('allChildren.wordSets')
+            ->with(['wordSets', 'allChildren'])
             ->orderBy('sort_order')
             ->get();
     }
