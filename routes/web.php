@@ -227,6 +227,11 @@ Route::middleware(['auth', 'verified.phone', 'teacher.approved'])->group(functio
 Route::middleware(['auth', 'role:ogretmen'])->group(function () {
     Route::get('/exams/daily-report', [ExamController::class, 'downloadDailyReport'])->name('exams.daily-report');
     Route::get('/exams/exam-creation-report', [ExamController::class, 'downloadExamCreationReport'])->name('exams.exam-creation-report');
+
+    // Kendi Sınavım raporları
+    Route::get('/exams/self-daily-report', [ExamController::class, 'downloadSelfExamDailyReport'])->name('exams.self-daily-report');
+    Route::get('/exams/self-daily-report/{user}', [ExamController::class, 'studentSelfExamDailyReport'])->name('exams.self-daily-report.student');
+
     Route::get('/exams/bulk-delete-preview', [ExamController::class, 'bulkDeletePreview'])->name('exams.bulk-delete.preview');
     Route::delete('/exams/bulk-delete', [ExamController::class, 'bulkDelete'])->name('exams.bulk-delete');
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');

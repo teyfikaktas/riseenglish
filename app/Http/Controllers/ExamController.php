@@ -175,6 +175,189 @@ private function getCreationStatusClass($selfCount, $teacherCount)
     if ($selfCount > 0) return 'self-created';
     return 'teacher-created';
 }
+
+/**
+ * Kendi Sınavım - Günlük Rapor
+ * Route: GET /exams/self-daily-report?date=2026-10-20&group_id=5 (group_id opsiyonel)
+ */
+public function downloadSelfExamDailyReport(Request $request)
+{
+    $request->validate([
+        'date'     => 'required|date',
+        'group_id' => 'nullable|exists:groups,id',
+    ]);
+
+    $date  = \Carbon\Carbon::parse($request->date);
+    $group = $request->filled('group_id') ? \App\Models\Group::find($request->group_id) : null;
+
+    $query = Exam::where('name', 'like', 'Kendi Sınavım%')
+        ->whereDate('start_time', $date->toDateString())
+        ->with(['teacher:id,name', 'wordSets:id,name', 'results'])
+        ->orderBy('start_time');
+
+    if ($group) {
+        $studentIds = $group->students()->pluck('users.id');
+        $query->whereIn('teacher_id', $studentIds);
+    }
+
+    $exams = $query->get();
+
+    if ($exams->isEmpty()) {
+        return back()->with('error', 'Bu tarihte öğrencilerin kendi oluşturduğu sınav bulunamadı.');
+    }
+
+    // Kendi sınavlarında teacher_id = öğrencinin kendisi
+    $rows = $exams->groupBy('teacher_id')->map(function ($studentExams) {
+        $student = $studentExams->first()->teacher;
+
+        $taken   = 0;
+        $correct = 0;
+        $wrong   = 0;
+        $rates   = [];
+        $details = [];
+
+        foreach ($studentExams as $exam) {
+            $result = $exam->results->where('student_id', $exam->teacher_id)->first();
+            $done   = $result && $result->score > 0;
+
+            $c = $done ? $result->getCorrectAnswersCount() : null;
+            $w = $done ? $result->getWrongAnswersCount() : null;
+
+            if ($done) {
+                $taken++;
+                $correct += $c;
+                $wrong   += $w;
+                $rates[]  = (float) $result->success_rate;
+            }
+
+            $details[] = [
+                'time'         => \Carbon\Carbon::parse($exam->start_time)->format('H:i'),
+                'sets'         => $exam->wordSets->pluck('name')->implode(', '),
+                'done'         => $done,
+                'correct'      => $c,
+                'wrong'        => $w,
+                'success_rate' => $done ? (float) $result->success_rate : null,
+            ];
+        }
+
+        $total = $studentExams->count();
+
+        return [
+            'student_name' => $student->name ?? 'Silinmiş kullanıcı',
+            'total'        => $total,
+            'taken'        => $taken,
+            'correct'      => $correct,
+            'wrong'        => $wrong,
+            'success_rate' => count($rates) ? round(array_sum($rates) / count($rates), 1) : null,
+            'status'       => $taken === 0 ? 'none' : ($taken < $total ? 'partial' : 'done'),
+            'details'      => $details,
+        ];
+    })->values();
+
+    $entered = $rows->where('status', '!=', 'none')
+        ->sortByDesc('success_rate')
+        ->values();
+
+    $notEntered = $rows->where('status', 'none')
+        ->sortBy('student_name')
+        ->values();
+
+    $avgSuccess = $entered->count()
+        ? round($entered->avg('success_rate'), 1)
+        : null;
+
+    $pdf = PDF::loadView('exams.self-exam-daily-report-pdf', [
+        'entered'         => $entered,
+        'notEntered'      => $notEntered,
+        'date'            => $date,
+        'group'           => $group,
+        'teacher'         => auth()->user(),
+        'totalStudents'   => $rows->count(),
+        'enteredCount'    => $entered->count(),
+        'notEnteredCount' => $notEntered->count(),
+        'partialCount'    => $entered->where('status', 'partial')->count(),
+        'avgSuccess'      => $avgSuccess,
+    ]);
+
+    $fileName = 'Kendi_Sinavlari_Gunluk_Rapor_'
+        . ($group ? str_replace(' ', '_', $group->name) . '_' : '')
+        . $date->format('d-m-Y') . '.pdf';
+
+    return $pdf->download($fileName);
+}
+
+/**
+ * Kendi Sınavım - Öğrenci bazlı günlük rapor
+ * Route: GET /exams/self-daily-report/{user}?date=2026-10-20
+ */
+public function studentSelfExamDailyReport(Request $request, \App\Models\User $user)
+{
+    $request->validate(['date' => 'required|date']);
+    $date = \Carbon\Carbon::parse($request->date);
+
+    // Kendi sınavlarında teacher_id = öğrencinin id'si
+    $exams = Exam::where('teacher_id', $user->id)
+        ->where('name', 'like', 'Kendi Sınavım%')
+        ->whereDate('start_time', $date->toDateString())
+        ->with(['wordSets:id,name', 'results'])
+        ->orderBy('start_time')
+        ->get();
+
+    if ($exams->isEmpty()) {
+        return back()->with('error', $user->name . ' bu tarihte kendi sınavı oluşturmamış.');
+    }
+
+    $rows    = [];
+    $taken   = 0;
+    $correct = 0;
+    $wrong   = 0;
+    $rates   = [];
+
+    foreach ($exams as $exam) {
+        $result = $exam->results->where('student_id', $user->id)->first();
+        $done   = $result && $result->score > 0;
+
+        $c = $done ? $result->getCorrectAnswersCount() : null;
+        $w = $done ? $result->getWrongAnswersCount() : null;
+
+        if ($done) {
+            $taken++;
+            $correct += $c;
+            $wrong   += $w;
+            $rates[]  = (float) $result->success_rate;
+        }
+
+        $rows[] = [
+            'time'              => \Carbon\Carbon::parse($exam->start_time)->format('H:i'),
+            'sets'              => $exam->wordSets->pluck('name')->implode(', '),
+            'time_per_question' => $exam->time_per_question,
+            'done'              => $done,
+            'correct'           => $c,
+            'wrong'             => $w,
+            'success_rate'      => $done ? round((float) $result->success_rate, 1) : null,
+        ];
+    }
+
+    $total = $exams->count();
+
+    $pdf = PDF::loadView('exams.student-self-exam-daily-report-pdf', [
+        'student'    => $user,
+        'rows'       => $rows,
+        'date'       => $date,
+        'teacher'    => auth()->user(),
+        'total'      => $total,
+        'taken'      => $taken,
+        'notTaken'   => $total - $taken,
+        'correct'    => $correct,
+        'wrong'      => $wrong,
+        'avgSuccess' => count($rates) ? round(array_sum($rates) / count($rates), 1) : null,
+        'status'     => $taken === 0 ? 'none' : ($taken < $total ? 'partial' : 'done'),
+    ]);
+
+    $fileName = 'Kendi_Sinavim_' . str_replace(' ', '_', $user->name) . '_' . $date->format('d-m-Y') . '.pdf';
+    return $pdf->download($fileName);
+}
+
     /**
  * Sınavı sil
  */
@@ -682,12 +865,13 @@ $validated = $request->validate([
             'teacher_id'        => $student->id,
             'name'              => 'Kendi Sınavım - ' . $currentDate->isoFormat('D MMMM, dddd'),
             'description'       => 'Öğrenci tarafından oluşturuldu',
-'start_time' => $currentDate->copy()->setTimeFromTimeString($validated['exam_time'])->format('Y-m-d H:i:s'),
+            'start_time'        => $currentDate->copy()->setTimeFromTimeString($validated['exam_time'])->format('Y-m-d H:i:s'),
             'time_per_question' => $validated['time_per_question'],
             'is_active'         => true,
         ]);
 
-$exam->wordSets()->attach([$validated['word_set']]);        $exam->students()->attach([$student->id]);
+        $exam->wordSets()->attach([$validated['word_set']]);
+        $exam->students()->attach([$student->id]);
 
         $createdExams[] = $exam;
         $currentDate->addDay();
