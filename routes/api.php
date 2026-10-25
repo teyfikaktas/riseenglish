@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\StudentExamController;
+use App\Http\Controllers\WordSetController;
 use App\Models\Word;
 use App\Models\WordSet;
 use App\Models\ChainProgress;
@@ -155,6 +156,7 @@ Route::get('/tts', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/word-sets/{id}/submit-quiz', [WordSetController::class, 'submitQuiz']);
 
     // Zincir / Streak durumu
     Route::get('/chain/progress', function () {
