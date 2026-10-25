@@ -262,6 +262,81 @@ Route::middleware('auth:sanctum')->group(function () {
         }
     });
 
+    // Günü tamamla
+    Route::post('/chain/complete-day', function () {
+        try {
+            $userId = auth()->id();
+            $today = now()->toDateString();
+
+            $progress = ChainProgress::firstOrCreate(
+                ['user_id' => $userId],
+                ['days_completed' => 0, 'current_streak' => 0, 'longest_streak' => 0]
+            );
+
+            $todayCount = \App\Models\ChainActivity::where('chain_progress_id', $progress->id)
+                ->whereDate('activity_date', $today)
+                ->count();
+
+            if ($todayCount === 0) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'no_activity',
+                    'message' => 'Günü tamamlamak için önce çalışma eklemelisin!'
+                ], 422);
+            }
+
+            $lastCompleted = $progress->last_completed_at
+                ? \Carbon\Carbon::parse($progress->last_completed_at)->toDateString()
+                : null;
+
+            if ($lastCompleted === $today) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'already_completed',
+                    'message' => 'Bugün zaten tamamlandı!'
+                ], 409);
+            }
+
+            $previousLevel = $progress->getCurrentLevel();
+
+            $progress->days_completed++;
+
+            if ($lastCompleted === null || $lastCompleted === now()->subDay()->toDateString()) {
+                $progress->current_streak++;
+            } else {
+                $progress->current_streak = 1;
+            }
+
+            if ($progress->current_streak > $progress->longest_streak) {
+                $progress->longest_streak = $progress->current_streak;
+            }
+
+            $progress->last_completed_at = now();
+            $progress->save();
+
+            $newLevel = $progress->getCurrentLevel();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gün başarıyla tamamlandı!',
+                'current_streak' => (int) $progress->current_streak,
+                'longest_streak' => (int) $progress->longest_streak,
+                'days_completed' => (int) $progress->days_completed,
+                'level' => $newLevel,
+                'level_color' => $progress->getLevelColor(),
+                'next_level_progress' => $progress->getNextLevelProgress(),
+                'level_up' => $previousLevel !== $newLevel,
+                'previous_level' => $previousLevel,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Chain Complete Day API Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gün tamamlanamadı'
+            ], 500);
+        }
+    });
+
     Route::get('/word-set-categories/tree', function (Request $request) {
         try {
             $categories = \App\Models\WordSetCategory::tree(1);
