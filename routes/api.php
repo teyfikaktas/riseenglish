@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\StudentExamController;
 use App\Models\Word;
 use App\Models\WordSet;
+use App\Models\ChainProgress;
 use App\Http\Controllers\MockExamController;
 
 // Auth routes
@@ -154,6 +155,60 @@ Route::get('/tts', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+
+    // Zincir / Streak durumu
+    Route::get('/chain/progress', function () {
+        try {
+            $progress = ChainProgress::where('user_id', auth()->id())->first();
+
+            if (!$progress) {
+                return response()->json([
+                    'success' => true,
+                    'current_streak' => 0,
+                    'longest_streak' => 0,
+                    'days_completed' => 0,
+                    'level' => 'Bronz',
+                    'level_color' => '#CD7F32',
+                    'next_level_progress' => 0,
+                    'last_completed_at' => null,
+                    'completed_today' => false,
+                    'streak_broken' => false,
+                ]);
+            }
+
+            $today = now()->startOfDay();
+            $last = $progress->last_completed_at
+                ? \Carbon\Carbon::parse($progress->last_completed_at)->startOfDay()
+                : null;
+
+            $completedToday = $last && $last->equalTo($today);
+            // Dünden önce tamamlandıysa seri kopmuş demektir (DB'de henüz güncellenmemiş olabilir)
+            $streakBroken = $last && $last->lt($today->copy()->subDay());
+            $currentStreak = $streakBroken ? 0 : (int) $progress->current_streak;
+
+            return response()->json([
+                'success' => true,
+                'current_streak' => $currentStreak,
+                'longest_streak' => (int) $progress->longest_streak,
+                'days_completed' => (int) $progress->days_completed,
+                'level' => $progress->getCurrentLevel(),
+                'level_color' => $progress->getLevelColor(),
+                'next_level_progress' => $progress->getNextLevelProgress(),
+                'last_completed_at' => $progress->last_completed_at
+                    ? \Carbon\Carbon::parse($progress->last_completed_at)->toIso8601String()
+                    : null,
+                'completed_today' => $completedToday,
+                'streak_broken' => $streakBroken,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Chain Progress API Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Zincir bilgisi alınamadı'
+            ], 500);
+        }
+    });
+
     Route::get('/word-set-categories/tree', function (Request $request) {
         try {
             $categories = \App\Models\WordSetCategory::tree(1);
