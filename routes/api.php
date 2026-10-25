@@ -209,6 +209,59 @@ Route::middleware('auth:sanctum')->group(function () {
         }
     });
 
+    // Çalışma ekle (sadece metin)
+    Route::post('/chain/activities', function (Request $request) {
+        $request->validate([
+            'content' => 'required|string|max:5000',
+        ]);
+
+        try {
+            $user = auth()->user();
+
+            $progress = ChainProgress::firstOrCreate(
+                ['user_id' => $user->id],
+                ['days_completed' => 0, 'current_streak' => 0, 'longest_streak' => 0]
+            );
+
+            // Öğretmeni bul (Livewire'daki findTeacher ile aynı mantık)
+            $teacherId = null;
+            if (method_exists($user, 'enrolledCourses')) {
+                $course = $user->enrolledCourses()->first();
+                $teacherId = $course?->teacher_id;
+            }
+
+            $activity = \App\Models\ChainActivity::create([
+                'user_id' => $user->id,
+                'chain_progress_id' => $progress->id,
+                'teacher_id' => $teacherId,
+                'content' => trim($request->input('content')),
+                'activity_date' => now(),
+            ]);
+
+            $todayCount = \App\Models\ChainActivity::where('chain_progress_id', $progress->id)
+                ->whereDate('activity_date', now()->toDateString())
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Çalışma eklendi. Son çalışmansa günü tamamlamayı unutma.',
+                'activity' => [
+                    'id' => $activity->id,
+                    'content' => $activity->content,
+                    'activity_date' => \Carbon\Carbon::parse($activity->activity_date)->toIso8601String(),
+                    'created_at' => $activity->created_at?->toIso8601String(),
+                ],
+                'today_activity_count' => $todayCount,
+            ], 201);
+        } catch (\Exception $e) {
+            \Log::error('Chain Add Activity API Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Çalışma eklenemedi'
+            ], 500);
+        }
+    });
+
     Route::get('/word-set-categories/tree', function (Request $request) {
         try {
             $categories = \App\Models\WordSetCategory::tree(1);
