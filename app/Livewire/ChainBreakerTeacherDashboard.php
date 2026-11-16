@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\User;
 use App\Models\ChainProgress;
 use App\Models\ChainActivity;
+use App\Models\WordSetQuizLog;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,6 +19,8 @@ class ChainBreakerTeacherDashboard extends Component
     public $showActivityDetail = false;
     public $selectedDate = null;
     public $selectedActivities = [];
+    public $selectedStudentQuizResults = [];
+    public $showQuizResults = false;
     public $adjustDays = 0;
     public $adjustReason = '';
     
@@ -49,6 +52,25 @@ class ChainBreakerTeacherDashboard extends Component
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
+    }
+
+    public function viewStudentQuizResults($studentId)
+    {
+        $student = User::role('ogrenci')->findOrFail($studentId);
+
+        $this->selectedStudentQuizResults = WordSetQuizLog::with('wordSet')
+            ->where('user_id', $student->id)
+            ->latest()
+            ->limit(100)
+            ->get();
+        $this->selectedStudent = $student;
+        $this->showQuizResults = true;
+    }
+
+    public function closeQuizResultsModal()
+    {
+        $this->showQuizResults = false;
+        $this->selectedStudentQuizResults = [];
     }
 
 public function adjustStudentDays()

@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\StudentExamController;
-use App\Http\Controllers\WordSetController;
 use App\Models\Word;
 use App\Models\WordSet;
 use App\Models\ChainProgress;
@@ -156,7 +155,6 @@ Route::get('/tts', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-    Route::post('/word-sets/{id}/submit-quiz', [WordSetController::class, 'submitQuiz']);
 
     // Zincir / Streak durumu
     Route::get('/chain/progress', function () {
@@ -211,11 +209,13 @@ Route::middleware('auth:sanctum')->group(function () {
         }
     });
 
-    // Çalışma ekle (sadece metin)
     Route::post('/chain/activities', function (Request $request) {
         $request->validate([
-            'content' => 'required|string|max:5000',
+            'content' => 'nullable|required_without:image|string|max:5000',
+            'image' => 'nullable|required_without:content|image|mimes:jpg,jpeg,png,webp,heic|max:10240',
         ]);
+
+        $storedPath = null;
 
         try {
             $user = auth()->user();
@@ -232,11 +232,24 @@ Route::middleware('auth:sanctum')->group(function () {
                 $teacherId = $course?->teacher_id;
             }
 
+            $fileName = null;
+            $fileType = null;
+
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $storedPath = $file->store('chain-activities/' . $user->id, 'public');
+                $fileName = $file->getClientOriginalName();
+                $fileType = $file->getMimeType();
+            }
+
             $activity = \App\Models\ChainActivity::create([
                 'user_id' => $user->id,
                 'chain_progress_id' => $progress->id,
                 'teacher_id' => $teacherId,
-                'content' => trim($request->input('content')),
+                'content' => trim((string) $request->input('content', '')),
+                'file_path' => $storedPath,
+                'file_name' => $fileName,
+                'file_type' => $fileType,
                 'activity_date' => now(),
             ]);
 
@@ -250,91 +263,22 @@ Route::middleware('auth:sanctum')->group(function () {
                 'activity' => [
                     'id' => $activity->id,
                     'content' => $activity->content,
+                    'file_url' => $activity->file_path ? asset('storage/' . $activity->file_path) : null,
+                    'file_name' => $activity->file_name,
+                    'file_type' => $activity->file_type,
                     'activity_date' => \Carbon\Carbon::parse($activity->activity_date)->toIso8601String(),
                     'created_at' => $activity->created_at?->toIso8601String(),
                 ],
                 'today_activity_count' => $todayCount,
             ], 201);
         } catch (\Exception $e) {
+            if ($storedPath) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($storedPath);
+            }
             \Log::error('Chain Add Activity API Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Çalışma eklenemedi'
-            ], 500);
-        }
-    });
-
-    // Günü tamamla
-    Route::post('/chain/complete-day', function () {
-        try {
-            $userId = auth()->id();
-            $today = now()->toDateString();
-
-            $progress = ChainProgress::firstOrCreate(
-                ['user_id' => $userId],
-                ['days_completed' => 0, 'current_streak' => 0, 'longest_streak' => 0]
-            );
-
-            $todayCount = \App\Models\ChainActivity::where('chain_progress_id', $progress->id)
-                ->whereDate('activity_date', $today)
-                ->count();
-
-            if ($todayCount === 0) {
-                return response()->json([
-                    'success' => false,
-                    'code' => 'no_activity',
-                    'message' => 'Günü tamamlamak için önce çalışma eklemelisin!'
-                ], 422);
-            }
-
-            $lastCompleted = $progress->last_completed_at
-                ? \Carbon\Carbon::parse($progress->last_completed_at)->toDateString()
-                : null;
-
-            if ($lastCompleted === $today) {
-                return response()->json([
-                    'success' => false,
-                    'code' => 'already_completed',
-                    'message' => 'Bugün zaten tamamlandı!'
-                ], 409);
-            }
-
-            $previousLevel = $progress->getCurrentLevel();
-
-            $progress->days_completed++;
-
-            if ($lastCompleted === null || $lastCompleted === now()->subDay()->toDateString()) {
-                $progress->current_streak++;
-            } else {
-                $progress->current_streak = 1;
-            }
-
-            if ($progress->current_streak > $progress->longest_streak) {
-                $progress->longest_streak = $progress->current_streak;
-            }
-
-            $progress->last_completed_at = now();
-            $progress->save();
-
-            $newLevel = $progress->getCurrentLevel();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Gün başarıyla tamamlandı!',
-                'current_streak' => (int) $progress->current_streak,
-                'longest_streak' => (int) $progress->longest_streak,
-                'days_completed' => (int) $progress->days_completed,
-                'level' => $newLevel,
-                'level_color' => $progress->getLevelColor(),
-                'next_level_progress' => $progress->getNextLevelProgress(),
-                'level_up' => $previousLevel !== $newLevel,
-                'previous_level' => $previousLevel,
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Chain Complete Day API Error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gün tamamlanamadı'
             ], 500);
         }
     });

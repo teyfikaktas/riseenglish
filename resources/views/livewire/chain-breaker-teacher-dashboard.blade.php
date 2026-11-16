@@ -98,7 +98,12 @@
                                         </div>
                                     </div>
                                     <!-- Mobil görünümde detay butonu -->
-                                    <div class="md:hidden">
+                                    <div class="md:hidden flex items-center gap-2">
+                                        <button wire:click="viewStudentQuizResults({{ $student->id }})"
+                                            class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm inline-flex items-center"
+                                            aria-label="{{ $student->name }} quiz sonuçlarını göster">
+                                            <i class="fas fa-chart-bar mr-1"></i>Quiz
+                                        </button>
                                         <a href="{{ route('ogretmen.student.chain-detail', $student->id) }}"
                                             class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm inline-flex items-center">
                                             <i class="fas fa-eye mr-1"></i> Detay
@@ -136,10 +141,19 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center md:table-cell hidden">
+                                <div class="inline-flex items-center gap-2">
+                                    <button wire:click="viewStudentQuizResults({{ $student->id }})"
+                                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs inline-flex items-center"
+                                        title="{{ $student->name }} quiz sonuçlarını göster"
+                                        aria-label="{{ $student->name }} quiz sonuçlarını göster">
+                                        <i class="fas fa-chart-bar"></i>
+                                        <span class="ml-1">Quiz</span>
+                                    </button>
                                 <a href="{{ route('ogretmen.student.chain-detail', $student->id) }}"
                                     class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs inline-flex items-center">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -152,6 +166,67 @@
             {{ $students->links() }}
         </div>
     </div>
+
+    @if ($showQuizResults && $selectedStudent)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            wire:click.self="closeQuizResultsModal">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" wire:click.stop>
+                <div class="sticky top-0 bg-gradient-to-r from-[#1a2e5a] to-[#e63946] p-6 rounded-t-xl">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">
+                                {{ $selectedStudent->name }} {{ $selectedStudent->surname }}
+                            </h3>
+                            <p class="text-white/80">Kelime Seti Quiz Sonuçları</p>
+                        </div>
+                        <button wire:click="closeQuizResultsModal" class="text-white hover:text-gray-200"
+                            aria-label="Quiz sonuçlarını kapat">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    @if ($selectedStudentQuizResults->isEmpty())
+                        <p class="py-10 text-center text-gray-500">Bu öğrencinin kayıtlı quiz sonucu bulunmuyor.</p>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500">
+                                    <tr>
+                                        <th class="px-4 py-3">Tarih</th>
+                                        <th class="px-4 py-3">Kelime Seti</th>
+                                        <th class="px-4 py-3 text-center">Doğru</th>
+                                        <th class="px-4 py-3 text-center">Başarı</th>
+                                        <th class="px-4 py-3 text-center">Süre</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    @foreach ($selectedStudentQuizResults as $result)
+                                        <tr>
+                                            <td class="px-4 py-3 whitespace-nowrap">
+                                                {{ $result->created_at->format('d.m.Y H:i') }}
+                                            </td>
+                                            <td class="px-4 py-3">{{ $result->wordSet?->name ?? 'Silinmiş kelime seti' }}</td>
+                                            <td class="px-4 py-3 text-center">
+                                                {{ $result->score }} / {{ $result->total_questions }}
+                                            </td>
+                                            <td class="px-4 py-3 text-center font-semibold">
+                                                {{ number_format($result->success_rate, 1, ',', '.') }}%
+                                            </td>
+                                            <td class="px-4 py-3 text-center whitespace-nowrap">
+                                                {{ $result->time_spent !== null ? $result->time_spent . ' sn' : '-' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Öğrenci Detay Modal -->
     @if ($selectedStudent)
@@ -347,6 +422,7 @@
             if (e.key === 'Escape' || e.key === 'Esc') {
                 @this.closeStudentModal();
                 @this.closeActivityModal();
+                @this.closeQuizResultsModal();
             }
         });
     </script>
