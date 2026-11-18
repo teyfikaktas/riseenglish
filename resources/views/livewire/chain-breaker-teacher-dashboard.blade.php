@@ -167,7 +167,7 @@
         </div>
     </div>
 
-    @if ($showQuizResults && $selectedStudent)
+    @if ($showQuizResults && $selectedQuizStudent)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             wire:click.self="closeQuizResultsModal">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" wire:click.stop>
@@ -175,7 +175,7 @@
                     <div class="flex justify-between items-center">
                         <div>
                             <h3 class="text-xl font-bold text-white">
-                                {{ $selectedStudent->name }} {{ $selectedStudent->surname }}
+                                {{ $selectedQuizStudent->name }} {{ $selectedQuizStudent->surname }}
                             </h3>
                             <p class="text-white/80">Kelime Seti Quiz Sonuçları</p>
                         </div>
@@ -187,7 +187,85 @@
                 </div>
 
                 <div class="p-6">
-                    @if ($selectedStudentQuizResults->isEmpty())
+                    @if ($selectedExamResult)
+                        <button wire:click="closeExamResultDetails"
+                            class="mb-5 inline-flex items-center text-sm font-medium text-blue-700 hover:text-blue-900">
+                            <i class="fas fa-arrow-left mr-2"></i>Sonuç listesine dön
+                        </button>
+
+                        <div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                            <h4 class="text-lg font-semibold text-gray-900">
+                                {{ $selectedExamResult->exam?->name ?? 'Sınav sonucu' }}
+                            </h4>
+                            <p class="mt-1 text-sm text-gray-600">
+                                {{ $selectedExamResult->completed_at?->format('d.m.Y H:i') }}
+                                @if ($selectedExamResult->exam?->wordSets?->isNotEmpty())
+                                    · {{ $selectedExamResult->exam->wordSets->pluck('name')->join(', ') }}
+                                @endif
+                            </p>
+                            <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                <div>
+                                    <p class="text-xs text-gray-500">Doğru</p>
+                                    <p class="font-semibold text-gray-900">
+                                        {{ $selectedExamResult->score }} / {{ $selectedExamResult->total_questions }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Başarı</p>
+                                    <p class="font-semibold text-gray-900">
+                                        {{ number_format($selectedExamResult->success_rate, 1, ',', '.') }}%
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Toplam Süre</p>
+                                    <p class="font-semibold text-gray-900">
+                                        {{ $selectedExamResult->time_spent }} sn
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Yanlış</p>
+                                    <p class="font-semibold text-gray-900">
+                                        {{ max(0, $selectedExamResult->total_questions - $selectedExamResult->score) }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (empty($selectedExamAnswerDetails))
+                            <p class="py-8 text-center text-gray-500">Bu sonuç için soru-cevap detayı bulunmuyor.</p>
+                        @else
+                            <div class="space-y-3">
+                                @foreach ($selectedExamAnswerDetails as $answer)
+                                    <article class="rounded-lg border p-4 {{ $answer['is_correct'] ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50' }}">
+                                        <div class="flex flex-wrap items-start justify-between gap-2">
+                                            <div>
+                                                <p class="text-xs font-semibold uppercase text-gray-500">
+                                                    Soru {{ $answer['question_number'] ?? $loop->iteration }}
+                                                </p>
+                                                <p class="mt-1 font-semibold text-gray-900">
+                                                    {{ $answer['english'] ?? 'Kelime bulunamadı' }}
+                                                </p>
+                                            </div>
+                                            <span class="text-sm font-semibold {{ $answer['is_correct'] ? 'text-emerald-700' : 'text-red-700' }}">
+                                                {{ $answer['is_correct'] ? 'Doğru' : 'Yanlış' }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+                                            <p><span class="text-gray-500">Verilen cevap:</span>
+                                                {{ filled($answer['selected_answer']) ? $answer['selected_answer'] : 'Boş bırakıldı' }}
+                                            </p>
+                                            <p><span class="text-gray-500">Doğru cevap:</span>
+                                                {{ $answer['correct_answer'] ?? 'Kelime bulunamadı' }}
+                                            </p>
+                                            <p><span class="text-gray-500">Süre:</span>
+                                                {{ $answer['time_taken'] !== null ? $answer['time_taken'] . ' sn' : '-' }}
+                                            </p>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        @endif
+                    @elseif ($selectedStudentQuizResults->isEmpty())
                         <p class="py-10 text-center text-gray-500">Bu öğrencinin kayıtlı quiz sonucu bulunmuyor.</p>
                     @else
                         <div class="overflow-x-auto">
@@ -195,19 +273,29 @@
                                 <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500">
                                     <tr>
                                         <th class="px-4 py-3">Tarih</th>
-                                        <th class="px-4 py-3">Kelime Seti</th>
+                                        <th class="px-4 py-3">Sınav / Kelime Seti</th>
                                         <th class="px-4 py-3 text-center">Doğru</th>
                                         <th class="px-4 py-3 text-center">Başarı</th>
                                         <th class="px-4 py-3 text-center">Süre</th>
+                                        <th class="px-4 py-3 text-right">Detay</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
                                     @foreach ($selectedStudentQuizResults as $result)
                                         <tr>
                                             <td class="px-4 py-3 whitespace-nowrap">
-                                                {{ $result->created_at->format('d.m.Y H:i') }}
+                                                {{ $result->completed_at?->format('d.m.Y H:i') }}
                                             </td>
-                                            <td class="px-4 py-3">{{ $result->wordSet?->name ?? 'Silinmiş kelime seti' }}</td>
+                                            <td class="px-4 py-3">
+                                                <div class="font-medium text-gray-900">
+                                                    {{ $result->exam?->name ?? 'Silinmiş sınav' }}
+                                                </div>
+                                                @if ($result->exam?->wordSets?->isNotEmpty())
+                                                    <div class="mt-1 text-xs text-gray-500">
+                                                        {{ $result->exam->wordSets->pluck('name')->join(', ') }}
+                                                    </div>
+                                                @endif
+                                            </td>
                                             <td class="px-4 py-3 text-center">
                                                 {{ $result->score }} / {{ $result->total_questions }}
                                             </td>
@@ -216,6 +304,12 @@
                                             </td>
                                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                                 {{ $result->time_spent !== null ? $result->time_spent . ' sn' : '-' }}
+                                            </td>
+                                            <td class="px-4 py-3 text-right">
+                                                <button wire:click="viewExamResultDetails({{ $result->id }})"
+                                                    class="text-blue-700 hover:text-blue-900 font-medium">
+                                                    Detayları gör
+                                                </button>
                                             </td>
                                         </tr>
                                     @endforeach

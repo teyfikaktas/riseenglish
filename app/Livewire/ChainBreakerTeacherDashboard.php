@@ -6,7 +6,8 @@ use Livewire\Component;
 use App\Models\User;
 use App\Models\ChainProgress;
 use App\Models\ChainActivity;
-use App\Models\WordSetQuizLog;
+use App\Models\ExamResult;
+use App\Models\Word;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,6 +21,9 @@ class ChainBreakerTeacherDashboard extends Component
     public $selectedDate = null;
     public $selectedActivities = [];
     public $selectedStudentQuizResults = [];
+    public $selectedQuizStudent = null;
+    public $selectedExamResult = null;
+    public $selectedExamAnswerDetails = [];
     public $showQuizResults = false;
     public $adjustDays = 0;
     public $adjustReason = '';
@@ -58,19 +62,60 @@ class ChainBreakerTeacherDashboard extends Component
     {
         $student = User::role('ogrenci')->findOrFail($studentId);
 
-        $this->selectedStudentQuizResults = WordSetQuizLog::with('wordSet')
-            ->where('user_id', $student->id)
-            ->latest()
+        $this->selectedStudentQuizResults = ExamResult::with(['exam.wordSets'])
+            ->where('student_id', $student->id)
+            ->whereNotNull('completed_at')
+            ->whereHas('exam.wordSets')
+            ->orderByDesc('completed_at')
             ->limit(100)
             ->get();
-        $this->selectedStudent = $student;
+        $this->selectedQuizStudent = $student;
+        $this->selectedExamResult = null;
+        $this->selectedExamAnswerDetails = [];
         $this->showQuizResults = true;
+    }
+
+    public function viewExamResultDetails($resultId)
+    {
+        $result = ExamResult::with(['exam.wordSets'])
+            ->where('student_id', $this->selectedQuizStudent->id)
+            ->whereNotNull('completed_at')
+            ->whereHas('exam.wordSets')
+            ->findOrFail($resultId);
+
+        $answers = collect($result->answers ?? []);
+        $words = Word::whereIn('id', $answers->pluck('word_id')->filter()->unique())
+            ->get()
+            ->keyBy('id');
+
+        $this->selectedExamAnswerDetails = $answers->map(function ($answer) use ($words) {
+            $word = $words->get($answer['word_id'] ?? null);
+
+            return [
+                'question_number' => $answer['question_number'] ?? null,
+                'english' => $word?->word,
+                'selected_answer' => $answer['selected_answer'] ?? null,
+                'correct_answer' => $word?->definition,
+                'is_correct' => (bool) ($answer['is_correct'] ?? false),
+                'time_taken' => $answer['time_taken'] ?? null,
+            ];
+        })->all();
+
+        $this->selectedExamResult = $result;
+    }
+
+    public function closeExamResultDetails()
+    {
+        $this->selectedExamResult = null;
+        $this->selectedExamAnswerDetails = [];
     }
 
     public function closeQuizResultsModal()
     {
         $this->showQuizResults = false;
         $this->selectedStudentQuizResults = [];
+        $this->selectedQuizStudent = null;
+        $this->closeExamResultDetails();
     }
 
 public function adjustStudentDays()
